@@ -1,73 +1,92 @@
-# Welcome to your Lovable project
+# Cetak Cepat Kuy - ARSC Printing Service
 
-## Project info
+A modern web application for campus printing services built with React, TypeScript, and Vite.
 
-**URL**: https://lovable.dev/projects/a7922ed6-06a1-430c-a77c-b98bef40f600
+## About
 
-## How can I edit this code?
+Cetak Cepat Kuy is a digital printing service platform developed for ARSC (Academic Resource and Service Center) that allows students and faculty to:
 
-There are several ways of editing your application.
+- Upload documents for printing from anywhere
+- Track printing queue status in real-time
+- Receive notifications when orders are ready
+- Manage printing orders through an intuitive web interface
 
-**Use Lovable**
+## Features
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/a7922ed6-06a1-430c-a77c-b98bef40f600) and start prompting.
+- **Real-time Queue Monitoring**: Live updates on printing queue status
+- **Document Upload**: Support for various document formats
+- **Order Management**: Track and manage printing orders
+- **Admin Dashboard**: Administrative tools for managing the printing service
+- **Responsive Design**: Works seamlessly on desktop and mobile devices
 
-Changes made via Lovable will be committed automatically to this repo.
+## Tech Stack
 
-**Use your preferred IDE**
+- **Frontend**: React 18 with TypeScript
+- **Build Tool**: Vite
+- **UI Components**: shadcn/ui with Radix UI primitives
+- **Styling**: Tailwind CSS
+- **State Management**: React Context + TanStack Query
+- **Routing**: React Router DOM
+- **Form Handling**: React Hook Form with Zod validation
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Getting Started
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Prerequisites
 
-Follow these steps:
+- Node.js (v18 or higher)
+- npm or yarn package manager
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
+### Installation
+
+1. Clone the repository:
+```bash
 git clone <YOUR_GIT_URL>
+cd cetak-cepat-kuy
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+2. Install dependencies:
+```bash
+npm install
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+3. Start the development server:
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+4. Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Available Scripts
 
-**Use GitHub Codespaces**
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run build:dev` - Build for development
+- `npm run lint` - Run ESLint
+- `npm run preview` - Preview production build
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Project Structure
 
-## What technologies are used for this project?
+```
+src/
+├── components/          # Reusable UI components
+│   ├── ui/             # shadcn/ui components
+│   └── ...
+├── contexts/           # React contexts for state management
+├── hooks/              # Custom React hooks
+├── lib/                # Utility functions
+├── pages/              # Page components
+├── types/              # TypeScript type definitions
+└── ...
+```
 
-This project is built with:
+## Contributing
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## How can I deploy this project?
+## License
 
-Simply open [Lovable](https://lovable.dev/projects/a7922ed6-06a1-430c-a77c-b98bef40f600) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+This project is private and proprietary to ARSC Printing services.
