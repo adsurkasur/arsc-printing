@@ -1,4 +1,4 @@
-# Cetak Cepat Kuy - ARSC Printing Service
+# ARSC Printing Service
 
 A modern web application for campus printing services built with React, TypeScript, and Vite.
 
@@ -40,8 +40,8 @@ Cetak Cepat Kuy is a digital printing service platform developed for ARSC (Acade
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/adsurkasur/cetak-cepat-kuy.git
-cd cetak-cepat-kuy
+git clone https://github.com/adsurkasur/arsc-printing.git
+cd arsc-printing
 ```
 
 2. Install dependencies:
