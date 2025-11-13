@@ -34,35 +34,35 @@ Cetak Cepat Kuy is a digital printing service platform developed for ARSC (Acade
 ### Prerequisites
 
 - Node.js (v18 or higher)
-- npm or yarn package manager
+- bun package manager
 
 ### Installation
 
 1. Clone the repository:
 ```bash
-git clone <YOUR_GIT_URL>
+git clone https://github.com/adsurkasur/cetak-cepat-kuy.git
 cd cetak-cepat-kuy
 ```
 
 2. Install dependencies:
 ```bash
-npm install
+bun install
 ```
 
 3. Start the development server:
 ```bash
-npm run dev
+bun run dev
 ```
 
 4. Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ### Available Scripts
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run build:dev` - Build for development
-- `npm run lint` - Run ESLint
-- `npm run preview` - Preview production build
+- `bun run dev` - Start development server
+- `bun run build` - Build for production
+- `bun run build:dev` - Build for development
+- `bun run lint` - Run ESLint
+- `bun run preview` - Preview production build
 
 ## Project Structure
 
