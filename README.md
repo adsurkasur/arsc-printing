@@ -1,4 +1,4 @@
-# ARSC Printing - Cetak Dokumen Tanpa Antre
+# ARSC Printing Service
 
 A modern web application for campus printing services built with Next.js 16, React 19, TypeScript, and Tailwind CSS.
 
