@@ -92,10 +92,13 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground antialiased;
+    /* Reserve scrollbar gutter to avoid layout shift when scrollbars appear */
+    scrollbar-gutter: stable;
   }
   
   html {
-    scroll-behavior: smooth;
+    /* Use instant scrolling behavior globally to avoid unexpected smooth scrolls during navigation */
+    scroll-behavior: auto;
   }
 }
 

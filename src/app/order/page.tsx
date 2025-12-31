@@ -175,7 +175,7 @@ export default function Order() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 py-8 px-4">
+      <div className="min-h-full bg-gradient-to-b from-background to-muted/30 py-8 px-4">
         <div className="container mx-auto max-w-2xl">
           {/* Header */}
           <FadeInUp className="mb-10 text-center">

@@ -65,7 +65,7 @@ export default function OrderSuccess() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-b from-background via-green-50/30 to-background py-16 px-4 flex items-center justify-center relative overflow-hidden">
+      <div className="min-h-full bg-gradient-to-b from-background via-green-50/30 to-background py-16 px-4 flex items-center justify-center relative overflow-hidden">
         {/* Confetti animation */}
         {showConfetti && (
           <div className="absolute inset-0 pointer-events-none overflow-hidden">

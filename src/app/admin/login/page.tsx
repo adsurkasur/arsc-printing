@@ -112,7 +112,7 @@ export default function AdminLogin() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center py-8 px-4 relative overflow-hidden">
+      <div className="min-h-full bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center py-8 px-4 relative overflow-hidden">
         {/* Decorative background elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <motion.div
