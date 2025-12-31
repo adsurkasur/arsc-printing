@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { useOrders } from "@/contexts/OrderContext";
-import { Upload, FileText, CheckCircle } from "lucide-react";
+import { Upload, FileText, CheckCircle, Loader2 } from "lucide-react";
 
 export default function Order() {
   const router = useRouter();
@@ -17,7 +17,11 @@ export default function Order() {
   const { addOrder } = useOrders();
 
   const [step, setStep] = useState(1);
+  const [file, setFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [fileUrl, setFileUrl] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     customerName: "",
     contact: "",
@@ -26,15 +30,84 @@ export default function Order() {
     paperSize: "A4" as "A4" | "A3",
   });
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFileName(file.name);
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+
+    // Validate file type
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ];
+    
+    if (!allowedTypes.includes(selectedFile.type)) {
+      toast({
+        title: "Format tidak didukung",
+        description: "Hanya file PDF, DOC, dan DOCX yang diizinkan",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (10MB max)
+    if (selectedFile.size > 10 * 1024 * 1024) {
+      toast({
+        title: "File terlalu besar",
+        description: "Ukuran maksimum file adalah 10MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setFile(selectedFile);
+    setFileName(selectedFile.name);
+    setUploading(true);
+
+    try {
+      const formDataObj = new FormData();
+      formDataObj.append('file', selectedFile);
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formDataObj,
+      });
+
+      if (!response.ok) {
+        // Demo mode - just proceed without actual upload
+        console.log('Upload API not available, using demo mode');
+        setFileUrl(null);
+        setStep(2);
+        toast({
+          title: "File dipilih (Demo Mode)",
+          description: "Upload file akan berfungsi setelah Supabase dikonfigurasi",
+        });
+        return;
+      }
+
+      const data = await response.json();
+      setFileUrl(data.fileUrl);
       setStep(2);
+      
+      toast({
+        title: "File berhasil diupload",
+        description: "Lanjutkan ke pengaturan cetak",
+      });
+    } catch (error) {
+      console.error('Upload error:', error);
+      // Demo mode fallback
+      setFileUrl(null);
+      setStep(2);
+      toast({
+        title: "File dipilih (Demo Mode)",
+        description: "Upload file akan berfungsi setelah Supabase dikonfigurasi",
+      });
+    } finally {
+      setUploading(false);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!fileName) {
@@ -46,24 +119,50 @@ export default function Order() {
       return;
     }
 
-    addOrder({
-      customerName: formData.customerName,
-      contact: formData.contact,
-      fileName: fileName,
-      colorMode: formData.colorMode,
-      copies: formData.copies,
-      paperSize: formData.paperSize,
-      status: "pending",
-    });
+    if (!formData.customerName || !formData.contact) {
+      toast({
+        title: "Error",
+        description: "Silakan lengkapi informasi kontak",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    toast({
-      title: "Pesanan Berhasil!",
-      description: "Pesanan Anda telah diterima dan akan segera diproses",
-    });
+    setSubmitting(true);
 
-    setTimeout(() => {
-      router.push("/order-success");
-    }, 1000);
+    try {
+      const order = await addOrder({
+        customer_name: formData.customerName,
+        contact: formData.contact,
+        file_name: fileName,
+        file_url: fileUrl,
+        color_mode: formData.colorMode,
+        copies: formData.copies,
+        paper_size: formData.paperSize,
+      }, fileUrl || undefined);
+
+      if (order) {
+        toast({
+          title: "Pesanan Berhasil!",
+          description: "Pesanan Anda telah diterima dan akan segera diproses",
+        });
+
+        // Store order ID for success page
+        sessionStorage.setItem('lastOrderId', order.id);
+
+        router.push("/order-success");
+      } else {
+        throw new Error('Failed to create order');
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Gagal membuat pesanan. Silakan coba lagi.",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -107,19 +206,30 @@ export default function Order() {
                 accept=".pdf,.doc,.docx"
                 onChange={handleFileChange}
                 className="hidden"
+                disabled={uploading}
               />
               <label
                 htmlFor="file-upload"
-                className="flex min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-muted/30 transition-colors hover:bg-muted/50"
+                className={`flex min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-muted/30 transition-colors hover:bg-muted/50 ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                {fileName ? (
+                {uploading ? (
                   <div className="text-center">
-                    <FileText className="mx-auto mb-4 h-12 w-12 text-success" />
+                    <Loader2 className="mx-auto mb-4 h-12 w-12 text-primary animate-spin" />
+                    <p className="text-lg font-medium text-foreground">
+                      Mengupload file...
+                    </p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Mohon tunggu sebentar
+                    </p>
+                  </div>
+                ) : fileName ? (
+                  <div className="text-center">
+                    <FileText className="mx-auto mb-4 h-12 w-12 text-green-500" />
                     <p className="text-lg font-medium text-foreground">
                       {fileName}
                     </p>
                     <p className="mt-2 text-sm text-muted-foreground">
-                      Klik untuk mengganti file
+                      {fileUrl ? '✓ Upload berhasil - Klik untuk mengganti' : 'Klik untuk mengganti file'}
                     </p>
                   </div>
                 ) : (
@@ -294,10 +404,20 @@ export default function Order() {
             <Button
               type="submit"
               size="lg"
+              disabled={submitting || !fileName}
               className="fixed bottom-0 left-0 right-0 z-50 h-16 w-full rounded-none text-lg font-semibold shadow-2xl md:relative md:rounded-lg"
             >
-              <CheckCircle className="mr-2 h-5 w-5" />
-              Selesaikan Pesanan
+              {submitting ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Memproses...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="mr-2 h-5 w-5" />
+                  Selesaikan Pesanan
+                </>
+              )}
             </Button>
           )}
         </form>

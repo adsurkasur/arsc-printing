@@ -1,15 +1,43 @@
-export type OrderStatus = "pending" | "printing" | "completed";
+export type OrderStatus = "pending" | "printing" | "completed" | "cancelled";
 
 export interface Order {
   id: string;
-  customerName: string;
+  customer_name: string;
   contact: string;
-  fileName: string;
-  fileUrl?: string;
-  colorMode: "bw" | "color";
+  file_name: string;
+  file_url: string | null;
+  color_mode: "bw" | "color";
   copies: number;
-  paperSize: "A4" | "A3";
+  paper_size: "A4" | "A3";
   status: OrderStatus;
-  createdAt: Date;
-  estimatedTime: number; // in minutes
+  created_at: string;
+  estimated_time: number; // in minutes
+  notes?: string;
 }
+
+// For creating a new order (without auto-generated fields)
+export interface CreateOrderInput {
+  customer_name: string;
+  contact: string;
+  file_name: string;
+  file_url?: string | null;
+  color_mode: "bw" | "color";
+  copies: number;
+  paper_size: "A4" | "A3";
+  notes?: string;
+}
+
+// Database type for Supabase
+export type Database = {
+  public: {
+    Tables: {
+      orders: {
+        Row: Order;
+        Insert: Omit<Order, "id" | "created_at" | "estimated_time" | "status"> & {
+          status?: OrderStatus;
+        };
+        Update: Partial<Omit<Order, "id" | "created_at">>;
+      };
+    };
+  };
+};

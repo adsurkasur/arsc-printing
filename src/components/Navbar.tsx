@@ -48,13 +48,22 @@ export function Navbar() {
               Pesan Sekarang
             </Link>
             <Link
+              href="/track"
+              className={cn(
+                "text-sm font-medium text-foreground transition-colors hover:text-primary",
+                pathname === "/track" && "text-primary"
+              )}
+            >
+              Lacak Pesanan
+            </Link>
+            <Link
               href="/admin"
               className={cn(
                 "text-sm font-medium text-foreground transition-colors hover:text-primary",
-                pathname === "/admin" && "text-primary"
+                pathname.startsWith("/admin") && "text-primary"
               )}
             >
-              Dashboard Admin
+              Admin
             </Link>
           </div>
 
@@ -86,13 +95,22 @@ export function Navbar() {
                   Pesan Sekarang
                 </Link>
                 <Link
+                  href="/track"
+                  className={cn(
+                    "text-lg font-medium text-foreground transition-colors hover:text-primary",
+                    pathname === "/track" && "text-primary"
+                  )}
+                >
+                  Lacak Pesanan
+                </Link>
+                <Link
                   href="/admin"
                   className={cn(
                     "text-lg font-medium text-foreground transition-colors hover:text-primary",
-                    pathname === "/admin" && "text-primary"
+                    pathname.startsWith("/admin") && "text-primary"
                   )}
                 >
-                  Dashboard Admin
+                  Admin
                 </Link>
               </div>
             </SheetContent>
