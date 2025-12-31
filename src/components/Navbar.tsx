@@ -66,12 +66,13 @@ export function Navbar() {
                 )}>
                   {link.label}
                 </span>
-                <div
-                  className={cn(
-                    "absolute inset-0 rounded-lg bg-primary/10 transition-opacity duration-200",
-                    isActive(link.href, link.matchPrefix) ? "opacity-100" : "opacity-0"
-                  )}
-                />
+                {isActive(link.href, link.matchPrefix) && (
+                  <motion.div
+                    layoutId="navbar-indicator"
+                    className="absolute inset-0 rounded-lg bg-primary/10"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
               </Link>
             ))}
           </div>
