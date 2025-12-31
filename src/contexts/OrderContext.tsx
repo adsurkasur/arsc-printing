@@ -57,11 +57,33 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   const fetchOrders = useCallback(async () => {
     try {
       const response = await fetch('/api/orders');
-      if (!response.ok) {
-        throw new Error('Failed to fetch orders');
+      let data;
+
+      // Try parsing JSON safely
+      try {
+        data = await response.json();
+      } catch (jsonErr) {
+        console.error('Failed to parse orders response, using demo mode:', jsonErr);
+        setDemoMode(true);
+        setOrders(demoOrders);
+        setError('Failed to fetch orders');
+        return;
       }
-      const data = await response.json();
-      
+
+      // Handle non-OK responses without throwing so we don't spam the console
+      if (!response.ok) {
+        if (data?.demoMode || data?.error) {
+          setDemoMode(true);
+          setOrders(demoOrders);
+          setError(null);
+        } else {
+          setDemoMode(true);
+          setOrders(demoOrders);
+          setError(data?.error || 'Failed to fetch orders');
+        }
+        return;
+      }
+
       // Check if it's an error response (Supabase not configured)
       if (data.error || data.demoMode) {
         setDemoMode(true);
@@ -72,10 +94,10 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         setError(null);
       }
     } catch (err) {
-      console.error('Error fetching orders, using demo mode:', err);
+      console.error('Network error fetching orders, using demo mode:', err);
       setDemoMode(true);
       setOrders(demoOrders);
-      setError(null);
+      setError('Failed to fetch orders');
     } finally {
       setLoading(false);
     }

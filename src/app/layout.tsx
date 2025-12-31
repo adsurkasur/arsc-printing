@@ -3,7 +3,6 @@ import { Analytics } from '@vercel/analytics/next'
 import { Providers } from './providers'
 import { Navbar } from '@/components/Navbar'
 import './globals.css'
-import { ScrollToTop } from '@/components/ScrollToTop'
 
 export const metadata: Metadata = {
   title: 'ARSC Printing - Cetak Dokumen Tanpa Antre',
@@ -30,8 +29,6 @@ export default function RootLayout({
       <body>
         <Providers>
           <Navbar />
-          {/* Scroll to top on route change */}
-          <ScrollToTop />
           {children}
         </Providers>
         <Analytics />
