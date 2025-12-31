@@ -10,113 +10,107 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { motion } from "@/components/animations";
+
+const navLinks = [
+  { href: "/", label: "Beranda" },
+  { href: "/order", label: "Pesan Sekarang" },
+  { href: "/track", label: "Lacak Pesanan" },
+  { href: "/admin", label: "Admin", matchPrefix: true },
+];
 
 export function Navbar() {
   const pathname = usePathname();
 
+  const isActive = (href: string, matchPrefix?: boolean) => {
+    if (matchPrefix) return pathname.startsWith(href);
+    return pathname === href;
+  };
+
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+    <motion.nav
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60"
+    >
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="rounded-lg bg-primary p-2">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <motion.div 
+              whileHover={{ scale: 1.05, rotate: -5 }}
+              whileTap={{ scale: 0.95 }}
+              className="rounded-xl bg-gradient-to-br from-primary to-secondary p-2 shadow-lg shadow-primary/25"
+            >
               <Printer className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <span className="text-lg font-bold text-primary">
+            </motion.div>
+            <span className="text-lg font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               ARSC Printing
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden items-center gap-6 md:flex">
-            <Link
-              href="/"
-              className={cn(
-                "text-sm font-medium text-foreground transition-colors hover:text-primary",
-                pathname === "/" && "text-primary"
-              )}
-            >
-              Beranda
-            </Link>
-            <Link
-              href="/order"
-              className={cn(
-                "text-sm font-medium text-foreground transition-colors hover:text-primary",
-                pathname === "/order" && "text-primary"
-              )}
-            >
-              Pesan Sekarang
-            </Link>
-            <Link
-              href="/track"
-              className={cn(
-                "text-sm font-medium text-foreground transition-colors hover:text-primary",
-                pathname === "/track" && "text-primary"
-              )}
-            >
-              Lacak Pesanan
-            </Link>
-            <Link
-              href="/admin"
-              className={cn(
-                "text-sm font-medium text-foreground transition-colors hover:text-primary",
-                pathname.startsWith("/admin") && "text-primary"
-              )}
-            >
-              Admin
-            </Link>
+          <div className="hidden items-center gap-1 md:flex">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="relative px-4 py-2 group"
+              >
+                <span className={cn(
+                  "relative z-10 text-sm font-medium transition-colors",
+                  isActive(link.href, link.matchPrefix)
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                )}>
+                  {link.label}
+                </span>
+                {isActive(link.href, link.matchPrefix) && (
+                  <motion.div
+                    layoutId="navbar-indicator"
+                    className="absolute inset-0 rounded-lg bg-primary/10"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+              </Link>
+            ))}
           </div>
 
           {/* Mobile Navigation */}
           <Sheet>
             <SheetTrigger asChild className="md:hidden">
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="rounded-xl">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right">
-              <div className="flex flex-col gap-4 mt-8">
-                <Link
-                  href="/"
-                  className={cn(
-                    "text-lg font-medium text-foreground transition-colors hover:text-primary",
-                    pathname === "/" && "text-primary"
-                  )}
-                >
-                  Beranda
-                </Link>
-                <Link
-                  href="/order"
-                  className={cn(
-                    "text-lg font-medium text-foreground transition-colors hover:text-primary",
-                    pathname === "/order" && "text-primary"
-                  )}
-                >
-                  Pesan Sekarang
-                </Link>
-                <Link
-                  href="/track"
-                  className={cn(
-                    "text-lg font-medium text-foreground transition-colors hover:text-primary",
-                    pathname === "/track" && "text-primary"
-                  )}
-                >
-                  Lacak Pesanan
-                </Link>
-                <Link
-                  href="/admin"
-                  className={cn(
-                    "text-lg font-medium text-foreground transition-colors hover:text-primary",
-                    pathname.startsWith("/admin") && "text-primary"
-                  )}
-                >
-                  Admin
-                </Link>
+            <SheetContent side="right" className="w-72">
+              <div className="flex flex-col gap-2 mt-8">
+                {navLinks.map((link, index) => (
+                  <motion.div
+                    key={link.href}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <Link
+                      href={link.href}
+                      className={cn(
+                        "flex items-center px-4 py-3 rounded-xl text-base font-medium transition-all",
+                        isActive(link.href, link.matchPrefix)
+                          ? "bg-primary/10 text-primary"
+                          : "text-foreground hover:bg-muted"
+                      )}
+                    >
+                      {link.label}
+                    </Link>
+                  </motion.div>
+                ))}
               </div>
             </SheetContent>
           </Sheet>
         </div>
       </div>
-    </nav>
+    </motion.nav>
   );
 }

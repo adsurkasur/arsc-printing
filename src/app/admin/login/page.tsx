@@ -8,7 +8,8 @@ import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
-import { Printer, LogIn, AlertCircle } from 'lucide-react'
+import { Printer, LogIn, AlertCircle, Shield, Lock, Mail, Sparkles } from 'lucide-react'
+import { motion, PageTransition, FadeInUp, ScaleIn } from '@/components/animations'
 
 // Demo credentials for testing
 const DEMO_EMAIL = 'admin@arsc-printing.com'
@@ -110,83 +111,173 @@ export default function AdminLogin() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center py-8 px-4">
-      <Card className="w-full max-w-md p-8">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
-            <Printer className="h-8 w-8 text-primary" />
-          </div>
-          <h1 className="text-2xl font-bold text-foreground">Admin Login</h1>
-          <p className="text-muted-foreground mt-2">
-            Masuk untuk mengelola pesanan cetak
-          </p>
+    <PageTransition>
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center py-8 px-4 relative overflow-hidden">
+        {/* Decorative background elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.5 }}
+            transition={{ duration: 1 }}
+            className="absolute top-1/4 -left-32 w-64 h-64 bg-primary/10 rounded-full blur-3xl"
+          />
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.3 }}
+            transition={{ duration: 1, delay: 0.3 }}
+            className="absolute bottom-1/4 -right-32 w-96 h-96 bg-secondary/10 rounded-full blur-3xl"
+          />
         </div>
 
-        {demoMode && (
-          <div className="mb-6 p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
-              <div className="text-sm">
-                <p className="font-medium text-yellow-600">Demo Mode Active</p>
-                <p className="text-muted-foreground mt-1">
-                  Supabase belum dikonfigurasi. Gunakan demo credentials untuk testing.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+        <div className="w-full max-w-md relative z-10">
+          {/* Header above card */}
+          <FadeInUp className="text-center mb-8">
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: "spring", bounce: 0.5, duration: 0.8 }}
+              className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-secondary shadow-lg mb-6"
+            >
+              <Shield className="h-10 w-10 text-white" />
+            </motion.div>
+            <h1 className="text-3xl font-bold text-foreground tracking-tight">Admin Portal</h1>
+            <p className="text-muted-foreground mt-2">
+              Masuk untuk mengelola pesanan cetak
+            </p>
+          </FadeInUp>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="admin@example.com"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              required
-            />
-          </div>
+          <ScaleIn delay={0.2}>
+            <Card className="p-8 shadow-smooth border-border/50 backdrop-blur-sm bg-card/80">
+              {demoMode && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-6 p-4 rounded-xl bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-lg bg-yellow-500/20 p-2">
+                      <AlertCircle className="h-4 w-4 text-yellow-600" />
+                    </div>
+                    <div className="text-sm">
+                      <p className="font-medium text-yellow-600">Demo Mode Active</p>
+                      <p className="text-muted-foreground mt-1">
+                        Supabase belum dikonfigurasi. Gunakan demo credentials.
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
 
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              required
-            />
-          </div>
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="space-y-2"
+                >
+                  <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="admin@example.com"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      required
+                      className="pl-10 rounded-xl h-12 bg-background/50 border-border/50 focus:border-primary transition-colors"
+                    />
+                  </div>
+                </motion.div>
 
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? (
-              'Loading...'
-            ) : (
-              <>
-                <LogIn className="mr-2 h-4 w-4" />
-                Masuk
-              </>
-            )}
-          </Button>
-        </form>
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="space-y-2"
+                >
+                  <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      required
+                      className="pl-10 rounded-xl h-12 bg-background/50 border-border/50 focus:border-primary transition-colors"
+                    />
+                  </div>
+                </motion.div>
 
-        <div className="mt-6 text-center">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleDemoLogin}
-            className="text-xs"
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  <Button
+                    type="submit"
+                    className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity text-white font-medium"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        className="mr-2"
+                      >
+                        <Printer className="h-4 w-4" />
+                      </motion.div>
+                    ) : (
+                      <>
+                        <LogIn className="mr-2 h-4 w-4" />
+                        Masuk
+                      </>
+                    )}
+                  </Button>
+                </motion.div>
+              </form>
+
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.6 }}
+                className="mt-8 pt-6 border-t border-border/50"
+              >
+                <div className="text-center">
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDemoLogin}
+                      className="rounded-xl gap-2"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      Isi Demo Credentials
+                    </Button>
+                  </motion.div>
+                  <p className="text-xs text-muted-foreground mt-3">
+                    <code className="px-2 py-1 rounded bg-muted text-xs">{DEMO_EMAIL}</code>
+                    <span className="mx-2">/</span>
+                    <code className="px-2 py-1 rounded bg-muted text-xs">{DEMO_PASSWORD}</code>
+                  </p>
+                </div>
+              </motion.div>
+            </Card>
+          </ScaleIn>
+
+          {/* Footer */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8 }}
+            className="text-center text-xs text-muted-foreground mt-6"
           >
-            Isi Demo Credentials
-          </Button>
-          <p className="text-xs text-muted-foreground mt-2">
-            <span className="font-mono">{DEMO_EMAIL}</span> / <span className="font-mono">{DEMO_PASSWORD}</span>
-          </p>
+            ARSC Printing Admin Dashboard
+          </motion.p>
         </div>
-      </Card>
-    </div>
+      </div>
+    </PageTransition>
   )
 }
