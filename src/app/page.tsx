@@ -104,16 +104,15 @@ export default function Home() {
               >
                 Cetak Dokumen
                 <br />
-                <span className="relative inline-block min-h-[1.2em] pb-2" style={{ perspective: '500px' }}>
+                <span className="relative inline-block min-h-[1.2em] pb-2">
                   <AnimatePresence mode="wait">
                     <motion.span
                       key={textIndex}
-                      initial={{ rotateX: 90, opacity: 0 }}
-                      animate={{ rotateX: 0, opacity: 1 }}
-                      exit={{ rotateX: -90, opacity: 0 }}
-                      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                      className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-yellow-400 inline-block"
-                      style={{ transformOrigin: 'center center' }}
+                      initial={{ y: 40, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      exit={{ y: -40, opacity: 0 }}
+                      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                      className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-yellow-400"
                     >
                       {cyclingTexts[textIndex].text}
                     </motion.span>
