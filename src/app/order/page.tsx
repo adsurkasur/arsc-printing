@@ -27,7 +27,7 @@ export default function Order() {
     contact: "",
     colorMode: "bw" as "bw" | "color",
     copies: 1,
-    paperSize: "A4" as "A4" | "A3",
+    paperSize: "A4" as const,
   });
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -312,34 +312,9 @@ export default function Order() {
 
                 <div>
                   <Label className="text-base font-medium">Ukuran Kertas</Label>
-                  <RadioGroup
-                    value={formData.paperSize}
-                    onValueChange={(value: "A4" | "A3") =>
-                      setFormData({ ...formData, paperSize: value })
-                    }
-                    className="mt-3 grid grid-cols-2 gap-4"
-                  >
-                    <label
-                      className={`flex cursor-pointer items-center justify-center rounded-lg border-2 p-4 transition-all ${
-                        formData.paperSize === "A4"
-                          ? "border-primary bg-primary/5"
-                          : "border-border"
-                      }`}
-                    >
-                      <RadioGroupItem value="A4" id="A4" className="sr-only" />
-                      <span className="font-medium">A4</span>
-                    </label>
-                    <label
-                      className={`flex cursor-pointer items-center justify-center rounded-lg border-2 p-4 transition-all ${
-                        formData.paperSize === "A3"
-                          ? "border-primary bg-primary/5"
-                          : "border-border"
-                      }`}
-                    >
-                      <RadioGroupItem value="A3" id="A3" className="sr-only" />
-                      <span className="font-medium">A3</span>
-                    </label>
-                  </RadioGroup>
+                  <div className="mt-3 flex items-center justify-center rounded-lg border-2 border-primary bg-primary/5 p-4">
+                    <span className="font-medium">A4</span>
+                  </div>
                 </div>
 
                 <Button

@@ -8,7 +8,7 @@ export interface Order {
   file_url: string | null;
   color_mode: "bw" | "color";
   copies: number;
-  paper_size: "A4" | "A3";
+  paper_size: "A4";
   status: OrderStatus;
   created_at: string;
   estimated_time: number; // in minutes
@@ -23,7 +23,7 @@ export interface CreateOrderInput {
   file_url?: string | null;
   color_mode: "bw" | "color";
   copies: number;
-  paper_size: "A4" | "A3";
+  paper_size: "A4";
   notes?: string;
 }
 

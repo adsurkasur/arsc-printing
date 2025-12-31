@@ -20,26 +20,61 @@ import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
 
+// Check if Supabase is properly configured
+function isSupabaseConfigured() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  return url && key && !url.includes('placeholder') && !key.includes('placeholder')
+}
+
 export default function Admin() {
   const router = useRouter();
   const { toast } = useToast();
   const { orders, updateOrderStatus, loading, refreshOrders } = useOrders();
   const [user, setUser] = useState<{ email: string } | null>(null);
+  const [demoMode, setDemoMode] = useState(false);
 
   useEffect(() => {
-    const checkUser = async () => {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUser({ email: user.email || '' });
+    const checkDemoMode = !isSupabaseConfigured();
+    setDemoMode(checkDemoMode);
+
+    if (checkDemoMode) {
+      // Check demo auth from localStorage
+      const demoAuth = localStorage.getItem('demo_admin_auth');
+      if (demoAuth) {
+        try {
+          const auth = JSON.parse(demoAuth);
+          // Check if demo auth is less than 24 hours old
+          if (auth.authenticated && Date.now() - auth.timestamp < 24 * 60 * 60 * 1000) {
+            setUser({ email: auth.email });
+            return;
+          }
+        } catch {
+          // Invalid auth, redirect to login
+        }
       }
-    };
-    checkUser();
-  }, []);
+      // No valid demo auth, redirect to login
+      router.push('/admin/login');
+    } else {
+      // Check real Supabase auth
+      const checkUser = async () => {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setUser({ email: user.email || '' });
+        }
+      };
+      checkUser();
+    }
+  }, [router]);
 
   const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    if (demoMode) {
+      localStorage.removeItem('demo_admin_auth');
+    } else {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+    }
     router.push('/admin/login');
     router.refresh();
   };

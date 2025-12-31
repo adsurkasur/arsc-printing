@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS orders (
   file_url TEXT,
   color_mode TEXT NOT NULL CHECK (color_mode IN ('bw', 'color')),
   copies INTEGER NOT NULL DEFAULT 1,
-  paper_size TEXT NOT NULL CHECK (paper_size IN ('A4', 'A3')),
+  paper_size TEXT NOT NULL DEFAULT 'A4' CHECK (paper_size = 'A4'),
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'printing', 'completed', 'cancelled')),
   estimated_time INTEGER NOT NULL DEFAULT 5,
   notes TEXT,
