@@ -7,7 +7,7 @@ import { Home, AlertCircle } from "lucide-react";
 
 export default function NotFound() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-background to-muted/30 px-4">
+    <div className="flex min-h-screen items-center justify-center px-4">
       <div className="text-center">
         <motion.div
           initial={{ scale: 0, rotate: -10 }}

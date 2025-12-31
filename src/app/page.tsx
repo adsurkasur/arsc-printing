@@ -54,7 +54,7 @@ export default function Home() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background overflow-hidden">
+      <div className="min-h-screen overflow-hidden">
         {/* Hero Section */}
         <section className="relative min-h-[90vh] flex items-center overflow-hidden">
           {/* Animated Background */}
@@ -198,7 +198,8 @@ export default function Home() {
         </section>
 
         {/* Queue Status Section */}
-        <section className="py-16 bg-gradient-to-b from-muted/50 to-background relative">
+        <section className="py-16 relative">
+          <div className="absolute inset-0 bg-gradient-to-b from-muted/30 to-transparent" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_hsl(var(--primary)/0.05)_0%,_transparent_70%)]" />
           <div className="container relative mx-auto px-4">
             <FadeInUp className="mx-auto max-w-md">

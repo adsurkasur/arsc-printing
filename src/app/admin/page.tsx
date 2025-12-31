@@ -132,7 +132,7 @@ export default function Admin() {
 
   return (
     <PageTransition>
-      <div className="min-h-full bg-gradient-to-b from-background to-muted/30 py-8 px-4">
+      <div className="min-h-full py-8 px-4">
         <div className="container mx-auto">
           {/* Header */}
           <FadeInUp className="mb-8">
