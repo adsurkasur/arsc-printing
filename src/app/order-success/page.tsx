@@ -1,10 +1,12 @@
-import { useNavigate } from "react-router-dom";
+"use client";
+
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { CheckCircle, Home, FileText } from "lucide-react";
 
 export default function OrderSuccess() {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   return (
     <div className="min-h-screen bg-background py-16 px-4 flex items-center justify-center">
@@ -31,7 +33,7 @@ export default function OrderSuccess() {
 
         <div className="space-y-3">
           <Button
-            onClick={() => navigate("/")}
+            onClick={() => router.push("/")}
             className="w-full h-12"
             size="lg"
           >
@@ -40,7 +42,7 @@ export default function OrderSuccess() {
           </Button>
           
           <Button
-            onClick={() => navigate("/order")}
+            onClick={() => router.push("/order")}
             variant="outline"
             className="w-full h-12"
             size="lg"

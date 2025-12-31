@@ -1,5 +1,7 @@
+"use client";
+
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,7 +12,7 @@ import { useOrders } from "@/contexts/OrderContext";
 import { Upload, FileText, CheckCircle } from "lucide-react";
 
 export default function Order() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { toast } = useToast();
   const { addOrder } = useOrders();
 
@@ -60,7 +62,7 @@ export default function Order() {
     });
 
     setTimeout(() => {
-      navigate("/order-success");
+      router.push("/order-success");
     }, 1000);
   };
 

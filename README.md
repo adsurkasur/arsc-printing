@@ -1,10 +1,10 @@
-# Cetak Cepat Kuy - ARSC Printing Service
+# ARSC Printing - Cetak Dokumen Tanpa Antre
 
-A modern web application for campus printing services built with React, TypeScript, and Vite.
+A modern web application for campus printing services built with Next.js 16, React 19, TypeScript, and Tailwind CSS.
 
 ## About
 
-Cetak Cepat Kuy is a digital printing service platform developed for ARSC (Academic Resource and Service Center) that allows students and faculty to:
+ARSC Printing is a digital printing service platform developed for ARSC (Academic Resource and Service Center) that allows students and faculty to:
 
 - Upload documents for printing from anywhere
 - Track printing queue status in real-time
@@ -18,30 +18,32 @@ Cetak Cepat Kuy is a digital printing service platform developed for ARSC (Acade
 - **Order Management**: Track and manage printing orders
 - **Admin Dashboard**: Administrative tools for managing the printing service
 - **Responsive Design**: Works seamlessly on desktop and mobile devices
+- **SSR Ready**: Server-side rendering for optimal performance
 
 ## Tech Stack
 
-- **Frontend**: React 18 with TypeScript
-- **Build Tool**: Vite
+- **Framework**: Next.js 16 (App Router)
+- **Language**: TypeScript
 - **UI Components**: shadcn/ui with Radix UI primitives
 - **Styling**: Tailwind CSS
 - **State Management**: React Context + TanStack Query
-- **Routing**: React Router DOM
 - **Form Handling**: React Hook Form with Zod validation
+- **Package Manager**: Bun
+- **Deployment**: Vercel-ready
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
-- bun package manager
+- Node.js 20.9 or higher
+- Bun package manager
 
 ### Installation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/adsurkasur/cetak-cepat-kuy.git
-cd cetak-cepat-kuy
+git clone https://github.com/adsurkasur/arsc-printing.git
+cd arsc-printing
 ```
 
 2. Install dependencies:
@@ -54,29 +56,44 @@ bun install
 bun run dev
 ```
 
-4. Open [http://localhost:5173](http://localhost:5173) in your browser.
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ### Available Scripts
 
-- `bun run dev` - Start development server
+- `bun run dev` - Start development server with Turbopack
 - `bun run build` - Build for production
-- `bun run build:dev` - Build for development
+- `bun run start` - Start production server
 - `bun run lint` - Run ESLint
-- `bun run preview` - Preview production build
 
 ## Project Structure
 
 ```
 src/
-├── components/          # Reusable UI components
-│   ├── ui/             # shadcn/ui components
-│   └── ...
-├── contexts/           # React contexts for state management
-├── hooks/              # Custom React hooks
-├── lib/                # Utility functions
-├── pages/              # Page components
-├── types/              # TypeScript type definitions
-└── ...
+├── app/                # Next.js App Router pages
+│   ├── layout.tsx     # Root layout
+│   ├── page.tsx       # Home page
+│   ├── order/         # Order page
+│   ├── order-success/ # Order success page
+│   ├── admin/         # Admin dashboard
+│   └── not-found.tsx  # 404 page
+├── components/        # Reusable UI components
+│   └── ui/           # shadcn/ui components
+├── contexts/         # React contexts for state management
+├── hooks/            # Custom React hooks
+├── lib/              # Utility functions
+└── types/            # TypeScript type definitions
+```
+
+## Deployment
+
+This project is configured for Vercel deployment. Simply connect your GitHub repository to Vercel for automatic deployments.
+
+```bash
+# Build for production
+bun run build
+
+# Start production server (for self-hosting)
+bun run start
 ```
 
 ## Contributing

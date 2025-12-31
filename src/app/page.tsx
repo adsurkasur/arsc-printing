@@ -1,10 +1,12 @@
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { QueueWidget } from "@/components/QueueWidget";
-import { CheckCircle, Clock, Shield, Zap } from "lucide-react";
+﻿'use client'
+
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { QueueWidget } from '@/components/QueueWidget'
+import { CheckCircle, Clock, Shield, Zap } from 'lucide-react'
 
 export default function Home() {
-  const navigate = useNavigate();
+  const router = useRouter()
 
   return (
     <div className="min-h-screen bg-background">
@@ -25,7 +27,7 @@ export default function Home() {
             </p>
             <Button
               size="lg"
-              onClick={() => navigate("/order")}
+              onClick={() => router.push('/order')}
               className="h-14 w-full max-w-md text-lg font-semibold shadow-2xl hover:shadow-xl transition-all duration-300 bg-white text-primary hover:bg-white/90 sm:w-auto"
             >
               Pesan Sekarang
@@ -112,7 +114,7 @@ export default function Home() {
           </p>
           <Button
             size="lg"
-            onClick={() => navigate("/order")}
+            onClick={() => router.push('/order')}
             className="h-14 w-full max-w-md text-lg font-semibold bg-white text-primary hover:bg-white/90 sm:w-auto"
           >
             Mulai Pesan
@@ -120,5 +122,5 @@ export default function Home() {
         </div>
       </section>
     </div>
-  );
+  )
 }
