@@ -1,4 +1,4 @@
-﻿{
+{
   "framework": "nextjs",
   "installCommand": "bun install",
   "buildCommand": "bun run build"
