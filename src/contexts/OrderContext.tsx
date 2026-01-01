@@ -9,7 +9,7 @@ interface OrderContextType {
   loading: boolean;
   error: string | null;
   demoMode: boolean;
-  addOrder: (order: CreateOrderInput, fileUrl?: string) => Promise<Order | null>;
+  addOrder: (order: CreateOrderInput, fileUrl?: string, filePath?: string) => Promise<Order | null>;
   updateOrderStatus: (id: string, status: Order["status"]) => Promise<void>;
   getQueueInfo: () => { count: number; estimatedTime: number };
   refreshOrders: () => Promise<void>;
@@ -153,7 +153,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     }
   }, [fetchOrders]);
 
-  const addOrder = async (orderData: CreateOrderInput, fileUrl?: string): Promise<Order | null> => {
+  const addOrder = async (orderData: CreateOrderInput, fileUrl?: string, filePath?: string): Promise<Order | null> => {
     // Demo mode: create order locally
     if (demoMode) {
       const newOrder: Order = {
@@ -162,6 +162,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         contact: orderData.contact,
         file_name: orderData.file_name,
         file_url: fileUrl || null,
+        file_path: filePath || null,
         color_mode: orderData.color_mode,
         copies: orderData.copies,
         paper_size: orderData.paper_size,
@@ -182,6 +183,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({
           ...orderData,
           file_url: fileUrl || null,
+          file_path: filePath || null,
         }),
       });
 
@@ -204,7 +206,19 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     // Demo mode: update order locally
     if (demoMode) {
       setOrders((prev) =>
-        prev.map((order) => (order.id === id ? { ...order, status } : order))
+        prev.map((order) => {
+          if (order.id === id) {
+            const updated = { ...order, status } as Order & { file_expires_at?: string | null };
+            if (status === 'completed') {
+              updated.file_expires_at = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+              updated.file_deleted = false;
+            } else {
+              updated.file_expires_at = null;
+            }
+            return updated;
+          }
+          return order;
+        })
       );
       return;
     }

@@ -1,6 +1,65 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
+
+// Small helper: Download link that shows countdown until deletion on hover
+function DownloadWithCountdown({ fileUrl, expiresAt }: { fileUrl: string; expiresAt?: string | null }) {
+  const [remaining, setRemaining] = useState<string | null>(null);
+  const intervalRef = useRef<number | null>(null);
+
+  const computeRemaining = useCallback(() => {
+    if (!expiresAt) {
+      setRemaining(null);
+      return;
+    }
+    const diff = new Date(expiresAt).getTime() - Date.now();
+    if (diff <= 0) {
+      setRemaining('0s');
+      return;
+    }
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    if (hours > 0) setRemaining(`${hours}h ${minutes}m ${seconds}s`);
+    else if (minutes > 0) setRemaining(`${minutes}m ${seconds}s`);
+    else setRemaining(`${seconds}s`);
+  }, [expiresAt]);
+
+  useEffect(() => {
+    // Keep updating in the background when the component mounts
+    computeRemaining();
+    intervalRef.current = window.setInterval(computeRemaining, 1000);
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [computeRemaining]);
+
+  // Ensure immediate calculation when user hovers (avoids initial 'Download' showing briefly)
+  const handleMouseEnter = () => {
+    computeRemaining();
+  };
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <motion.a
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          href={fileUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary hover:text-primary/80"
+          onMouseEnter={handleMouseEnter}
+        >
+          <Download className="h-4 w-4" />
+        </motion.a>
+      </TooltipTrigger>
+      <TooltipContent side="top">{remaining ? `Hapus dalam ${remaining}` : 'Download'}</TooltipContent>
+    </Tooltip>
+  );
+}
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,7 +74,8 @@ import {
 } from "@/components/ui/table";
 import { useOrders } from "@/contexts/OrderContext";
 import { createClient } from "@/lib/supabase/client";
-import { CheckCircle, Clock, Printer, LogOut, RefreshCw, Download, XCircle, Shield, TrendingUp } from "lucide-react";
+import { CheckCircle, Clock, Printer, LogOut, RefreshCw, Download, XCircle, Shield, TrendingUp, Trash } from "lucide-react";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
@@ -128,6 +188,27 @@ export default function Admin() {
   const handleCancelOrder = async (id: string) => {
     await updateOrderStatus(id, "cancelled");
     toast({ title: "Pesanan dibatalkan", variant: "destructive" });
+  };
+
+  const handleDeleteFile = async (id: string) => {
+    if (!confirm('Hapus file terkait pesanan ini sekarang?')) return;
+    try {
+      const res = await fetch('/api/delete-file', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error || 'Gagal menghapus file');
+      }
+      toast({ title: 'File dihapus', description: 'File berhasil dihapus dari storage' });
+      await refreshOrders();
+    } catch (err: unknown) {
+      console.error('Delete file error:', err);
+      const message = err instanceof Error ? err.message : String(err);
+      toast({ title: 'Gagal', description: message || 'Tidak dapat menghapus file', variant: 'destructive' });
+    }
   };
 
   return (
@@ -333,17 +414,20 @@ export default function Admin() {
                           <TableCell className="max-w-[150px]">
                             <div className="flex items-center gap-2">
                               <span className="truncate">{order.file_name}</span>
-                              {order.file_url && (
-                                <motion.a
-                                  whileHover={{ scale: 1.1 }}
-                                  whileTap={{ scale: 0.9 }}
-                                  href={order.file_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-primary hover:text-primary/80"
-                                >
-                                  <Download className="h-4 w-4" />
-                                </motion.a>
+
+                              {/* Deleted file indicator */}
+                              {order.file_deleted || !order.file_url ? (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <motion.span whileHover={{ scale: 1.05 }} className="text-muted-foreground">
+                                      <XCircle className="h-4 w-4" />
+                                    </motion.span>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top">File sudah dihapus</TooltipContent>
+                                </Tooltip>
+                              ) : (
+                                // Active file with download and expiry countdown hover
+                                <DownloadWithCountdown fileUrl={order.file_url} expiresAt={order.file_expires_at} />
                               )}
                             </div>
                           </TableCell>
@@ -379,6 +463,27 @@ export default function Admin() {
                                     >
                                       <XCircle className="h-4 w-4" />
                                     </Button>
+                                  </motion.div>
+                                </>
+                              )}
+
+                              {/* Allow admins to delete uploaded file immediately for completed orders */}
+                              {order.status === "completed" && (order.file_url || order.file_path) && !order.file_deleted && (
+                                <>
+                                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          className="rounded-lg"
+                                          onClick={() => handleDeleteFile(order.id)}
+                                        >
+                                          <Trash className="h-4 w-4" />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="top">Hapus file</TooltipContent>
+                                    </Tooltip>
                                   </motion.div>
                                 </>
                               )}

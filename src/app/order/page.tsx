@@ -24,6 +24,7 @@ export default function Order() {
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const [filePath, setFilePath] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     customerName: "",
     contact: "",
@@ -89,6 +90,7 @@ export default function Order() {
 
       const data = await response.json();
       setFileUrl(data.fileUrl);
+      setFilePath(data.filePath || null);
       setStep(2);
       
       toast({
@@ -138,10 +140,11 @@ export default function Order() {
         contact: formData.contact,
         file_name: fileName,
         file_url: fileUrl,
+        file_path: filePath || undefined,
         color_mode: formData.colorMode,
         copies: formData.copies,
         paper_size: formData.paperSize,
-      }, fileUrl || undefined);
+      }, fileUrl || undefined, filePath || undefined);
 
       if (order) {
         toast({
@@ -305,7 +308,7 @@ export default function Order() {
                               Pilih atau seret file
                             </p>
                             <p className="mt-2 text-sm text-muted-foreground">
-                              PDF, DOC, DOCX (Max 10MB)
+                              PDF, DOCX, dan lain-lain... (Maks 10MB)
                             </p>
                           </div>
                         )}

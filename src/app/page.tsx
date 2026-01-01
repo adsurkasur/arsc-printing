@@ -35,19 +35,19 @@ export default function Home() {
     {
       icon: Clock,
       title: 'Real-Time Status',
-      description: 'Pantau antrian dan estimasi waktu secara langsung',
+      description: 'Pantau antrian secara langsung',
       color: 'secondary'
     },
     {
       icon: Shield,
       title: 'Aman & Terpercaya',
-      description: 'Layanan resmi organisasi kampus',
+      description: 'Layanan oleh ARSC',
       color: 'primary'
     },
     {
       icon: CheckCircle,
       title: 'Kualitas Terjamin',
-      description: 'Hasil cetak berkualitas tinggi',
+      description: 'Hasil cetak berkualitas',
       color: 'secondary'
     }
   ]
@@ -92,7 +92,7 @@ export default function Home() {
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-8"
               >
                 <Sparkles className="h-4 w-4 text-yellow-300" />
-                <span className="text-sm font-medium text-white">Layanan Cetak #1 di Kampus</span>
+                <span className="text-sm font-medium text-white">Layanan Cetak Terbaru!</span>
               </motion.div>
 
               {/* Main Heading */}
@@ -126,7 +126,7 @@ export default function Home() {
                 transition={{ duration: 0.6, delay: 0.4 }}
                 className="mb-10 text-lg text-white/80 md:text-xl max-w-2xl mx-auto leading-relaxed"
               >
-                Layanan cetak resmi organisasi kampus Anda. Upload dokumen dari mana saja,
+                Layanan cetak oleh ARSC. Upload dokumen dari mana saja,
                 pantau status real-time, dan ambil hasil cetak kapan siap.
               </motion.p>
 
@@ -169,7 +169,7 @@ export default function Home() {
                 {[
                   { value: '24/7', label: 'Akses Online' },
                   { value: 'A4', label: 'Ukuran Kertas' },
-                  { value: 'PDF', label: 'Format Support' }
+                  { value: 'ALL', label: 'Format Support' }
                 ].map((stat, i) => (
                   <div key={i} className="text-center">
                     <div className="text-2xl md:text-3xl font-bold text-white">{stat.value}</div>
@@ -219,7 +219,7 @@ export default function Home() {
                 Kenapa Pilih <span className="gradient-text">ARSC Printing?</span>
               </h2>
               <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">
-                Kami menyediakan layanan cetak terbaik dengan teknologi modern untuk memenuhi kebutuhan Anda
+                ARSC menyediakan layanan cetak digital inovatif dengan teknologi modern untuk memenuhi kebutuhan Anda
               </p>
             </FadeInUp>
 
@@ -290,7 +290,7 @@ export default function Home() {
         <footer className="py-8 border-t border-border">
           <div className="container mx-auto px-4 text-center">
             <p className="text-sm text-muted-foreground">
-              © 2025 ARSC Printing. Layanan Cetak Resmi Organisasi Kampus.
+              © 2026 Agritech Research and Study Club (ARSC)
             </p>
           </div>
         </footer>

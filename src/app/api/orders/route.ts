@@ -108,6 +108,7 @@ export async function POST(request: NextRequest) {
         contact: body.contact,
         file_name: body.file_name,
         file_url: body.file_url || null,
+        file_path: body.file_path || null,
         color_mode: body.color_mode,
         copies: body.copies,
         paper_size: body.paper_size,
@@ -152,9 +153,20 @@ export async function PATCH(request: NextRequest) {
 
     const supabase = await createClient()
 
+    let updatePayload: any = { status };
+
+    // If marking as completed, set expiry 1 hour from now
+    if (status === 'completed') {
+      updatePayload.file_expires_at = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+      updatePayload.file_deleted = false;
+    } else {
+      // Clear expiry for non-completed statuses
+      updatePayload.file_expires_at = null;
+    }
+
     const { data, error } = await supabase
       .from('orders')
-      .update({ status })
+      .update(updatePayload)
       .eq('id', id)
       .select()
       .single()

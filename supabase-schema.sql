@@ -172,6 +172,14 @@ ALTER PUBLICATION supabase_realtime ADD TABLE orders;
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at DESC);
 
+-- Add file lifecycle columns
+ALTER TABLE IF EXISTS orders ADD COLUMN IF NOT EXISTS file_path TEXT;
+ALTER TABLE IF NOT EXISTS orders ADD COLUMN IF NOT EXISTS file_expires_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE IF NOT EXISTS orders ADD COLUMN IF NOT EXISTS file_deleted BOOLEAN DEFAULT FALSE;
+
+CREATE INDEX IF NOT EXISTS idx_orders_file_expires_at ON orders(file_expires_at);
+CREATE INDEX IF NOT EXISTS idx_orders_file_deleted ON orders(file_deleted);
+
 -- ============================================================================
 -- DEMO ADMIN USER
 -- ============================================================================
