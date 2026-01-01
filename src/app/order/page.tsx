@@ -402,7 +402,7 @@ export default function Order() {
                               Pilih atau seret file
                             </p>
                             <p className="mt-2 text-sm text-muted-foreground">
-                              Didukung: PDF, DOC, DOCX, PPTX, ODT, RTF, TXT, PNG, JPEG, WEBP, TIFF, SVG. (Maks 10MB)
+                              Didukung: PDF, DOC, DOCX, PPTX, ODT, RTF, TXT, PNG, JPEG, WEBP, TIFF, SVG. <br /> (Maksimal 10MB)
                             </p>
                           </div>
                         )}
