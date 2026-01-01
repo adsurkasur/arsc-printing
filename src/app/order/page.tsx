@@ -207,8 +207,11 @@ export default function Order() {
       const res = await fetch(url);
       if (!res.ok) throw new Error('Network response was not ok');
       const blob = await res.blob();
-      const contentType = res.headers.get('content-type') || '';
-      const ext = contentType.split('/').pop() || 'svg';
+      const contentType = (res.headers.get('content-type') || '').toLowerCase();
+      // Normalize extension: handle cases like 'image/svg+xml' -> 'svg'
+      let ext = 'bin';
+      if (contentType.includes('svg')) ext = 'svg';
+      else if (contentType.includes('/')) ext = contentType.split('/').pop()!.split('+')[0] || 'bin';
       const filename = `qris.${ext}`;
 
       const blobUrl = URL.createObjectURL(blob);
@@ -783,7 +786,7 @@ export default function Order() {
                         </div>
 
                         <div className="flex justify-center mt-3">
-                          <Button variant="outline" size="sm" className="h-9 sm:h-10 px-3 sm:px-4" onClick={downloadQris} aria-label="Unduh QRIS">
+                          <Button type="button" variant="outline" size="sm" className="h-9 sm:h-10 px-3 sm:px-4" onClick={downloadQris} aria-label="Unduh QRIS">
                             <Download className="mr-2 h-4 w-4" />
                             Unduh QRIS
                           </Button>
