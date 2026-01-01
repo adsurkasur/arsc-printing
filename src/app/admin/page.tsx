@@ -106,7 +106,7 @@ import {
 } from "@/components/ui/table";
 import { useOrders } from "@/contexts/OrderContext";
 import { createClient } from "@/lib/supabase/client";
-import { CheckCircle, Clock, Printer, LogOut, RefreshCw, Download, XCircle, Shield, TrendingUp, Trash } from "lucide-react";
+import { CheckCircle, Clock, Printer, LogOut, RefreshCw, Download, XCircle, Shield, TrendingUp, Trash, Home } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import {
   AlertDialog,
@@ -214,6 +214,13 @@ export default function Admin() {
           <Badge className="bg-green-500/10 text-green-600 hover:bg-green-500/20">
             <CheckCircle className="mr-1 h-3 w-3" />
             Selesai
+          </Badge>
+        );
+      case "delivered":
+        return (
+          <Badge className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20">
+            <Home className="mr-1 h-3 w-3" />
+            Diambil
           </Badge>
         );
       case "cancelled":
@@ -530,7 +537,7 @@ export default function Admin() {
           </FadeInUp>
 
           {/* Stats Cards */}
-          <StaggerContainer className="mb-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <StaggerContainer className="mb-8 grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
             {/* Total Pesanan */}
             <StaggerItem>
                 <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ duration: 0.2 }}>
@@ -621,6 +628,30 @@ export default function Admin() {
                       </div>
                       <div className="rounded-xl bg-green-500/10 p-3">
                         <CheckCircle className="h-6 w-6 text-green-600" />
+                      </div>
+                    </div>
+                  </Card>
+                </motion.div>
+              </StaggerItem>
+
+              {/* Diambil */}
+              <StaggerItem>
+                <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ duration: 0.2 }}>
+                  <Card className="p-6 border-border/50 shadow-smooth bg-gradient-to-br from-emerald-500/10 to-emerald-500/5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Diambil</p>
+                        <motion.p
+                          key={orders.filter((o) => o.status === "delivered").length}
+                          initial={{ scale: 0.5, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          className="text-3xl font-bold text-emerald-600"
+                        >
+                          {orders.filter((o) => o.status === "delivered").length}
+                        </motion.p>
+                      </div>
+                      <div className="rounded-xl bg-emerald-500/10 p-3">
+                        <Home className="h-6 w-6 text-emerald-600" />
                       </div>
                     </div>
                   </Card>
@@ -794,8 +825,34 @@ export default function Admin() {
                                 </motion.div>
                               )}
 
+                              {order.status === "completed" && (
+                                <>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                                        <Button
+                                          size="sm"
+                                          className="rounded-lg"
+                                          onClick={async () => {
+                                            const ok = await updateOrderStatus(order.id, 'delivered');
+                                            if (ok) {
+                                              toast({ title: 'Diambil', description: 'Pesanan ditandai sebagai diambil' });
+                                            } else {
+                                              toast({ title: 'Gagal', description: 'Tidak dapat menandai sebagai diambil', variant: 'destructive' });
+                                            }
+                                          }}
+                                        >
+                                          Diambil
+                                        </Button>
+                                      </motion.div>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top">Tandai pesanan sudah diambil</TooltipContent>
+                                  </Tooltip>
+                                </>
+                              )}
+
                               {/* Allow admins to delete uploaded file immediately for completed orders */}
-                              {(order.status === "completed" || order.status === "cancelled") && (order.file_url || order.file_path) && !order.file_deleted && (
+                              {(order.status === "completed" || order.status === "delivered" || order.status === "cancelled") && (order.file_url || order.file_path) && !order.file_deleted && (
                                 <>
                                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                                     <Tooltip>

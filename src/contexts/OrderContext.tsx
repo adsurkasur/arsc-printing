@@ -46,6 +46,19 @@ const demoOrders: Order[] = [
     created_at: new Date(Date.now() - 3 * 60000).toISOString(),
     estimated_time: 3,
   },
+  {
+    id: "demo-3",
+    customer_name: "Budi Santoso",
+    contact: "081299988877",
+    file_name: "Foto_Keluarga.jpg",
+    file_url: null,
+    color_mode: "color",
+    copies: 1,
+    paper_size: "A4",
+    status: "delivered",
+    created_at: new Date(Date.now() - 60 * 60000).toISOString(),
+    estimated_time: 0,
+  },
 ];
 
 export function OrderProvider({ children }: { children: ReactNode }) {
@@ -55,8 +68,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [demoMode, setDemoMode] = useState(false);
   const channelRef = useRef<ReturnType<ReturnType<typeof createClient>['channel']> | null>(null);
-
-  const fetchOrders = useCallback(async () => {
+const fetchOrders = useCallback(async () => {
     // Use AbortController to avoid hanging fetches
     const controller = new AbortController();
     const timeoutMs = 8000; // 8s timeout
@@ -328,7 +340,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
 
   const getQueueInfo = () => {
     const pendingOrders = orders.filter(
-      (order) => order.status === "pending" || order.status === "printing"
+      (order) => order.status === "pending" || order.status === "printing" || order.status === "completed"
     );
     const totalTime = pendingOrders.reduce(
       (sum, order) => sum + order.estimated_time,

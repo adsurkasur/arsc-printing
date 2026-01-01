@@ -7,6 +7,10 @@
 -- ============================================================================
 
 -- Create orders table
+-- NOTE: If you're upgrading an existing DB, add 'delivered' to the status CHECK via:
+-- ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_status_check;
+-- ALTER TABLE orders ADD CONSTRAINT orders_status_check CHECK (status IN ('pending','printing','completed','delivered','cancelled'));
+
 CREATE TABLE IF NOT EXISTS orders (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   customer_name TEXT NOT NULL,
@@ -16,7 +20,7 @@ CREATE TABLE IF NOT EXISTS orders (
   color_mode TEXT NOT NULL CHECK (color_mode IN ('bw', 'color')),
   copies INTEGER NOT NULL DEFAULT 1,
   paper_size TEXT NOT NULL DEFAULT 'A4' CHECK (paper_size = 'A4'),
-  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'printing', 'completed', 'cancelled')),
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'printing', 'completed', 'delivered', 'cancelled')),
   estimated_time INTEGER NOT NULL DEFAULT 5,
   notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -309,4 +313,3 @@ ON CONFLICT (user_id, role) DO NOTHING;
 
 -- After testing, optionally delete the test row:
 -- DELETE FROM public.orders WHERE customer_name = 'Test User';
-

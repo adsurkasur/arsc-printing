@@ -24,7 +24,7 @@ export default function QueuePage() {
   }, [refreshOrders]);
 
   const queue = orders
-    .filter((o) => o.status === "pending" || o.status === "printing")
+    .filter((o) => o.status === "pending" || o.status === "printing" || o.status === "completed")
     .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
   // If loading takes longer than this threshold, show a helpful message instead of indefinite "Memuat..."
