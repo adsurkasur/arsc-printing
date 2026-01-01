@@ -218,7 +218,7 @@ export default function Admin() {
         );
       case "delivered":
         return (
-          <Badge className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20">
+          <Badge className="bg-indigo-500/10 text-indigo-600 hover:bg-indigo-500/20">
             <Home className="mr-1 h-3 w-3" />
             Diambil
           </Badge>
@@ -637,7 +637,7 @@ export default function Admin() {
               {/* Diambil */}
               <StaggerItem>
                 <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ duration: 0.2 }}>
-                  <Card className="p-6 border-border/50 shadow-smooth bg-gradient-to-br from-emerald-500/10 to-emerald-500/5">
+                  <Card className="p-6 border-border/50 shadow-smooth bg-gradient-to-br from-indigo-500/10 to-indigo-500/5">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm text-muted-foreground">Diambil</p>
@@ -645,13 +645,13 @@ export default function Admin() {
                           key={orders.filter((o) => o.status === "delivered").length}
                           initial={{ scale: 0.5, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
-                          className="text-3xl font-bold text-emerald-600"
+                          className="text-3xl font-bold text-indigo-600"
                         >
                           {orders.filter((o) => o.status === "delivered").length}
                         </motion.p>
                       </div>
-                      <div className="rounded-xl bg-emerald-500/10 p-3">
-                        <Home className="h-6 w-6 text-emerald-600" />
+                      <div className="rounded-xl bg-indigo-500/10 p-3">
+                        <Home className="h-6 w-6 text-indigo-600" />
                       </div>
                     </div>
                   </Card>

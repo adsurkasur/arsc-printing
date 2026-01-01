@@ -9,7 +9,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useOrders } from "@/contexts/OrderContext";
 import { motion, PageTransition, FadeInUp } from "@/components/animations";
-import { RefreshCw, Clock, Printer, CheckCircle, XCircle } from "lucide-react"; 
+import { RefreshCw, Clock, Printer, CheckCircle, XCircle, Home } from "lucide-react"; 
 
 export default function QueuePage() {
   const { orders, loading, error, getQueueInfo, refreshOrders } = useOrders();
@@ -63,6 +63,13 @@ export default function QueuePage() {
           <Badge className="bg-green-500/10 text-green-600 hover:bg-green-500/20">
             <CheckCircle className="mr-1 h-3 w-3" />
             Selesai
+          </Badge>
+        );
+      case "delivered":
+        return (
+          <Badge className="bg-indigo-500/10 text-indigo-600 hover:bg-indigo-500/20">
+            <Home className="mr-1 h-3 w-3" />
+            Diambil
           </Badge>
         );
       case "cancelled":
