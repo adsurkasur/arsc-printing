@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
+  SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -86,6 +87,7 @@ export function Navbar() {
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-72">
+              <SheetTitle className="sr-only">Menu</SheetTitle>
               <div className="flex flex-col gap-2 mt-8">
                 {navLinks.map((link, index) => (
                   <motion.div
