@@ -710,7 +710,7 @@ export default function Order() {
                                   <Upload className="h-6 w-6 text-muted-foreground" />
                                 </div>
                                 <p className="text-lg font-medium text-foreground">Pilih file bukti pembayaran</p>
-                                <p className="mt-2 text-sm text-muted-foreground">PNG, JPEG, WEBP, TIFF, SVG atau PDF (Maks 5MB)</p>
+                                <p className="mt-2 text-sm text-muted-foreground">Didukung: PNG, JPEG, WEBP, atau PDF (Maks 5MB)</p>
                               </div>
                             )}
                           </motion.label>

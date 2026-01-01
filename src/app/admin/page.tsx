@@ -56,7 +56,7 @@ function DownloadWithCountdown({ fileUrl, expiresAt }: { fileUrl: string; expire
           <Download className="h-4 w-4" />
         </motion.a>
       </TooltipTrigger>
-      <TooltipContent side="top">{remaining ? `Hapus dalam ${remaining}` : 'Download'}</TooltipContent>
+      <TooltipContent side="top">{remaining ? `Hapus file dalam ${remaining}` : 'Download'}</TooltipContent>
     </Tooltip>
   );
 }
@@ -92,6 +92,36 @@ function DeletionTimer({ expiresAt }: { expiresAt?: string | null }) {
   return <p className="text-sm text-muted-foreground mt-2">Hapus bukti dalam {remaining ?? '—'}</p>;
 }
 
+// Tooltip content component that updates every second while mounted (used for proof tooltip)
+function ProofTooltipContent({ expiresAt }: { expiresAt?: string | null }) {
+  const [remaining, setRemaining] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!expiresAt) {
+      setRemaining(null);
+      return;
+    }
+
+    const compute = () => {
+      const diff = new Date(expiresAt!).getTime() - Date.now();
+      if (diff <= 0) return setRemaining('0s');
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      if (hours > 0) setRemaining(`${hours}h ${minutes}m ${seconds}s`);
+      else if (minutes > 0) setRemaining(`${minutes}m ${seconds}s`);
+      else setRemaining(`${seconds}s`);
+    };
+
+    compute();
+    const id = window.setInterval(compute, 1000);
+    return () => clearInterval(id);
+  }, [expiresAt]);
+
+  if (!expiresAt) return <>Lihat bukti pembayaran</>;
+  return <>Hapus bukti dalam {remaining ?? '—'}</>;
+}
+
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -106,7 +136,7 @@ import {
 } from "@/components/ui/table";
 import { useOrders } from "@/contexts/OrderContext";
 import { createClient } from "@/lib/supabase/client";
-import { CheckCircle, Clock, Printer, LogOut, RefreshCw, Download, XCircle, Shield, TrendingUp, Trash, Home } from "lucide-react";
+import { CheckCircle, Clock, Printer, LogOut, RefreshCw, Download, XCircle, Shield, TrendingUp, Trash, Home, FileText } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import {
   AlertDialog,
@@ -483,6 +513,11 @@ export default function Admin() {
               ) : (
                 <p className="text-muted-foreground">Tidak ada bukti pembayaran</p>
               )}
+
+              {/* Show helpful note only when no timer is scheduled (the timer is displayed in the header) */}
+              {proofUrl && !proofExpiresAt && (
+                <p className="text-sm text-muted-foreground mt-2">Jadwal penghapusan belum diatur. Penghapusan akan dihitung saat pesanan ditandai sebagai Diambil.</p>
+              )}
             </div>
 
             <DialogFooter>
@@ -757,10 +792,12 @@ export default function Admin() {
                                   <Tooltip>
                                     <TooltipTrigger asChild>
                                       <Button size="sm" variant="outline" className="rounded-lg" onClick={() => openProofModal(order)}>
-                                        <Download className="h-4 w-4" />
+                                        <FileText className="h-4 w-4" />
                                       </Button>
                                     </TooltipTrigger>
-                                    <TooltipContent side="top">Lihat bukti pembayaran</TooltipContent>
+                                    <TooltipContent side="top">
+                                      <ProofTooltipContent expiresAt={order.payment_proof_expires_at} />
+                                    </TooltipContent>
                                   </Tooltip>
                                 </motion.div>
                               )}

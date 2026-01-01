@@ -245,7 +245,7 @@ const fetchOrders = useCallback(async () => {
         prev.map((order) => {
           if (order.id === id) {
             const updated = { ...order, status } as Order & { file_expires_at?: string | null, payment_proof_expires_at?: string | null };
-            if (status === 'completed') {
+            if (status === 'delivered') {
               updated.file_expires_at = new Date(Date.now() + 60 * 60 * 1000).toISOString();
               updated.file_deleted = false;
               updated.payment_proof_expires_at = new Date(Date.now() + 60 * 60 * 1000).toISOString();

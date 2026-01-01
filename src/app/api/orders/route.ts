@@ -169,14 +169,14 @@ export async function PATCH(request: NextRequest) {
 
     const updatePayload: { status: string; file_expires_at?: string | null; file_deleted?: boolean; payment_proof_expires_at?: string | null; payment_proof_deleted?: boolean } = { status };
 
-    // If marking as completed, set expiry 1 hour from now for file and payment proof
-    if (status === 'completed') {
+    // If marking as delivered, set expiry 1 hour from now for file and payment proof
+    if (status === 'delivered') {
       updatePayload.file_expires_at = new Date(Date.now() + 60 * 60 * 1000).toISOString();
       updatePayload.file_deleted = false;
       updatePayload.payment_proof_expires_at = new Date(Date.now() + 60 * 60 * 1000).toISOString();
       updatePayload.payment_proof_deleted = false;
     } else {
-      // Clear expiry for non-completed statuses
+      // Clear expiry for other statuses
       updatePayload.file_expires_at = null;
       updatePayload.payment_proof_expires_at = null;
     }
