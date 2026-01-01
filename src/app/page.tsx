@@ -1,10 +1,10 @@
 ﻿'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { QueueWidget } from '@/components/QueueWidget'
-import { CheckCircle, Clock, Shield, Zap, ArrowRight, Sparkles } from 'lucide-react'
+import { CheckCircle, Clock, Shield, Zap, ArrowRight, Sparkles, ChevronUp } from 'lucide-react'
 import { motion, FadeInUp, StaggerContainer, StaggerItem, PageTransition } from '@/components/animations'
 import { AnimatePresence } from 'framer-motion'
 
@@ -24,6 +24,12 @@ export default function Home() {
     }, cyclingTexts[textIndex].duration)
     return () => clearTimeout(timer)
   }, [textIndex])
+
+  const nextSectionRef = useRef<HTMLElement | null>(null)
+
+  const scrollToNext = () => {
+    nextSectionRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
 
   const features = [
     {
@@ -189,18 +195,42 @@ export default function Home() {
             transition={{ delay: 1.5 }}
             className="absolute bottom-8 left-1/2 -translate-x-1/2"
           >
-            <motion.div
-              animate={{ y: [0, 10, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="w-6 h-10 rounded-full border-2 border-white/30 flex items-start justify-center p-2"
+            <button
+              onClick={scrollToNext}
+              aria-label="Scroll down"
+              className="flex flex-col items-center gap-1 bg-transparent focus:outline-none focus:ring-2 focus:ring-white/60 p-2 rounded-full"
             >
-              <motion.div className="w-1.5 h-1.5 rounded-full bg-white" />
-            </motion.div>
+              <motion.div
+                animate={{ y: [0, -10, 0], opacity: [0.6, 1, 0.6] }}
+                transition={{ duration: 1.2, repeat: Infinity, delay: 0 }}
+                className="text-white/80"
+              >
+                <ChevronUp className="h-4 w-4" />
+              </motion.div>
+
+              <motion.div
+                animate={{ y: [0, -10, 0], opacity: [0.6, 1, 0.6] }}
+                transition={{ duration: 1.2, repeat: Infinity, delay: 0.18 }}
+                className="text-white/80"
+              >
+                <ChevronUp className="h-4 w-4" />
+              </motion.div>
+
+              <motion.div
+                animate={{ y: [0, -10, 0], opacity: [0.6, 1, 0.6] }}
+                transition={{ duration: 1.2, repeat: Infinity, delay: 0.36 }}
+                className="text-white/80"
+              >
+                <ChevronUp className="h-4 w-4" />
+              </motion.div>
+
+              <span className="sr-only">Scroll down</span>
+            </button>
           </motion.div>
         </section>
 
         {/* Queue Status Section */}
-        <section className="pt-24 md:pt-28 pb-12 md:pb-14 relative">
+        <section ref={nextSectionRef} className="pt-24 md:pt-28 pb-12 md:pb-14 relative">
           <div className="absolute inset-0 bg-gradient-to-b from-muted/30 to-transparent" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_hsl(var(--primary)/0.05)_0%,_transparent_70%)]" />
           <div className="container relative mx-auto px-4">
