@@ -45,7 +45,8 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
   const router = useRouter();
   const { toast } = useToast();
   const [orderId, setOrderId] = useState<string | null>(initialOrderId || null);
-  const [copied, setCopied] = useState(false);
+  // Copy feature disabled for now (kept for future re-enable)
+  // const [copied, setCopied] = useState(false);
   const [showConfetti, setShowConfetti] = useState(true);
   const [downloading, setDownloading] = useState(false);
   // Used to avoid rendering the lookup input until we've checked sessionStorage
@@ -68,6 +69,7 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
     return () => clearTimeout(timer);
   }, [orderId]);
 
+  /* Copy feature disabled for now (kept for future re-enable)
   const copyOrderId = async () => {
     if (orderId) {
       await navigator.clipboard.writeText(orderId);
@@ -79,6 +81,7 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
       setTimeout(() => setCopied(false), 2000);
     }
   };
+  */
 
   const [orderData, setOrderData] = useState<Order | null>(null);
   const [loadingOrder, setLoadingOrder] = useState(false);
@@ -220,6 +223,7 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
                     Pesanan Berhasil! 🎉
                   </motion.h1>
                   
+                  {/* Original message (disabled for now):
                   <motion.p
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -227,6 +231,16 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
                     className="mb-6 text-muted-foreground"
                   >
                     Pesanan Anda telah diterima dan sedang diproses. Simpan ID pesanan di bawah untuk melacak status.
+                  </motion.p>
+                  */}
+
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                    className="mb-6 text-muted-foreground"
+                  >
+                    Cek status pesanan Anda di Status Antrian.
                   </motion.p>
 
                   <motion.div
@@ -248,6 +262,7 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
                         <code className="text-xl font-mono font-bold bg-background px-4 py-2 rounded-xl break-all">
                           {orderId}
                         </code>
+                        {/* Copy ID UI disabled for now (kept for future re-enable)
                         <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                           <Button
                             variant="outline"
@@ -262,12 +277,14 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
                             )}
                           </Button>
                         </motion.div>
+                        */}
                       </div>
                     )}
                   </motion.div>
 
                   <StaggerContainer className="space-y-3">
                     <StaggerItem>
+                      {/* Original 'Lacak Pesanan' button (disabled for now)
                       <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                         <Button
                           onClick={() => router.push("/track")}
@@ -276,6 +293,18 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
                         >
                           <Search className="mr-2 h-5 w-5" />
                           Lacak Pesanan
+                        </Button>
+                      </motion.div>
+                      */}
+
+                      <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                        <Button
+                          onClick={() => router.push("/queue")}
+                          className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity"
+                          size="lg"
+                        >
+                          <Search className="mr-2 h-5 w-5" />
+                          Status Antrian
                         </Button>
                       </motion.div>
                     </StaggerItem>
