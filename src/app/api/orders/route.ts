@@ -87,6 +87,11 @@ export async function POST(request: NextRequest) {
         contact: body.contact,
         file_name: body.file_name,
         file_url: body.file_url || null,
+        file_path: body.file_path || null,
+        payment_proof_url: body.payment_proof_url || null,
+        payment_proof_path: body.payment_proof_path || null,
+        // If payment proof provided, set demo expiry to 24 hours
+        payment_proof_expires_at: body.payment_proof_url ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() : null,
         color_mode: body.color_mode,
         copies: body.copies,
         paper_size: body.paper_size,
@@ -101,21 +106,32 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient()
 
+    // Build insert payload dynamically
+    const insertPayload: any = {
+      customer_name: body.customer_name,
+      contact: body.contact,
+      file_name: body.file_name,
+      file_url: body.file_url || null,
+      file_path: body.file_path || null,
+      color_mode: body.color_mode,
+      copies: body.copies,
+      paper_size: body.paper_size,
+      status: 'pending',
+      estimated_time,
+      notes: body.notes || null,
+    }
+
+    // If payment proof present, set an expiry (default 24 hours)
+    if (body.payment_proof_url) {
+      insertPayload.payment_proof_url = body.payment_proof_url
+      insertPayload.payment_proof_path = body.payment_proof_path || null
+      insertPayload.payment_proof_expires_at = new Date(Date.now() + (Number(process.env.PAYMENT_PROOF_TTL_HOURS || 24) * 60 * 60 * 1000)).toISOString();
+      insertPayload.payment_proof_deleted = false
+    }
+
     const { data, error } = await supabase
       .from('orders')
-      .insert({
-        customer_name: body.customer_name,
-        contact: body.contact,
-        file_name: body.file_name,
-        file_url: body.file_url || null,
-        file_path: body.file_path || null,
-        color_mode: body.color_mode,
-        copies: body.copies,
-        paper_size: body.paper_size,
-        status: 'pending',
-        estimated_time,
-        notes: body.notes || null,
-      })
+      .insert(insertPayload)
       .select()
       .single()
 
@@ -155,13 +171,16 @@ export async function PATCH(request: NextRequest) {
 
     let updatePayload: any = { status };
 
-    // If marking as completed, set expiry 1 hour from now
+    // If marking as completed, set expiry 1 hour from now for file and payment proof
     if (status === 'completed') {
       updatePayload.file_expires_at = new Date(Date.now() + 60 * 60 * 1000).toISOString();
       updatePayload.file_deleted = false;
+      updatePayload.payment_proof_expires_at = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+      updatePayload.payment_proof_deleted = false;
     } else {
       // Clear expiry for non-completed statuses
       updatePayload.file_expires_at = null;
+      updatePayload.payment_proof_expires_at = null;
     }
 
     const { data, error } = await supabase

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1135" height="1600" viewBox="0 0 1135 1600" fill="none">
+  <rect width="100%" height="100%" fill="#f3f4f6" />
+  <g transform="translate(80,120)">
+    <rect x="0" y="0" width="975" height="1360" rx="24" fill="#ffffff" stroke="#e5e7eb" />
+    <text x="487" y="680" text-anchor="middle" fill="#9ca3af" font-family="Inter, sans-serif" font-size="28">QRIS Placeholder</text>
+    <text x="487" y="720" text-anchor="middle" fill="#cbd5e1" font-family="Inter, sans-serif" font-size="14">Replace with your 1135×1600 QR image</text>
+  </g>
+</svg>

@@ -11,7 +11,7 @@ function isSupabaseConfigured() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { id } = body
+    const { id, type } = body
 
     if (!id) {
       return NextResponse.json({ error: 'Missing id' }, { status: 400 })
@@ -33,15 +33,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 })
     }
 
-    // Determine the file path. If not stored, try to derive it from public url.
-    let filePath = order.file_path;
-    if (!filePath && order.file_url) {
-      try {
-        const url = new URL(order.file_url);
-        const match = url.pathname.match(/\/documents\/(.+)$/);
-        if (match) filePath = decodeURIComponent(match[1]);
-      } catch (e) {
-        // ignore
+    // Determine which file to delete based on requested type
+    let filePath: string | null = null;
+    if (type === 'payment_proof') {
+      filePath = order.payment_proof_path;
+      if (!filePath && order.payment_proof_url) {
+        try {
+          const url = new URL(order.payment_proof_url);
+          const match = url.pathname.match(/\/documents\/(.+)$/);
+          if (match) filePath = decodeURIComponent(match[1]);
+        } catch (e) {
+          // ignore
+        }
+      }
+    } else {
+      filePath = order.file_path;
+      if (!filePath && order.file_url) {
+        try {
+          const url = new URL(order.file_url);
+          const match = url.pathname.match(/\/documents\/(.+)$/);
+          if (match) filePath = decodeURIComponent(match[1]);
+        } catch (e) {
+          // ignore
+        }
       }
     }
 
@@ -56,10 +70,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: removeError.message || 'Failed to remove file' }, { status: 500 })
     }
 
-    // Update order row
+    // Update order row depending on type
+    let updatePayload: any = {}
+    if (type === 'payment_proof') {
+      updatePayload = { payment_proof_url: null, payment_proof_path: null, payment_proof_deleted: true }
+    } else {
+      updatePayload = { file_url: null, file_path: null, file_deleted: true }
+    }
+
     const { error: updateError } = await supabase
       .from('orders')
-      .update({ file_url: null, file_path: null, file_deleted: true })
+      .update(updatePayload)
       .eq('id', id)
 
     if (updateError) {

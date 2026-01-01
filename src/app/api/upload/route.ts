@@ -17,16 +17,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
-    // Validate file type
+    // Validate file type (support common print formats and images)
     const allowedTypes = [
       'application/pdf',
       'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    ]
-    
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // docx
+      'application/vnd.ms-powerpoint',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation', // pptx
+      'application/vnd.oasis.opendocument.text', // odt
+      'application/rtf',
+      'text/plain',
+      'image/png',
+      'image/jpeg',
+      'image/webp',
+      'image/tiff',
+      'image/svg+xml',
+    ];
+
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
-        { error: 'Invalid file type. Only PDF, DOC, and DOCX are allowed.' },
+        { error: 'Invalid file type. Only common document and image formats are allowed (PDF/DOC/DOCX/PPTX/ODT/RTF/TXT/PNG/JPEG/WEBP/TIFF/SVG).'},
         { status: 400 }
       )
     }

@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { useOrders } from "@/contexts/OrderContext";
-import { Upload, FileText, CheckCircle, Loader2, ArrowRight, ArrowLeft, Palette, Copy, User } from "lucide-react";
+import { Upload, FileText, CheckCircle, Loader2, ArrowRight, ArrowLeft, Palette, Copy, User, CreditCard } from "lucide-react";
 import { motion, PageTransition, FadeInUp } from "@/components/animations";
 import { AnimatePresence } from "framer-motion";
 
@@ -33,21 +33,39 @@ export default function Order() {
     paperSize: "A4" as const,
   });
 
+  // Payment proof state
+  const [paymentFile, setPaymentFile] = useState<File | null>(null);
+  const [paymentFileName, setPaymentFileName] = useState("");
+  const [paymentUploading, setPaymentUploading] = useState(false);
+  const [paymentFileUrl, setPaymentFileUrl] = useState<string | null>(null);
+  const [paymentFilePath, setPaymentFilePath] = useState<string | null>(null);
+  const [paymentFileExpiresAt, setPaymentFileExpiresAt] = useState<string | null>(null);
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
 
-    // Validate file type
+    // Validate file type (support common print formats and images)
     const allowedTypes = [
       'application/pdf',
       'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // docx
+      'application/vnd.ms-powerpoint',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation', // pptx
+      'application/vnd.oasis.opendocument.text', // odt
+      'application/rtf',
+      'text/plain',
+      'image/png',
+      'image/jpeg',
+      'image/webp',
+      'image/tiff',
+      'image/svg+xml',
     ];
-    
+
     if (!allowedTypes.includes(selectedFile.type)) {
       toast({
         title: "Format tidak didukung",
-        description: "Hanya file PDF, DOC, dan DOCX yang diizinkan",
+        description: "Hanya file dokumen umum (PDF/DOC/DOCX/PPTX/ODT/RTF/TXT) atau gambar (PNG/JPEG/WEBP/TIFF/SVG) yang diizinkan",
         variant: "destructive",
       });
       return;
@@ -111,6 +129,67 @@ export default function Order() {
     }
   };
 
+  const handlePaymentProofChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+
+    const allowedTypes = [
+      'image/png',
+      'image/jpeg',
+      'image/webp',
+      'application/pdf'
+    ];
+
+    if (!allowedTypes.includes(selectedFile.type)) {
+      toast({ title: 'Format tidak didukung', description: 'Hanya PNG/JPEG/WEBP atau PDF yang diizinkan', variant: 'destructive' });
+      return;
+    }
+
+    // Validate file size (5MB for payment proof)
+    if (selectedFile.size > 5 * 1024 * 1024) {
+      toast({ title: 'File terlalu besar', description: 'Ukuran maksimum bukti pembayaran adalah 5MB', variant: 'destructive' });
+      return;
+    }
+
+    setPaymentFile(selectedFile);
+    setPaymentFileName(selectedFile.name);
+    setPaymentUploading(true);
+
+    try {
+      const formDataObj = new FormData();
+      formDataObj.append('file', selectedFile);
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formDataObj,
+      });
+
+      if (!response.ok) {
+        console.log('Upload API not available, using demo mode');
+        setPaymentFileUrl(null);
+        setPaymentFilePath(null);
+        setPaymentFileExpiresAt(new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString());
+        toast({ title: 'Bukti pembayaran dipilih (Demo Mode)', description: 'Upload akan berfungsi setelah Supabase dikonfigurasi' });
+        return;
+      }
+
+      const data = await response.json();
+      setPaymentFileUrl(data.fileUrl);
+      setPaymentFilePath(data.filePath || null);
+      // Local optimistic expiry based on TTL
+      setPaymentFileExpiresAt(new Date(Date.now() + (Number(process.env.NEXT_PUBLIC_PAYMENT_PROOF_TTL_HOURS || 24) * 60 * 60 * 1000)).toISOString());
+      toast({ title: 'Bukti pembayaran berhasil diupload' });
+    } catch (err) {
+      console.error('Payment proof upload error:', err);
+      setPaymentFileUrl(null);
+      setPaymentFilePath(null);
+      setPaymentFileExpiresAt(new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString());
+      toast({ title: 'Bukti pembayaran dipilih (Demo Mode)', description: 'Upload akan berfungsi setelah Supabase dikonfigurasi' });
+    } finally {
+      setPaymentUploading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -132,6 +211,17 @@ export default function Order() {
       return;
     }
 
+    // Payment proof is required
+    if (!paymentFileName && !paymentFileUrl) {
+      toast({
+        title: "Error",
+        description: "Silakan unggah bukti pembayaran di langkah Bayar",
+        variant: "destructive",
+      });
+      setStep(4);
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -141,10 +231,12 @@ export default function Order() {
         file_name: fileName,
         file_url: fileUrl,
         file_path: filePath || undefined,
+        payment_proof_url: paymentFileUrl || undefined,
+        payment_proof_path: paymentFilePath || undefined,
         color_mode: formData.colorMode,
         copies: formData.copies,
         paper_size: formData.paperSize,
-      }, fileUrl || undefined, filePath || undefined);
+      }, fileUrl || undefined, filePath || undefined, paymentFileUrl || undefined, paymentFilePath || undefined);
 
       if (order) {
         toast({
@@ -175,6 +267,7 @@ export default function Order() {
     { num: 1, title: "Upload", icon: Upload },
     { num: 2, title: "Pengaturan", icon: Palette },
     { num: 3, title: "Kontak", icon: User },
+    { num: 4, title: "Bayar", icon: CreditCard },
   ];
 
   return (
@@ -254,7 +347,7 @@ export default function Order() {
                       <input
                         type="file"
                         id="file-upload"
-                        accept=".pdf,.doc,.docx"
+                        accept=".pdf,.doc,.docx,.pptx,.odt,.rtf,.txt,.png,.jpg,.jpeg,.webp,.tif,.tiff,.svg"
                         onChange={handleFileChange}
                         className="hidden"
                         disabled={uploading}
@@ -309,7 +402,7 @@ export default function Order() {
                               Pilih atau seret file
                             </p>
                             <p className="mt-2 text-sm text-muted-foreground">
-                              PDF, DOCX, dan lain-lain... (Maks 10MB)
+                              Didukung: PDF, DOC, DOCX, PPTX, ODT, RTF, TXT, PNG, JPEG, WEBP, TIFF, SVG. (Maks 10MB)
                             </p>
                           </div>
                         )}
@@ -536,8 +629,113 @@ export default function Order() {
                           Kembali
                         </Button>
                         <Button
+                          type="button"
+                          onClick={() => setStep(4)}
+                          disabled={!fileName || !formData.customerName || !formData.contact}
+                          className="flex-1 h-12 bg-gradient-to-r from-primary to-secondary hover:opacity-90"
+                        >
+                          Lanjut ke Bayar
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                </motion.div>
+              )}
+
+              {/* Step 4: Payment */}
+              {step === 4 && (
+                <motion.div
+                  key="step4"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Card className="p-8 shadow-smooth border-border/50">
+                    <div className="mb-6 flex items-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-secondary text-primary-foreground shadow-lg">
+                        <CreditCard className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-semibold">Bayar</h2>
+                        <p className="text-sm text-muted-foreground">Scan QRIS di bawah lalu unggah bukti pembayaran</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-6">
+                      <div>
+                        <div className="w-full rounded-xl overflow-hidden border border-border bg-muted/30 flex items-center justify-center" style={{ aspectRatio: '1135 / 1600' }}>
+                          <img src={process.env.NEXT_PUBLIC_QRIS_URL || '/qris-placeholder.svg'} alt="QRIS" className="w-full h-full object-contain" />
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label className="text-base font-medium mb-4 block">Unggah Bukti Pembayaran (Wajib)</Label>
+                        <div className="relative">
+                          <input
+                            type="file"
+                            id="payment-proof"
+                            accept="image/png,image/jpeg,image/webp,image/tiff,image/svg+xml,application/pdf"
+                            onChange={handlePaymentProofChange}
+                            className="hidden"
+                            disabled={paymentUploading}
+                          />
+                          <motion.label
+                            htmlFor="payment-proof"
+                            whileHover={{ scale: 1.01 }}
+                            whileTap={{ scale: 0.99 }}
+                            className={`flex min-h-[160px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-all ${
+                              paymentFileName || paymentFileUrl
+                                ? "border-success bg-success/5"
+                                : "border-border hover:border-primary/50 bg-muted/30 hover:bg-muted/50"
+                            } ${paymentUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          >
+                            {paymentUploading ? (
+                              <div className="text-center">
+                                <motion.div
+                                  animate={{ rotate: 360 }}
+                                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                >
+                                  <Loader2 className="mx-auto mb-4 h-12 w-12 text-primary" />
+                                </motion.div>
+                                <p className="text-lg font-medium text-foreground">Mengunggah bukti...</p>
+                                <p className="mt-2 text-sm text-muted-foreground">Mohon tunggu</p>
+                              </div>
+                            ) : paymentFileName || paymentFileUrl ? (
+                              <div className="text-center">
+                                <div className="mx-auto mb-4 h-12 w-12 rounded-2xl bg-success/10 flex items-center justify-center">
+                                  <FileText className="h-6 w-6 text-success" />
+                                </div>
+                                <p className="text-lg font-medium text-foreground">{paymentFileName || (paymentFileUrl ? 'Bukti terunggah' : '')}</p>
+                                <p className="mt-2 text-sm text-muted-foreground">✓ Bukti pembayaran siap</p>
+                              </div>
+                            ) : (
+                              <div className="text-center">
+                                <div className="mx-auto mb-4 h-12 w-12 rounded-2xl bg-muted flex items-center justify-center">
+                                  <Upload className="h-6 w-6 text-muted-foreground" />
+                                </div>
+                                <p className="text-lg font-medium text-foreground">Pilih file bukti pembayaran</p>
+                                <p className="mt-2 text-sm text-muted-foreground">PNG, JPEG, WEBP, TIFF, SVG atau PDF (Maks 5MB)</p>
+                              </div>
+                            )}
+                          </motion.label>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3 pt-4">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setStep(3)}
+                          className="h-12 px-6"
+                        >
+                          <ArrowLeft className="mr-2 h-4 w-4" />
+                          Kembali
+                        </Button>
+                        <Button
                           type="submit"
-                          disabled={submitting || !fileName || !formData.customerName || !formData.contact}
+                          disabled={submitting || paymentUploading || (!paymentFileName && !paymentFileUrl)}
                           className="flex-1 h-12 bg-gradient-to-r from-primary to-secondary hover:opacity-90"
                         >
                           {submitting ? (
@@ -548,7 +746,7 @@ export default function Order() {
                           ) : (
                             <>
                               <CheckCircle className="mr-2 h-5 w-5" />
-                              Selesaikan Pesanan
+                              Kirim Pesanan
                             </>
                           )}
                         </Button>
@@ -557,6 +755,7 @@ export default function Order() {
                   </Card>
                 </motion.div>
               )}
+
             </AnimatePresence>
           </form>
         </div>

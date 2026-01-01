@@ -86,6 +86,15 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
@@ -210,6 +219,54 @@ export default function Admin() {
   const [cancelTargetId, setCancelTargetId] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState(false);
 
+  // Payment proof modal state
+  const [proofModalOpen, setProofModalOpen] = useState(false);
+  const [proofOrderId, setProofOrderId] = useState<string | null>(null);
+  const [proofUrl, setProofUrl] = useState<string | null>(null);
+  const [proofExpiresAt, setProofExpiresAt] = useState<string | null>(null);
+  const [proofDeleting, setProofDeleting] = useState(false);
+
+  const openProofModal = (order: any) => {
+    setProofOrderId(order.id);
+    setProofUrl(order.payment_proof_url || null);
+    setProofExpiresAt(order.payment_proof_expires_at || null);
+    // Open modal on next tick
+    setTimeout(() => setProofModalOpen(true), 0);
+  };
+
+  const closeProofModal = () => {
+    setProofModalOpen(false);
+    setProofOrderId(null);
+    setProofUrl(null);
+    setProofExpiresAt(null);
+  };
+
+  const confirmDeletePaymentProof = async () => {
+    if (!proofOrderId) return setProofModalOpen(false);
+    setProofDeleting(true);
+    try {
+      const res = await fetch('/api/delete-file', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: proofOrderId, type: 'payment_proof' }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error || 'Gagal menghapus bukti pembayaran');
+      }
+      toast({ title: 'Bukti pembayaran dihapus', description: 'Bukti pembayaran berhasil dihapus dari storage' });
+      await refreshOrders();
+      setProofModalOpen(false);
+      setProofOrderId(null);
+    } catch (err: unknown) {
+      console.error('Delete payment proof error:', err);
+      const message = err instanceof Error ? err.message : String(err);
+      toast({ title: 'Gagal', description: message || 'Tidak dapat menghapus bukti pembayaran', variant: 'destructive' });
+    } finally {
+      setProofDeleting(false);
+    }
+  };
+
   const requestDeleteFile = (id: string) => {
     setDeleteTargetId(id);
     // Open modal on next tick to avoid immediate click on the confirm button
@@ -333,6 +390,55 @@ export default function Admin() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Payment proof modal */}
+        <Dialog open={proofModalOpen} onOpenChange={setProofModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Bukti Pembayaran</DialogTitle>
+              <DialogDescription>Preview dan unduh bukti pembayaran</DialogDescription>
+            </DialogHeader>
+
+            <div className="py-4">
+              {proofUrl ? (
+                // Detect file type by extension and show preview for images, link for PDFs, or download link for others
+                (() => {
+                  const lower = proofUrl.toLowerCase();
+                  const isPdf = lower.endsWith('.pdf');
+                  const isImage = /\.(png|jpe?g|webp|svg|tiff?|gif)$/.test(lower);
+                  if (isPdf) {
+                    return <a href={proofUrl} target="_blank" rel="noopener noreferrer" className="text-primary">Buka PDF bukti pembayaran</a>;
+                  }
+                  if (isImage) {
+                    return (
+                      <div className="w-full h-96 flex items-center justify-center bg-muted/10 rounded-md p-4">
+                        <img src={proofUrl} alt="Bukti pembayaran" className="max-h-full object-contain" />
+                      </div>
+                    );
+                  }
+                  // Fallback: provide a download/open link
+                  return <a href={proofUrl} target="_blank" rel="noopener noreferrer" className="text-primary">Buka/Unduh bukti pembayaran</a>;
+                })()
+              ) : (
+                <p className="text-muted-foreground">Tidak ada bukti pembayaran</p>
+              )}
+            </div>
+
+            <DialogFooter>
+              <div className="flex gap-2">
+                {proofUrl && (
+                  <a href={proofUrl} target="_blank" rel="noopener noreferrer" className="inline-block">
+                    <Button variant="outline">Unduh</Button>
+                  </a>
+                )}
+                <Button variant="destructive" onClick={confirmDeletePaymentProof} disabled={proofDeleting}>{proofDeleting ? 'Menghapus...' : 'Hapus bukti'}</Button>
+                <DialogClose>
+                  <Button variant="outline">Tutup</Button>
+                </DialogClose>
+              </div>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
           {/* Header */}
           <FadeInUp className="mb-8">
             <div className="flex items-start justify-between flex-wrap gap-4">
@@ -483,8 +589,7 @@ export default function Admin() {
                     <TableRow className="bg-muted/20">
                       <TableHead>Nama Pelanggan</TableHead>
                       <TableHead>Kontak</TableHead>
-                      <TableHead>File</TableHead>
-                      <TableHead>Mode</TableHead>
+                      <TableHead>File</TableHead>                      <TableHead>Bukti Bayar</TableHead>                      <TableHead>Mode</TableHead>
                       <TableHead>Salinan</TableHead>
                       <TableHead>Waktu</TableHead>
                       <TableHead>Status</TableHead>
@@ -494,7 +599,7 @@ export default function Admin() {
                   <TableBody>
                     {loading ? (
                       <TableRow>
-                        <TableCell colSpan={8} className="text-center py-12">
+                        <TableCell colSpan={9} className="text-center py-12">
                           <motion.div
                             animate={{ rotate: 360 }}
                             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
@@ -507,7 +612,7 @@ export default function Admin() {
                       </TableRow>
                     ) : orders.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={8} className="text-center py-12">
+                        <TableCell colSpan={9} className="text-center py-12">
                           <div className="h-16 w-16 mx-auto mb-4 rounded-2xl bg-muted flex items-center justify-center">
                             <Printer className="h-8 w-8 text-muted-foreground" />
                           </div>
@@ -546,6 +651,34 @@ export default function Admin() {
                               ) : (
                                 // Active file with download and expiry countdown hover
                                 <DownloadWithCountdown fileUrl={order.file_url} expiresAt={order.file_expires_at} />
+                              )}
+                            </div>
+                          </TableCell>
+
+                          {/* Payment Proof Column */}
+                          <TableCell className="max-w-[150px]">
+                            <div className="flex items-center gap-2">
+                              {order.payment_proof_deleted || !order.payment_proof_url ? (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <motion.span whileHover={{ scale: 1.05 }} className="text-muted-foreground">
+                                      <XCircle className="h-4 w-4" />
+                                    </motion.span>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top">Bukti pembayaran belum tersedia</TooltipContent>
+                                </Tooltip>
+                              ) : (
+                                // Show button to open modal preview
+                                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button size="sm" variant="outline" className="rounded-lg" onClick={() => openProofModal(order)}>
+                                        <Download className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top">Lihat bukti pembayaran</TooltipContent>
+                                  </Tooltip>
+                                </motion.div>
                               )}
                             </div>
                           </TableCell>

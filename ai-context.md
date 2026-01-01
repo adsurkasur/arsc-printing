@@ -289,12 +289,15 @@
 - `supabase-schema.sql`
 
 ### Files Modified
-- `src/types/order.ts` - Updated to snake_case for Supabase
-- `src/contexts/OrderContext.tsx` - API integration + realtime
-- `src/app/order/page.tsx` - Real file upload
-- `src/app/order-success/page.tsx` - Order ID display
-- `src/app/admin/page.tsx` - Auth + enhanced UI
-- `src/components/Navbar.tsx` - Added track link
+- `src/types/order.ts` - Added `payment_proof_*` fields
+- `src/contexts/OrderContext.tsx` - Accept payment proof fields, demo TTL set
+- `src/app/order/page.tsx` - Added 'Bayar' step with QRIS placeholder and payment proof upload (required)
+- `src/app/admin/page.tsx` - Added 'Bukti Bayar' column, modal preview + download + delete
+- `src/app/api/upload/route.ts` - Allow image types for payment proof
+- `src/app/api/orders/route.ts` - Accept `payment_proof_*` fields and set expiry (default 24h)
+- `src/app/api/delete-file/route.ts` - Support deleting `payment_proof`
+- `supabase-schema.sql` - Added payment proof columns + indexes
+- `public/qris-placeholder.svg` - QRIS placeholder image
 - `README.md` - Supabase setup instructions
 
 ### Dependencies Added

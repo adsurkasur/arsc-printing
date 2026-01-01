@@ -9,6 +9,11 @@ export interface Order {
   file_path?: string | null;
   file_expires_at?: string | null;
   file_deleted?: boolean;
+  // Payment proof lifecycle
+  payment_proof_url?: string | null;
+  payment_proof_path?: string | null;
+  payment_proof_expires_at?: string | null;
+  payment_proof_deleted?: boolean;
   color_mode: "bw" | "color";
   copies: number;
   paper_size: "A4";
@@ -25,6 +30,8 @@ export interface CreateOrderInput {
   file_name: string;
   file_url?: string | null;
   file_path?: string | null;
+  payment_proof_url?: string | null;
+  payment_proof_path?: string | null;
   color_mode: "bw" | "color";
   copies: number;
   paper_size: "A4";

@@ -175,10 +175,17 @@ CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at DESC);
 -- Add file lifecycle columns
 ALTER TABLE IF EXISTS orders ADD COLUMN IF NOT EXISTS file_path TEXT;
 ALTER TABLE IF NOT EXISTS orders ADD COLUMN IF NOT EXISTS file_expires_at TIMESTAMP WITH TIME ZONE;
-ALTER TABLE IF NOT EXISTS orders ADD COLUMN IF NOT EXISTS file_deleted BOOLEAN DEFAULT FALSE;
+ALTER TABLE IF EXISTS orders ADD COLUMN IF NOT EXISTS file_deleted BOOLEAN DEFAULT FALSE;
+
+-- Add payment proof lifecycle columns
+ALTER TABLE IF EXISTS orders ADD COLUMN IF NOT EXISTS payment_proof_path TEXT;
+ALTER TABLE IF EXISTS orders ADD COLUMN IF NOT EXISTS payment_proof_expires_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE IF EXISTS orders ADD COLUMN IF NOT EXISTS payment_proof_deleted BOOLEAN DEFAULT FALSE;
 
 CREATE INDEX IF NOT EXISTS idx_orders_file_expires_at ON orders(file_expires_at);
 CREATE INDEX IF NOT EXISTS idx_orders_file_deleted ON orders(file_deleted);
+CREATE INDEX IF NOT EXISTS idx_orders_payment_proof_expires_at ON orders(payment_proof_expires_at);
+CREATE INDEX IF NOT EXISTS idx_orders_payment_proof_deleted ON orders(payment_proof_deleted);
 
 -- ============================================================================
 -- DEMO ADMIN USER
