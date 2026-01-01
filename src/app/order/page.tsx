@@ -249,6 +249,7 @@ export default function Order() {
         payment_proof_path: paymentFilePath || undefined,
         color_mode: formData.colorMode,
         copies: formData.copies,
+        pages: formData.pages,
         paper_size: formData.paperSize,
         notes,
       }, fileUrl || undefined, filePath || undefined, paymentFileUrl || undefined, paymentFilePath || undefined);
@@ -512,43 +513,6 @@ export default function Order() {
                       </div>
 
                       <div>
-                        <Label htmlFor="copies" className="text-base font-medium mb-4 block">
-                          Jumlah Salinan
-                        </Label>
-                        <div className="flex items-center gap-4">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            className="h-12 w-12 rounded-xl"
-                            onClick={() => setFormData({ ...formData, copies: Math.max(1, formData.copies - 1) })}
-                          >
-                            -
-                          </Button>
-                          <Input
-                            id="copies"
-                            type="number"
-                            min="1"
-                            max="20"
-                            value={formData.copies}
-                            onChange={(e) =>
-                              setFormData({ ...formData, copies: Math.max(1, parseInt(e.target.value) || 1) })
-                            }
-                            className="h-12 text-center text-lg font-semibold flex-1"
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            className="h-12 w-12 rounded-xl"
-                            onClick={() => setFormData({ ...formData, copies: Math.min(20, formData.copies + 1) })}
-                          >
-                            +
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div>
                         <Label htmlFor="pages" className="text-base font-medium mb-4 block">
                           Jumlah Halaman
                         </Label>
@@ -579,6 +543,43 @@ export default function Order() {
                             size="icon"
                             className="h-12 w-12 rounded-xl"
                             onClick={() => setFormData({ ...formData, pages: Math.min(9999, formData.pages + 1) })}
+                          >
+                            +
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="copies" className="text-base font-medium mb-4 block">
+                          Jumlah Salinan
+                        </Label>
+                        <div className="flex items-center gap-4">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="h-12 w-12 rounded-xl"
+                            onClick={() => setFormData({ ...formData, copies: Math.max(1, formData.copies - 1) })}
+                          >
+                            -
+                          </Button>
+                          <Input
+                            id="copies"
+                            type="number"
+                            min="1"
+                            max="20"
+                            value={formData.copies}
+                            onChange={(e) =>
+                              setFormData({ ...formData, copies: Math.max(1, parseInt(e.target.value) || 1) })
+                            }
+                            className="h-12 text-center text-lg font-semibold flex-1"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="h-12 w-12 rounded-xl"
+                            onClick={() => setFormData({ ...formData, copies: Math.min(20, formData.copies + 1) })}
                           >
                             +
                           </Button>
@@ -756,7 +757,7 @@ export default function Order() {
                       <div className="mt-4 p-4 rounded-xl bg-muted/10 border border-border text-center">
                         <p className="text-sm text-muted-foreground">Total Pembayaran</p>
                         <p className="text-2xl font-bold mt-1">{formatCurrency((formData.colorMode === 'color' ? priceColor : priceBw) * formData.pages * formData.copies)}</p>
-                        <p className="text-xs text-muted-foreground mt-1">({formatCurrency(formData.colorMode === 'color' ? priceColor : priceBw)} / halaman × {formData.pages} halaman × {formData.copies} salinan)</p>
+                        <p className="text-xs text-muted-foreground mt-1">{formatCurrency(formData.colorMode === 'color' ? priceColor : priceBw)} / halaman {formData.colorMode === 'color' ? 'warna' : 'hitam putih'} x {formData.pages} halaman x {formData.copies} salinan</p>
                       </div>
 
                       </div>

@@ -920,7 +920,7 @@ export default function Admin() {
                           </TableCell>
                           <TableCell>{order.copies}x</TableCell>
                           <TableCell>{order.paper_size}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground">{`${order.copies} x ${order.pages ?? 1} = ${ (order.pages ?? 1) * order.copies }`}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground">{`${order.pages ?? 1} x ${order.copies} = ${(order.pages ?? 1) * order.copies}`}</TableCell>
                           <TableCell className="text-sm text-muted-foreground">
                             {formatDistanceToNow(new Date(order.created_at), { addSuffix: true, locale: idLocale })}
                           </TableCell>
