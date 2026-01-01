@@ -91,13 +91,13 @@ export default function QueuePage() {
         <div className="mx-auto w-full max-w-screen-xl">
           <FadeInUp className="mb-8">
             <div className="mb-2">
-              <h1 className="text-3xl font-bold">Status Antrian</h1>
-              <p className="text-sm text-muted-foreground">Lihat antrian cetak: jumlah dan status</p>
+              <h1 className="text-3xl font-bold">Status Antrean</h1>
+              <p className="text-sm text-muted-foreground">Lihat antrean cetak: jumlah dan status</p>
             </div>
 
             <div className="flex items-center gap-3 justify-between">
               <div className="text-sm text-muted-foreground">
-                <div>Dalam Antrian</div>
+                <div>Dalam Antrean</div>
                 <div className="text-lg font-semibold">{loading ? '—' : `${count} dokumen`}</div>
               </div>
 
@@ -119,7 +119,7 @@ export default function QueuePage() {
                           if (error) {
                             toast({ title: 'Gagal', description: error, variant: 'destructive' });
                           } else {
-                            toast({ title: 'Sukses', description: 'Status antrian diperbarui' });
+                            toast({ title: 'Sukses', description: 'Status antrean diperbarui' });
                           }
                         } catch (err) {
                           toast({ title: 'Gagal', description: 'Terjadi kesalahan saat menyegarkan', variant: 'destructive' });
@@ -127,7 +127,7 @@ export default function QueuePage() {
                           setRefreshing(false);
                         }
                       }}
-                      aria-label="Segarkan antrian"
+                      aria-label="Segarkan antrean"
                       disabled={refreshing}
                     >
                       {refreshing ? (
@@ -144,7 +144,7 @@ export default function QueuePage() {
                       {refreshing ? 'Menyegarkan...' : 'Segarkan'}
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Segarkan status antrian</TooltipContent>
+                  <TooltipContent>Segarkan status antrean</TooltipContent>
                 </Tooltip>
               </div>
             </div>
@@ -175,7 +175,7 @@ export default function QueuePage() {
                         <div className="flex flex-col items-center gap-3">
                           <p className="text-sm text-muted-foreground">Proses memakan waktu atau gagal memuat data.</p>
                           <div className="flex gap-2">
-                            <Button size="sm" variant="outline" onClick={async () => { setRefreshing(true); try { await refreshOrders(); if (error) toast({ title: 'Gagal', description: error, variant: 'destructive' }); else toast({ title: 'Sukses', description: 'Status antrian diperbarui' }); } catch (err) { toast({ title: 'Gagal', description: 'Terjadi kesalahan saat menyegarkan', variant: 'destructive' }); } finally { setRefreshing(false); } }}>Segarkan</Button>
+                            <Button size="sm" variant="outline" onClick={async () => { setRefreshing(true); try { await refreshOrders(); if (error) toast({ title: 'Gagal', description: error, variant: 'destructive' }); else toast({ title: 'Sukses', description: 'Status antrean diperbarui' }); } catch (err) { toast({ title: 'Gagal', description: 'Terjadi kesalahan saat menyegarkan', variant: 'destructive' }); } finally { setRefreshing(false); } }}>Segarkan</Button>
                           </div>
                         </div>
                       </TableCell>
@@ -188,7 +188,7 @@ export default function QueuePage() {
                       <TableCell colSpan={4} className="text-center py-8">
                         <div className="flex flex-col items-center gap-3">
                           <p className="text-sm text-destructive">{error}</p>
-                          <Button size="sm" onClick={async () => { setRefreshing(true); try { await refreshOrders(); if (error) toast({ title: 'Gagal', description: error, variant: 'destructive' }); else toast({ title: 'Sukses', description: 'Status antrian diperbarui' }); } catch (err) { toast({ title: 'Gagal', description: 'Terjadi kesalahan saat menyegarkan', variant: 'destructive' }); } finally { setRefreshing(false); } }}>Segarkan</Button>
+                          <Button size="sm" onClick={async () => { setRefreshing(true); try { await refreshOrders(); if (error) toast({ title: 'Gagal', description: error, variant: 'destructive' }); else toast({ title: 'Sukses', description: 'Status antrean diperbarui' }); } catch (err) { toast({ title: 'Gagal', description: 'Terjadi kesalahan saat menyegarkan', variant: 'destructive' }); } finally { setRefreshing(false); } }}>Segarkan</Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -197,7 +197,7 @@ export default function QueuePage() {
                   {/* Empty state when not loading */}
                   {(!loading && !error && queue.length === 0) && (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">Tidak ada antrian saat ini</TableCell>
+                      <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">Tidak ada antrean saat ini</TableCell>
                     </TableRow>
                   )}
 

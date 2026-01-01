@@ -240,7 +240,7 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
                     transition={{ delay: 0.5 }}
                     className="mb-6 text-muted-foreground"
                   >
-                    Cek status pesanan Anda di Status Antrian.
+                    Cek status pesanan Anda di Status Antrean.
                   </motion.p>
 
                   <motion.div
@@ -304,7 +304,7 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
                           size="lg"
                         >
                           <Search className="mr-2 h-5 w-5" />
-                          Status Antrian
+                          Status Antrean
                         </Button>
                       </motion.div>
                     </StaggerItem>

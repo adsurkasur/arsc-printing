@@ -685,7 +685,7 @@ export default function Admin() {
                           if ((error as string | null)) {
                             toast({ title: 'Gagal', description: error as string, variant: 'destructive' });
                           } else {
-                            toast({ title: 'Sukses', description: 'Status antrian diperbarui' });
+                            toast({ title: 'Sukses', description: 'Status antrean diperbarui' });
                           }
                         } catch (err) {
                           toast({ title: 'Gagal', description: 'Terjadi kesalahan saat menyegarkan', variant: 'destructive' });
@@ -693,7 +693,7 @@ export default function Admin() {
                           setRefreshing(false);
                         }
                       }}
-                      aria-label="Segarkan antrian"
+                      aria-label="Segarkan antrean"
                       disabled={refreshing}
                     >
                       {refreshing ? (
@@ -710,7 +710,7 @@ export default function Admin() {
                       {refreshing ? 'Menyegarkan...' : 'Segarkan'}
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Segarkan status antrian</TooltipContent>
+                  <TooltipContent>Segarkan status antrean</TooltipContent>
                 </Tooltip>
 
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>

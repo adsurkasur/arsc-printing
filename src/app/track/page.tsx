@@ -26,10 +26,10 @@ export default function TrackDisabled() {
             <Card className="p-8 text-center">
               <motion.div initial={{ scale: 0.96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.25 }}>
                 <h1 className="text-2xl font-bold mb-2">Lacak Pesanan Sementara Dinonaktifkan</h1>
-                <p className="text-sm text-muted-foreground mb-6">Fitur pelacakan sedang dinonaktifkan untuk saat ini. Anda bisa melihat status antrian umum atau kembali ke beranda.</p>
+                <p className="text-sm text-muted-foreground mb-6">Fitur pelacakan sedang dinonaktifkan untuk saat ini. Anda bisa melihat status antrean umum atau kembali ke beranda.</p>
                 <div className="flex gap-3 justify-center">
                   <Button variant="outline" onClick={() => router.push('/')}>Beranda</Button>
-                  <Button onClick={() => router.push('/queue')}>Status Antrian</Button>
+                  <Button onClick={() => router.push('/queue')}>Status Antrean</Button>
                 </div>
               </motion.div>
             </Card>
@@ -112,7 +112,7 @@ function TrackOrderDisabled() {
           label: 'Menunggu',
           color: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20',
           bgColor: 'bg-yellow-500',
-          description: 'Pesanan Anda sedang dalam antrian',
+          description: 'Pesanan Anda sedang dalam antrean',
           step: 1
         }
       case 'printing':

@@ -33,7 +33,7 @@ export function QueueWidget() {
             </motion.div>
             <div>
               <h3 className="text-lg font-semibold text-card-foreground">
-                Status Antrian
+                Status Antrean
               </h3>
               <p className="text-xs text-muted-foreground">Update real-time</p>
             </div>
@@ -48,7 +48,7 @@ export function QueueWidget() {
             >
               <div className="flex items-center gap-2 mb-2">
                 <Users className="h-4 w-4 text-primary" />
-                <span className="text-xs font-medium text-muted-foreground">Dalam Antrian</span>
+                <span className="text-xs font-medium text-muted-foreground">Dalam Antrean</span>
               </div>
               <motion.div 
                 key={count}
@@ -72,7 +72,7 @@ export function QueueWidget() {
                 onClick={() => router.push('/queue')}
                 className="w-full h-full p-4 rounded-xl bg-gradient-to-br from-secondary/5 to-secondary/10 border border-secondary/10 text-secondary font-semibold"
               >
-                Lihat Status Antrian
+                Lihat Status Antrean
               </Button>
             </motion.div>
           </div>

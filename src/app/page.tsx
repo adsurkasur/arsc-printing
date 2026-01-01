@@ -35,7 +35,7 @@ export default function Home() {
     {
       icon: Clock,
       title: 'Real-Time Status',
-      description: 'Pantau antrian secara langsung',
+      description: 'Pantau antrean secara langsung',
       color: 'secondary'
     },
     {
