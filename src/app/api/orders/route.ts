@@ -170,10 +170,11 @@ export async function PATCH(request: NextRequest) {
 
     const updatePayload: { status: string; file_expires_at?: string | null; file_deleted?: boolean; payment_proof_expires_at?: string | null; payment_proof_deleted?: boolean } = { status };
 
-    // If marking as delivered, set expiry using separate env vars with safe fallbacks:
+    // If marking as delivered or cancelled, set expiry using separate env vars with safe fallbacks:
     // - DELIVERED_FILE_TTL_HOURS (hours) default: 1
     // - DELIVERED_PAYMENT_PROOF_TTL_HOURS (hours) fallback: PAYMENT_PROOF_TTL_HOURS / 24
-    if (status === 'delivered') {
+    // Note: both 'delivered' and 'cancelled' will schedule deletion of files and proofs.
+    if (status === 'delivered' || status === 'cancelled') {
       const fileHours = Number(process.env.DELIVERED_FILE_TTL_HOURS ?? 1);
       const paymentHours = Number(process.env.DELIVERED_PAYMENT_PROOF_TTL_HOURS ?? process.env.PAYMENT_PROOF_TTL_HOURS ?? 24);
       const fileMs = fileHours * 60 * 60 * 1000;

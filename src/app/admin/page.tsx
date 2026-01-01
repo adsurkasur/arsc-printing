@@ -592,7 +592,7 @@ export default function Admin() {
 
               {/* Show helpful note only when no timer is scheduled (the timer is displayed in the header) */}
               {proofUrl && !proofExpiresAt && (
-                <p className="text-sm text-muted-foreground mt-2">Jadwal penghapusan belum diatur. Penghapusan akan dihitung saat pesanan ditandai sebagai Diambil.</p>
+                <p className="text-sm text-muted-foreground mt-2">Jadwal penghapusan belum diatur. Penghapusan akan dihitung saat pesanan ditandai sebagai Diambil atau Dibatalkan.</p>
               )}
             </div>
 

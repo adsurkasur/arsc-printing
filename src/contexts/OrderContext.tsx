@@ -282,7 +282,8 @@ const fetchOrders = useCallback(async () => {
       }
 
       const updatePayload: { status: Order["status"]; file_expires_at?: string | null; file_deleted?: boolean; payment_proof_expires_at?: string | null; payment_proof_deleted?: boolean } = { status };
-      if (status === 'delivered') {
+      // When marking delivered or cancelled, schedule file/proof expiry and ensure deleted flags are false
+      if (status === 'delivered' || status === 'cancelled') {
         const fileHours = Number(process.env.NEXT_PUBLIC_DELIVERED_FILE_TTL_HOURS ?? 1);
         const proofHours = Number(process.env.NEXT_PUBLIC_DELIVERED_PAYMENT_PROOF_TTL_HOURS ?? process.env.NEXT_PUBLIC_PAYMENT_PROOF_TTL_HOURS ?? 24);
         updatePayload.file_expires_at = new Date(Date.now() + fileHours * 60 * 60 * 1000).toISOString();
