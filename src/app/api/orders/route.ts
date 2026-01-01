@@ -168,12 +168,17 @@ export async function PATCH(request: NextRequest) {
 
     const updatePayload: { status: string; file_expires_at?: string | null; file_deleted?: boolean; payment_proof_expires_at?: string | null; payment_proof_deleted?: boolean } = { status };
 
-    // If marking as delivered, set expiry 24 hours from now for file and payment proof
+    // If marking as delivered, set expiry using separate env vars with safe fallbacks:
+    // - DELIVERED_FILE_TTL_HOURS (hours) default: 1
+    // - DELIVERED_PAYMENT_PROOF_TTL_HOURS (hours) fallback: PAYMENT_PROOF_TTL_HOURS / 24
     if (status === 'delivered') {
-      const twentyFourHours = 24 * 60 * 60 * 1000;
-      updatePayload.file_expires_at = new Date(Date.now() + twentyFourHours).toISOString();
+      const fileHours = Number(process.env.DELIVERED_FILE_TTL_HOURS ?? 1);
+      const paymentHours = Number(process.env.DELIVERED_PAYMENT_PROOF_TTL_HOURS ?? process.env.PAYMENT_PROOF_TTL_HOURS ?? 24);
+      const fileMs = fileHours * 60 * 60 * 1000;
+      const paymentMs = paymentHours * 60 * 60 * 1000;
+      updatePayload.file_expires_at = new Date(Date.now() + fileMs).toISOString();
       updatePayload.file_deleted = false;
-      updatePayload.payment_proof_expires_at = new Date(Date.now() + twentyFourHours).toISOString();
+      updatePayload.payment_proof_expires_at = new Date(Date.now() + paymentMs).toISOString();
       updatePayload.payment_proof_deleted = false;
     } else {
       // Clear expiry for other statuses

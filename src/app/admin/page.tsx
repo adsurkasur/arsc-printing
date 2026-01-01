@@ -189,7 +189,8 @@ export default function Admin() {
         try {
           const auth = JSON.parse(demoAuth);
           // Check if demo auth is less than 24 hours old
-          if (auth.authenticated && Date.now() - auth.timestamp < 24 * 60 * 60 * 1000) {
+          const demoAdminTtlHours = Number(process.env.NEXT_PUBLIC_DEMO_ADMIN_AUTH_TTL_HOURS ?? process.env.NEXT_PUBLIC_ADMIN_AUTH_TTL_HOURS ?? 24);
+          if (auth.authenticated && Date.now() - auth.timestamp < demoAdminTtlHours * 60 * 60 * 1000) {
             setUser({ email: auth.email });
             return;
           }

@@ -55,6 +55,15 @@ NEXT_PUBLIC_SUPABASE_URL=your-project-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 ```
 
+Optional TTL environment variables (defaults applied if unset):
+
+- `DELIVERED_FILE_TTL_HOURS` — hours files are kept after status is set to `delivered` (server-side). Default: `1`.
+- `DELIVERED_PAYMENT_PROOF_TTL_HOURS` — hours payment proof files are kept after status `delivered` (server-side). Fallbacks: `PAYMENT_PROOF_TTL_HOURS` → `24`.
+- `NEXT_PUBLIC_DELIVERED_FILE_TTL_HOURS` — client / demo counterpart (default `1`).
+- `NEXT_PUBLIC_DELIVERED_PAYMENT_PROOF_TTL_HOURS` — client / demo counterpart (fallbacks to `NEXT_PUBLIC_PAYMENT_PROOF_TTL_HOURS` → `24`).
+- `PAYMENT_PROOF_TTL_HOURS` — (legacy) used for initial upload expiry when set; default `24`.
+
+Add these to your `.env.local` if you want to customize deletion windows.
 5. Run the development server
 
 ```bash
