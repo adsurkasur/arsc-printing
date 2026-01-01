@@ -248,8 +248,8 @@ export default function OrderSuccess() {
                 <StaggerItem>
                   <Button
                     onClick={() => router.push("/order")}
-                    variant="ghost"
-                    className="w-full h-12 rounded-xl"
+                    variant="outline"
+                    className="w-full h-12 rounded-xl border-border/50"
                     size="lg"
                   >
                     Buat Pesanan Baru

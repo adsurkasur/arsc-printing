@@ -76,10 +76,22 @@ import { useOrders } from "@/contexts/OrderContext";
 import { createClient } from "@/lib/supabase/client";
 import { CheckCircle, Clock, Printer, LogOut, RefreshCw, Download, XCircle, Shield, TrendingUp, Trash } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
 import { motion, PageTransition, FadeInUp, StaggerContainer, StaggerItem } from "@/components/animations";
+import { ToastAction } from "@/components/ui/toast";
+import type { OrderStatus } from "@/types/order";
 
 // Check if Supabase is properly configured
 function isSupabaseConfigured() {
@@ -190,13 +202,28 @@ export default function Admin() {
     toast({ title: "Pesanan dibatalkan", variant: "destructive" });
   };
 
-  const handleDeleteFile = async (id: string) => {
-    if (!confirm('Hapus file terkait pesanan ini sekarang?')) return;
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [cancelTargetId, setCancelTargetId] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState(false);
+
+  const requestDeleteFile = (id: string) => {
+    setDeleteTargetId(id);
+    // Open modal on next tick to avoid immediate click on the confirm button
+    setTimeout(() => setDeleteModalOpen(true), 0);
+  };
+
+  const confirmDeleteFile = async () => {
+    if (!deleteTargetId) return setDeleteModalOpen(false);
+    setDeleting(true);
     try {
       const res = await fetch('/api/delete-file', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id }),
+        body: JSON.stringify({ id: deleteTargetId }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -204,10 +231,61 @@ export default function Admin() {
       }
       toast({ title: 'File dihapus', description: 'File berhasil dihapus dari storage' });
       await refreshOrders();
+      setDeleteModalOpen(false);
+      setDeleteTargetId(null);
     } catch (err: unknown) {
       console.error('Delete file error:', err);
       const message = err instanceof Error ? err.message : String(err);
       toast({ title: 'Gagal', description: message || 'Tidak dapat menghapus file', variant: 'destructive' });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const requestCancelOrder = (id: string) => {
+    setCancelTargetId(id);
+    setTimeout(() => setCancelModalOpen(true), 0);
+  };
+
+  const confirmCancelOrder = async () => {
+    if (!cancelTargetId) return setCancelModalOpen(false);
+    setCancelling(true);
+    try {
+      // capture previous status for undo
+      const order = orders.find((o) => o.id === cancelTargetId);
+      const prevStatus = order?.status || 'pending';
+
+      await updateOrderStatus(cancelTargetId, 'cancelled');
+
+      // show toast with undo action
+      toast({
+        title: 'Pesanan dibatalkan',
+        variant: 'destructive',
+        action: (
+          <ToastAction altText="Undo" onClick={async () => {
+            // revert status
+            try {
+              await updateOrderStatus(cancelTargetId, prevStatus as OrderStatus); // prevStatus is one of OrderStatus types
+              await refreshOrders();
+              toast({ title: 'Undo: Pesanan dipulihkan', description: `Status dikembalikan ke ${prevStatus}` });
+            } catch (e) {
+              toast({ title: 'Gagal', description: 'Tidak dapat memulihkan status', variant: 'destructive' });
+            }
+          }}>
+            Undo
+          </ToastAction>
+        ),
+      });
+
+      await refreshOrders();
+      setCancelModalOpen(false);
+      setCancelTargetId(null);
+    } catch (err: unknown) {
+      console.error('Cancel order error:', err);
+      const message = err instanceof Error ? err.message : String(err);
+      toast({ title: 'Gagal', description: message || 'Tidak dapat membatalkan pesanan', variant: 'destructive' });
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -215,6 +293,46 @@ export default function Admin() {
     <PageTransition>
       <div className="min-h-full py-8 px-4">
         <div className="container mx-auto">
+
+        {/* Delete confirmation modal */}
+        <AlertDialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Hapus file</AlertDialogTitle>
+              <AlertDialogDescription>
+                Hapus file terkait pesanan ini sekarang? Tindakan ini tidak dapat dibatalkan.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => { setDeleteModalOpen(false); setDeleteTargetId(null); }}>
+                Batal
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={confirmDeleteFile} className="bg-destructive text-white">
+                {deleting ? 'Menghapus...' : 'Hapus file'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Cancel confirmation modal */}
+        <AlertDialog open={cancelModalOpen} onOpenChange={setCancelModalOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Batalkan pesanan</AlertDialogTitle>
+              <AlertDialogDescription>
+                Apakah Anda yakin ingin membatalkan pesanan ini? Pesanan yang dibatalkan tidak akan diproses.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => { setCancelModalOpen(false); setCancelTargetId(null); }}>
+                Batal
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={confirmCancelOrder} className="bg-destructive text-white">
+                {cancelling ? 'Membatalkan...' : 'Batalkan pesanan'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
           {/* Header */}
           <FadeInUp className="mb-8">
             <div className="flex items-start justify-between flex-wrap gap-4">
@@ -443,7 +561,7 @@ export default function Admin() {
                           <TableCell>{getStatusBadge(order.status)}</TableCell>
                           <TableCell>
                             <div className="flex gap-1">
-                              {order.status !== "completed" && order.status !== "cancelled" && (
+                              {order.status === "pending" && (
                                 <>
                                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                                     <Button
@@ -451,7 +569,7 @@ export default function Admin() {
                                       className="rounded-lg"
                                       onClick={() => handleStatusUpdate(order.id, order.status)}
                                     >
-                                      {order.status === "pending" ? "Cetak" : "Selesai"}
+                                      Cetak
                                     </Button>
                                   </motion.div>
                                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -459,7 +577,7 @@ export default function Admin() {
                                       size="sm"
                                       variant="outline"
                                       className="rounded-lg"
-                                      onClick={() => handleCancelOrder(order.id)}
+                                      onClick={() => requestCancelOrder(order.id)}
                                     >
                                       <XCircle className="h-4 w-4" />
                                     </Button>
@@ -467,8 +585,20 @@ export default function Admin() {
                                 </>
                               )}
 
+                              {order.status === "printing" && (
+                                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                                  <Button
+                                    size="sm"
+                                    className="rounded-lg"
+                                    onClick={() => handleStatusUpdate(order.id, order.status)}
+                                  >
+                                    Selesai
+                                  </Button>
+                                </motion.div>
+                              )}
+
                               {/* Allow admins to delete uploaded file immediately for completed orders */}
-                              {order.status === "completed" && (order.file_url || order.file_path) && !order.file_deleted && (
+                              {(order.status === "completed" || order.status === "cancelled") && (order.file_url || order.file_path) && !order.file_deleted && (
                                 <>
                                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                                     <Tooltip>
@@ -477,13 +607,14 @@ export default function Admin() {
                                           size="sm"
                                           variant="outline"
                                           className="rounded-lg"
-                                          onClick={() => handleDeleteFile(order.id)}
+                                          onClick={() => requestDeleteFile(order.id)}
                                         >
                                           <Trash className="h-4 w-4" />
                                         </Button>
                                       </TooltipTrigger>
                                       <TooltipContent side="top">Hapus file</TooltipContent>
                                     </Tooltip>
+
                                   </motion.div>
                                 </>
                               )}
