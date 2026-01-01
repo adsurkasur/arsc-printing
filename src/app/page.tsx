@@ -147,6 +147,7 @@ export default function Home() {
                     <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </motion.div>
+                {/*
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <Button
                     size="lg"
@@ -157,6 +158,7 @@ export default function Home() {
                     Lacak Pesanan
                   </Button>
                 </motion.div>
+                */}
               </motion.div>
 
               {/* Highlights */}

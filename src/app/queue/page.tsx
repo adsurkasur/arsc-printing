@@ -109,9 +109,7 @@ export default function QueuePage() {
           <TableHeader>
             <TableRow>
               <TableHead>No.</TableHead>
-              <TableHead>Order</TableHead>
               <TableHead>Nama Pelanggan</TableHead>
-              <TableHead>File</TableHead>
               <TableHead>Copy</TableHead>
               <TableHead>Warna</TableHead>
               <TableHead>Status</TableHead>
@@ -122,16 +120,14 @@ export default function QueuePage() {
           <TableBody>
             {queue.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Tidak ada antrian saat ini</TableCell>
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Tidak ada antrian saat ini</TableCell>
               </TableRow>
             ) : null}
 
             {queue.map((order, idx) => (
               <TableRow key={order.id}>
                 <TableCell className="font-medium">{idx + 1}</TableCell>
-                <TableCell>{order.id.slice(0, 8)}</TableCell>
                 <TableCell>{order.customer_name}</TableCell>
-                <TableCell className="max-w-xs truncate">{order.file_name}</TableCell>
                 <TableCell>{order.copies}</TableCell>
                 <TableCell className="capitalize">{order.color_mode}</TableCell>
                 <TableCell>

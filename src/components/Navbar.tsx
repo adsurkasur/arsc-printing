@@ -15,7 +15,7 @@ import { motion } from "@/components/animations";
 const navLinks = [
   { href: "/", label: "Beranda" },
   { href: "/order", label: "Pesan Sekarang" },
-  { href: "/track", label: "Lacak Pesanan" },
+  // { href: "/track", label: "Lacak Pesanan" },
   { href: "/queue", label: "Status Antrian" },
   { href: "/admin", label: "Admin", matchPrefix: true },
 ];

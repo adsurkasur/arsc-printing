@@ -12,6 +12,34 @@ import { formatDistanceToNow } from 'date-fns'
 import { id } from 'date-fns/locale'
 import { motion, PageTransition, FadeInUp } from '@/components/animations'
 import { AnimatePresence } from 'framer-motion'
+import { useRouter } from 'next/navigation'
+
+// Page temporarily disabled: default stub exported here so the route is inactive while keeping the implementation in this file.
+export default function TrackDisabled() {
+  const router = useRouter()
+
+  return (
+    <PageTransition>
+      <div className="min-h-screen flex items-center justify-center px-4 py-12">
+        <div className="max-w-md w-full">
+          <FadeInUp>
+            <Card className="p-8 text-center">
+              <motion.div initial={{ scale: 0.96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.25 }}>
+                <h1 className="text-2xl font-bold mb-2">Lacak Pesanan Sementara Dinonaktifkan</h1>
+                <p className="text-sm text-muted-foreground mb-6">Fitur pelacakan sedang dinonaktifkan untuk saat ini. Anda bisa melihat status antrian umum atau kembali ke beranda.</p>
+                <div className="flex gap-3 justify-center">
+                  <Button variant="outline" onClick={() => router.push('/')}>Beranda</Button>
+                  <Button onClick={() => router.push('/queue')}>Status Antrian</Button>
+                </div>
+              </motion.div>
+            </Card>
+          </FadeInUp>
+        </div>
+      </div>
+    </PageTransition>
+  )
+}
+
 
 interface TrackedOrder {
   id: string
@@ -22,7 +50,7 @@ interface TrackedOrder {
   estimated_time: number
 }
 
-export default function TrackOrder() {
+function TrackOrderDisabled() {
   const { toast } = useToast()
   const [trackingId, setTrackingId] = useState('')
   const [loading, setLoading] = useState(false)
