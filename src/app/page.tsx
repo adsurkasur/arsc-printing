@@ -273,7 +273,7 @@ export default function Home() {
                   Siap Untuk Mencetak?
                 </h2>
                 <p className="mb-10 text-lg text-white/80 max-w-xl mx-auto">
-                  Mulai pesan dokumen Anda sekarang dan hemat waktu berharga Anda
+                  Mulai cetak dokumen Anda sekarang dan hemat waktu berharga Anda
                 </p>
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <Button
