@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { CheckCircle, Home, Search, Copy, Check, Sparkles, PartyPopper, Download } from "lucide-react";
@@ -41,16 +41,27 @@ export default function OrderSuccess() {
   const [showConfetti, setShowConfetti] = useState(true);
   const [downloading, setDownloading] = useState(false);
 
+  const searchParams = useSearchParams();
+
   useEffect(() => {
-    const id = sessionStorage.getItem('lastOrderId');
-    if (id) {
-      setOrderId(id);
+    // Prefer explicit orderId query param (shareable/bookmarkable)
+    const paramId = searchParams.get('orderId');
+    if (paramId) {
+      setOrderId(paramId);
+    } else {
+      const id = sessionStorage.getItem('lastOrderId');
+      if (id) setOrderId(id);
     }
-    
+
     // Hide confetti after animation
     const timer = setTimeout(() => setShowConfetti(false), 4000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [searchParams]);
+
+  const [orderData, setOrderData] = useState<Record<string, any> | null>(null);
+  const [loadingOrder, setLoadingOrder] = useState(false);
+  const [lookupId, setLookupId] = useState('');
+  const [lookupError, setLookupError] = useState<string | null>(null);
 
   const copyOrderId = async () => {
     if (orderId) {
@@ -64,13 +75,41 @@ export default function OrderSuccess() {
     }
   };
 
+  // Fetch order details when orderId is set
+  useEffect(() => {
+    const load = async () => {
+      if (!orderId) {
+        setOrderData(null);
+        return;
+      }
+      setLoadingOrder(true);
+      setLookupError(null);
+      try {
+        const res = await fetch(`/api/orders?id=${orderId}`);
+        if (!res.ok) throw new Error('Order not found');
+        const data = await res.json();
+        setOrderData(data);
+      } catch (err: unknown) {
+        setOrderData(null);
+        setLookupError(err instanceof Error ? err.message : String(err));
+      } finally {
+        setLoadingOrder(false);
+      }
+    };
+    load();
+  }, [orderId]);
+
   const downloadReceipt = async () => {
     if (!orderId) return;
     setDownloading(true);
     try {
-      const res = await fetch(`/api/orders?id=${orderId}`);
-      if (!res.ok) throw new Error('Gagal mengambil data pesanan');
-      const data = await res.json();
+      // Prefer using fetched order data if available to avoid refetch
+      let data = orderData;
+      if (!data) {
+        const res = await fetch(`/api/orders?id=${orderId}`);
+        if (!res.ok) throw new Error('Gagal mengambil data pesanan');
+        data = await res.json();
+      }
 
       const receipt = `ARSC Printing - Bukti Pesanan\n\nID: ${data.id}\nNama: ${data.customer_name}\nKontak: ${data.contact}\nFile: ${data.file_name}\nMode: ${data.color_mode === 'bw' ? 'B/W' : 'Warna'}\nSalinan: ${data.copies}\nUkuran: ${data.paper_size}\nStatus: ${data.status}\nWaktu: ${data.created_at}\n\nTerima kasih telah menggunakan ARSC Printing.`;
 
@@ -169,7 +208,7 @@ export default function OrderSuccess() {
                 Pesanan Anda telah diterima dan sedang diproses. Simpan ID pesanan di bawah untuk melacak status.
               </motion.p>
 
-              {orderId && (
+              {orderId ? (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -179,24 +218,56 @@ export default function OrderSuccess() {
                   <p className="text-xs text-muted-foreground mb-3 uppercase tracking-wider font-medium">
                     ID Pesanan Anda
                   </p>
-                  <div className="flex items-center justify-center gap-3">
-                    <code className="text-xl font-mono font-bold bg-background px-4 py-2 rounded-xl break-all">
-                      {orderId}
-                    </code>
-                    <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={copyOrderId}
-                        className="h-10 w-10 p-0 rounded-xl"
-                      >
-                        {copied ? (
-                          <Check className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <Copy className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </motion.div>
+
+                  {loadingOrder ? (
+                    <p className="text-sm text-muted-foreground">Memuat data pesanan…</p>
+                  ) : lookupError ? (
+                    <p className="text-sm text-destructive">{lookupError}</p>
+                  ) : (
+                    <div className="flex items-center justify-center gap-3">
+                      <code className="text-xl font-mono font-bold bg-background px-4 py-2 rounded-xl break-all">
+                        {orderId}
+                      </code>
+                      <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={copyOrderId}
+                          className="h-10 w-10 p-0 rounded-xl"
+                        >
+                          {copied ? (
+                            <Check className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </motion.div>
+                    </div>
+                  )}
+                </motion.div>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.6 }}
+                  className="mb-6 rounded-2xl bg-muted p-6 border border-border/50"
+                >
+                  <p className="text-sm text-muted-foreground mb-2">Tidak ada ID pesanan yang ditemukan. Masukkan ID pesanan untuk melihat status:</p>
+                  <div className="flex gap-2">
+                    <input
+                      className="flex-1 rounded-xl border border-border px-3 py-2"
+                      placeholder="Masukkan ID Pesanan"
+                      value={lookupId}
+                      onChange={(e) => setLookupId(e.target.value)}
+                    />
+                    <Button
+                      onClick={() => {
+                        if (lookupId.trim()) {
+                          setOrderId(lookupId.trim());
+                          sessionStorage.setItem('lastOrderId', lookupId.trim());
+                        }
+                      }}
+                    >Cari</Button>
                   </div>
                 </motion.div>
               )}
