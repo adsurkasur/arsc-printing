@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import ColorModeBadge from "../../components/ColorModeBadge";
+
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useOrders } from "@/contexts/OrderContext";
@@ -157,8 +157,6 @@ export default function QueuePage() {
                   <TableRow>
                     <TableHead>No.</TableHead>
                     <TableHead>Nama Pelanggan</TableHead>
-                    <TableHead>Salinan</TableHead>
-                    <TableHead>Mode</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Masuk</TableHead>
                   </TableRow>
@@ -167,13 +165,13 @@ export default function QueuePage() {
                   {/* Loading short -> show spinner text; if loading persists, show a helpful message with action */}
                   {loading && !slowLoading && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Memuat...</TableCell>
+                      <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">Memuat...</TableCell>
                     </TableRow>
                   )}
 
                   {loading && slowLoading && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8">
+                      <TableCell colSpan={4} className="text-center py-8">
                         <div className="flex flex-col items-center gap-3">
                           <p className="text-sm text-muted-foreground">Proses memakan waktu atau gagal memuat data.</p>
                           <div className="flex gap-2">
@@ -187,7 +185,7 @@ export default function QueuePage() {
                   {/* Error state (non-loading) */}
                   {(!loading && error) && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8">
+                      <TableCell colSpan={4} className="text-center py-8">
                         <div className="flex flex-col items-center gap-3">
                           <p className="text-sm text-destructive">{error}</p>
                           <Button size="sm" onClick={async () => { setRefreshing(true); try { await refreshOrders(); if (error) toast({ title: 'Gagal', description: error, variant: 'destructive' }); else toast({ title: 'Sukses', description: 'Status antrian diperbarui' }); } catch (err) { toast({ title: 'Gagal', description: 'Terjadi kesalahan saat menyegarkan', variant: 'destructive' }); } finally { setRefreshing(false); } }}>Segarkan</Button>
@@ -199,7 +197,7 @@ export default function QueuePage() {
                   {/* Empty state when not loading */}
                   {(!loading && !error && queue.length === 0) && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Tidak ada antrian saat ini</TableCell>
+                      <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">Tidak ada antrian saat ini</TableCell>
                     </TableRow>
                   )}
 
@@ -207,10 +205,6 @@ export default function QueuePage() {
                     <TableRow key={order.id}>
                       <TableCell className="font-medium">{idx + 1}</TableCell>
                       <TableCell>{order.customer_name}</TableCell>
-                      <TableCell>{order.copies}</TableCell>
-                      <TableCell>
-                        <ColorModeBadge mode={order.color_mode} />
-                      </TableCell>
                       <TableCell>
                         {statusBadge(order.status)}
                       </TableCell>
