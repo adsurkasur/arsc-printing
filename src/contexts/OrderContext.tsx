@@ -265,10 +265,12 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ id, status }),
       });
 
+      // Parse response body for verification
+      const resBody = await res.json().catch(() => null);
+
       if (!res.ok) {
-        const errBody = await res.json().catch(() => ({}));
-        console.error('Server PATCH error:', errBody);
-        const message = errBody?.error || errBody?.message || 'Gagal memperbarui pesanan';
+        console.error('Server PATCH error:', res.status, resBody);
+        const message = resBody?.error || resBody?.message || 'Gagal memperbarui pesanan';
         setError(message);
         if (res.status === 401 || res.status === 403) {
           toast({ title: 'Harap login sebagai admin', description: 'Harap login sebagai admin untuk membatalkan pesanan', variant: 'destructive' });
@@ -276,6 +278,23 @@ export function OrderProvider({ children }: { children: ReactNode }) {
           toast({ title: 'Gagal', description: message, variant: 'destructive' });
         }
         return false;
+      }
+
+      // If PostgREST returned an empty array, treat as failure (RLS likely blocked the update)
+      if (Array.isArray(resBody) && resBody.length === 0) {
+        console.error('PostgREST returned empty array — update likely blocked by RLS', { requested: status, resBody });
+        toast({ title: 'Gagal', description: 'Tidak ada baris yang diperbarui. Periksa peran admin atau kebijakan RLS.', variant: 'destructive' });
+        return false;
+      }
+
+      // If server returned a representation, verify the returned row has the requested status
+      if (resBody && (resBody.status ?? (Array.isArray(resBody) ? resBody[0]?.status : undefined))) {
+        const returnedStatus = Array.isArray(resBody) ? resBody[0]?.status : resBody.status;
+        if (returnedStatus !== status) {
+          console.warn('Status update apparent success but returned status mismatch', { requested: status, returned: returnedStatus, resBody });
+          toast({ title: 'Gagal', description: 'Status tidak berubah di database', variant: 'destructive' });
+          return false;
+        }
       }
 
       // Ensure UI is current

@@ -200,7 +200,23 @@ export async function PATCH(request: NextRequest) {
 
         const body = await restRes.json().catch(() => null);
         if (!restRes.ok) {
-          return NextResponse.json({ error: body?.message || 'Unauthorized or invalid token' }, { status: restRes.status });
+          console.error('PostgREST returned non-OK', restRes.status, body);
+          return NextResponse.json({ error: body?.message || body || 'Unauthorized or invalid token' }, { status: restRes.status });
+        }
+
+        // If PostgREST returned empty array, log token's user info to help debug RLS
+        if (Array.isArray(body) && body.length === 0) {
+          try {
+            const authUserRes = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/user`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            const authUser = await authUserRes.json().catch(() => null);
+            console.error('PostgREST returned empty array and token did not update any rows. Token user:', authUser);
+          } catch (e) {
+            console.error('Failed to fetch auth user for diagnostic:', e);
+          }
+          // Return empty response same as before
+          return NextResponse.json([]);
         }
 
         // PostgREST returns an array when using return=representation. Return first item for compatibility

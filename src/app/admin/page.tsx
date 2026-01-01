@@ -606,7 +606,9 @@ export default function Admin() {
                     <TableRow className="bg-muted/20">
                       <TableHead>Nama Pelanggan</TableHead>
                       <TableHead>Kontak</TableHead>
-                      <TableHead>File</TableHead>                      <TableHead>Bukti Bayar</TableHead>                      <TableHead>Mode</TableHead>
+                      <TableHead>File</TableHead>
+                      <TableHead>Bukti Bayar</TableHead>
+                      <TableHead>Mode</TableHead>
                       <TableHead>Salinan</TableHead>
                       <TableHead>Waktu</TableHead>
                       <TableHead>Status</TableHead>
