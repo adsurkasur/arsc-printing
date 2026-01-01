@@ -2,148 +2,135 @@
 
 A modern web application for campus printing services built with Next.js 16, React 19, TypeScript, Tailwind CSS, and Supabase.
 
-## About
+# ARSC Printing Service
 
-ARSC Printing is a digital printing service platform developed for ARSC (Academic Resource and Service Center) that allows students and faculty to:
+ARSC Printing is a campus-focused document printing platform built with Next.js (App Router), React, TypeScript, Tailwind CSS, and Supabase. It provides a lightweight web experience for submitting print jobs, tracking order status, and managing orders from an admin dashboard.
 
-- Upload documents for printing from anywhere
-- Track printing queue status in real-time
-- Receive notifications when orders are ready
-- Manage printing orders through an intuitive web interface
+## Key Features
 
-## Features
-
-- **Real-time Queue Monitoring**: Live updates on printing queue status via Supabase Realtime
-- **Document Upload**: Upload PDF, DOC, DOCX files to Supabase Storage
-- **Order Tracking**: Track orders using unique order IDs
-- **Admin Dashboard**: Protected admin panel with Supabase Auth
-- **Responsive Design**: Works seamlessly on desktop and mobile devices
-- **SSR Ready**: Server-side rendering for optimal performance
+- Upload PDF / DOC / DOCX files (10 MB limit) with server-side validation
+- Create and manage print orders with print preferences (color, copies, paper size)
+- Public order tracking via a short order ID
+- Admin dashboard for viewing and updating order status
+- Demo mode fallback when Supabase is not configured (for local development)
+- Built with accessibility and responsive design in mind
 
 ## Tech Stack
 
-- **Framework**: Next.js 16 (App Router)
-- **Language**: TypeScript
-- **Database**: Supabase (PostgreSQL)
-- **File Storage**: Supabase Storage
-- **Authentication**: Supabase Auth
-- **Real-time**: Supabase Realtime
-- **UI Components**: shadcn/ui with Radix UI primitives
-- **Styling**: Tailwind CSS
-- **State Management**: React Context + TanStack Query
-- **Package Manager**: Bun
-- **Deployment**: Vercel-ready
+- Framework: Next.js 16 (App Router)
+- Language: TypeScript + React 19
+- Database & Auth: Supabase (Postgres)
+- Storage: Supabase Storage (for uploaded documents)
+- State / Data: React Context + TanStack Query
+- UI: Tailwind CSS, shadcn/ui primitives, Radix
+- Package manager: Bun
 
-## Getting Started
+## Quickstart (Developer)
 
-### Prerequisites
+Prerequisites: Node 20.9+, Bun, and a Supabase project (optional for demo mode).
 
-- Node.js 20.9 or higher
-- Bun package manager
-- Supabase account (free tier available)
+1. Clone repository
 
-### Supabase Setup
-
-1. Create a new project at [database.new](https://database.new)
-
-2. Go to SQL Editor and run the contents of `supabase-schema.sql`
-
-3. Create an admin user:
-   - Go to Authentication > Users
-   - Click "Add user" > "Create new user"
-   - Email: `admin@arsc-printing.com`
-   - Password: `admin123` (change in production!)
-
-4. Get your API keys:
-   - Go to Settings > API
-   - Copy the Project URL and anon/public key
-
-### Installation
-
-1. Clone the repository:
 ```bash
 git clone https://github.com/adsurkasur/arsc-printing.git
 cd arsc-printing
 ```
 
-2. Install dependencies:
+2. Install dependencies
+
 ```bash
 bun install
 ```
 
-3. Set up environment variables:
+3. Create local env file
+
 ```bash
 cp .env.local.example .env.local
 ```
 
-4. Edit `.env.local` with your Supabase credentials:
+4. Add Supabase environment variables to `.env.local` (optional - demo mode will run without them):
+
 ```
 NEXT_PUBLIC_SUPABASE_URL=your-project-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 ```
 
-5. Start the development server:
+5. Run the development server
+
 ```bash
 bun run dev
 ```
 
-6. Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open http://localhost:3000 in your browser.
 
-### Available Scripts
+## Environment & Demo Mode
 
-- `bun run dev` - Start development server with Turbopack
-- `bun run build` - Build for production
-- `bun run start` - Start production server
-- `bun run lint` - Run ESLint
+- If `NEXT_PUBLIC_SUPABASE_URL` or `NEXT_PUBLIC_SUPABASE_ANON_KEY` are missing or contain placeholder values, the application runs in "demo mode":
+   - Uploads and database operations will return mock/demo responses.
+   - UI shows clear messages indicating demo behavior.
+- For production, provide valid Supabase URL and anon key and set up the database schema with `supabase-schema.sql`.
 
-## Project Structure
+## Supabase Setup
 
+1. Create a Supabase project at https://app.supabase.com
+2. Open SQL Editor and run `supabase-schema.sql` from the repository to create the `orders` table.
+3. In Supabase > Storage, create a bucket named `documents` for uploaded files.
+4. (Optional) Add an admin user via Supabase Auth or manage via the dashboard.
+
+## API Reference
+
+This project exposes Next.js App Router API routes under `/api`.
+
+- POST `/api/upload` — multipart/form-data file upload
+   - Accepts: `file` (PDF, DOC, DOCX). Max 10MB.
+   - Response (success): `{ fileName, filePath, fileUrl }`
+
+- GET `/api/orders` — list orders or query by `id` or `trackingId`
+   - Examples:
+      - List all orders: `GET /api/orders`
+      - Get by id: `GET /api/orders?id=<ORDER_ID>`
+      - Public tracking: `GET /api/orders?trackingId=<TRACKING_ID>` (returns limited fields)
+
+- POST `/api/orders` — create order
+   - JSON body: `CreateOrderInput` (see `src/types/order.ts`)
+   - Example body:
+
+```json
+{
+   "customer_name": "Jane Doe",
+   "contact": "jane@example.com",
+   "file_name": "document.pdf",
+   "file_url": "https://...",
+   "color_mode": "bw",
+   "copies": 2,
+   "paper_size": "A4",
+   "notes": "Please print double-sided"
+}
 ```
-src/
-├── app/                 # Next.js App Router pages
-│   ├── layout.tsx       # Root layout
-│   ├── page.tsx         # Home page
-│   ├── order/           # Order form page
-│   ├── order-success/   # Order success page
-│   ├── track/           # Order tracking page
-│   ├── admin/           # Admin dashboard (protected)
-│   │   └── login/       # Admin login page
-│   ├── api/             # API routes
-│   │   ├── orders/      # Orders CRUD API
-│   │   └── upload/      # File upload API
-│   └── not-found.tsx    # 404 page
-├── components/          # Reusable UI components
-│   └── ui/              # shadcn/ui components
-├── contexts/            # React contexts for state management
-├── hooks/               # Custom React hooks
-├── lib/                 # Utility functions
-│   └── supabase/        # Supabase client utilities
-└── types/               # TypeScript type definitions
-```
 
-## User Workflows
+- PATCH `/api/orders` — update order status
+   - JSON body: `{ id: string, status: 'pending' | 'printing' | 'completed' | 'cancelled' }`
 
-### Customer Flow
-1. Upload document on `/order` page
-2. Select print settings (color, copies, paper size)
-3. Enter contact information
-4. Submit order and receive order ID
-5. Track order status on `/track` page
+Note: When Supabase is not configured the API returns demo data or `demoMode: true` in responses.
 
-### Admin Flow
-1. Login at `/admin/login` with admin credentials
-2. View all orders on dashboard
-3. Update order status (pending → printing → completed)
-4. Download uploaded documents
+## Data Model
+
+See `src/types/order.ts` for TypeScript definitions. Main fields:
+
+- `id`, `customer_name`, `contact`, `file_name`, `file_url`, `color_mode` (`bw|color`), `copies`, `paper_size`, `status`, `estimated_time`, `created_at`.
+
+Estimated processing time is calculated server-side when creating orders (copies × cost-per-copy minutes based on color mode).
+
+## Admin
+
+- Admin UI lives under `/admin`. Authentication is handled via Supabase Auth (project-specific).
+- Admins can view all orders and update statuses.
 
 ## Deployment
 
-### Vercel (Recommended)
-1. Connect your GitHub repository to Vercel
-2. Add environment variables in Vercel dashboard
-3. Deploy automatically on push
+Recommended: Vercel. Add the same environment variables to the Vercel project settings and deploy the `main` branch for automatic builds.
 
-### Manual Deployment
+Manual build & run:
 
 ```bash
 # Build for production
@@ -153,21 +140,24 @@ bun run build
 bun run start
 ```
 
-## Free Tier Limits (Supabase)
+## Development Notes
 
-- Database: 500MB storage
-- File Storage: 1GB with 2GB bandwidth/month
-- Authentication: 50,000 monthly active users
-- Realtime: Included
+- File upload validation (server and client) restricts to PDF/DOC/DOCX with a 10MB max.
+- Client code gracefully falls back to demo mode when Supabase is not configured.
+
+## Troubleshooting
+
+- If uploads fail, confirm your Supabase `documents` bucket name and that anon/public key has storage privileges.
+- Use browser console and server logs for stack traces.
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+- Fork → feature branch → PR. Keep changes focused and add tests where applicable.
 
-## License
+## License & Ownership
 
-This project is private and proprietary to ARSC Printing services.
+This repository is currently private and owned by the ARSC Printing project. Contact the project owner for licensing and contribution agreements.
+
+---
+
+For a deeper technical narrative, architecture diagrams, and product rationale see [WHITEPAPER.md](WHITEPAPER.md).
