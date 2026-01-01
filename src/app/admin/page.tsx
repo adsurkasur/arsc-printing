@@ -60,6 +60,38 @@ function DownloadWithCountdown({ fileUrl, expiresAt }: { fileUrl: string; expire
     </Tooltip>
   );
 }
+
+// Simple inline deletion timer shown in the proof modal
+function DeletionTimer({ expiresAt }: { expiresAt?: string | null }) {
+  const [remaining, setRemaining] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!expiresAt) {
+      setRemaining(null);
+      return;
+    }
+
+    const compute = () => {
+      const diff = new Date(expiresAt!).getTime() - Date.now();
+      if (diff <= 0) return setRemaining('0s');
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      if (hours > 0) setRemaining(`${hours}h ${minutes}m ${seconds}s`);
+      else if (minutes > 0) setRemaining(`${minutes}m ${seconds}s`);
+      else setRemaining(`${seconds}s`);
+    };
+
+    compute();
+    const id = window.setInterval(compute, 1000);
+    return () => clearInterval(id);
+  }, [expiresAt]);
+
+  if (!expiresAt) return null;
+
+  return <p className="text-sm text-muted-foreground mt-2">Hapus bukti dalam {remaining ?? '—'}</p>;
+}
+
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -418,6 +450,7 @@ export default function Admin() {
             <DialogHeader>
               <DialogTitle>Bukti Pembayaran</DialogTitle>
               <DialogDescription>Preview dan unduh bukti pembayaran</DialogDescription>
+              <DeletionTimer expiresAt={proofExpiresAt} />
             </DialogHeader>
 
             <div className="py-4">
