@@ -11,7 +11,7 @@ interface OrderContextType {
   error: string | null;
   demoMode: boolean;
   addOrder: (order: CreateOrderInput, fileUrl?: string, filePath?: string, paymentProofUrl?: string, paymentProofPath?: string) => Promise<Order | null>;
-  updateOrderStatus: (id: string, status: Order["status"]) => Promise<void>;
+  updateOrderStatus: (id: string, status: Order["status"]) => Promise<boolean>;
   getQueueInfo: () => { count: number; estimatedTime: number };
   refreshOrders: () => Promise<void>;
 }
@@ -209,7 +209,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateOrderStatus = async (id: string, status: Order["status"]) => {
+  const updateOrderStatus = async (id: string, status: Order["status"]) : Promise<boolean> => {
     // Demo mode: update order locally
     if (demoMode) {
       setOrders((prev) =>
@@ -230,7 +230,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
           return order;
         })
       );
-      return;
+      return true;
     }
 
     try {
@@ -242,7 +242,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
       if (!token) {
         setError('Admin session not available. Please login.');
         toast({ title: 'Harap login sebagai admin', description: 'Harap login sebagai admin untuk melakukan aksi ini.', variant: 'destructive' });
-        return;
+        return false;
       }
 
       const updatePayload: { status: Order["status"]; file_expires_at?: string | null; file_deleted?: boolean; payment_proof_expires_at?: string | null; payment_proof_deleted?: boolean } = { status };
@@ -275,16 +275,18 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         } else {
           toast({ title: 'Gagal', description: message, variant: 'destructive' });
         }
-        return;
+        return false;
       }
 
       // Ensure UI is current
       await refreshOrders();
+      return true;
     } catch (err: unknown) {
       console.error('Error updating order:', err);
       const message = err instanceof Error ? err.message : 'Gagal memperbarui pesanan';
       setError(message);
       toast({ title: 'Gagal', description: message, variant: 'destructive' });
+      return false;
     }
   };
 

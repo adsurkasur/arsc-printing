@@ -198,17 +198,17 @@ export default function Admin() {
 
   const handleStatusUpdate = async (id: string, currentStatus: string) => {
     if (currentStatus === "pending") {
-      await updateOrderStatus(id, "printing");
-      toast({ title: "Status diperbarui", description: "Pesanan sedang dicetak" });
+      const ok = await updateOrderStatus(id, "printing");
+      if (ok) toast({ title: "Status diperbarui", description: "Pesanan sedang dicetak" });
     } else if (currentStatus === "printing") {
-      await updateOrderStatus(id, "completed");
-      toast({ title: "Status diperbarui", description: "Pesanan selesai" });
+      const ok = await updateOrderStatus(id, "completed");
+      if (ok) toast({ title: "Status diperbarui", description: "Pesanan selesai" });
     }
   };
 
   const handleCancelOrder = async (id: string) => {
-    await updateOrderStatus(id, "cancelled");
-    toast({ title: "Pesanan dibatalkan", variant: "destructive" });
+    const ok = await updateOrderStatus(id, "cancelled");
+    if (ok) toast({ title: "Pesanan dibatalkan", variant: "destructive" });
   };
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -319,7 +319,13 @@ export default function Admin() {
       const order = orders.find((o) => o.id === cancelTargetId);
       const prevStatus = order?.status || 'pending';
 
-      await updateOrderStatus(cancelTargetId, 'cancelled');
+      const ok = await updateOrderStatus(cancelTargetId, 'cancelled');
+
+      if (!ok) {
+        // update failed; keep modal open and let the toast from updateOrderStatus explain the error
+        setCancelling(false);
+        return;
+      }
 
       // show toast with undo action
       toast({
@@ -329,9 +335,13 @@ export default function Admin() {
           <ToastAction altText="Undo" onClick={async () => {
             // revert status
             try {
-              await updateOrderStatus(cancelTargetId, prevStatus as OrderStatus); // prevStatus is one of OrderStatus types
-              await refreshOrders();
-              toast({ title: 'Undo: Pesanan dipulihkan', description: `Status dikembalikan ke ${prevStatus}` });
+              const rev = await updateOrderStatus(cancelTargetId, prevStatus as OrderStatus); // prevStatus is one of OrderStatus types
+              if (rev) {
+                await refreshOrders();
+                toast({ title: 'Undo: Pesanan dipulihkan', description: `Status dikembalikan ke ${prevStatus}` });
+              } else {
+                toast({ title: 'Gagal', description: 'Tidak dapat memulihkan status', variant: 'destructive' });
+              }
             } catch (e) {
               toast({ title: 'Gagal', description: 'Tidak dapat memulihkan status', variant: 'destructive' });
             }
