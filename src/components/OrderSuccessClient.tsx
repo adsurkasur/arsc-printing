@@ -145,7 +145,7 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
       const totalPrice = pricePer * totalPages;
 
       const receiptHtml = `
-        <div style="box-sizing:border-box;background:#fff;padding:24px;font-family:Inter,Arial,sans-serif;color:#0f172a;width:210mm;min-height:297mm;">
+        <div style="box-sizing:border-box;background:#fff;padding:24px;font-family:Inter,Arial,sans-serif;color:#0f172a;width:210mm;height:297mm;display:flex;flex-direction:column;">
           <div style="display:flex;gap:16px;align-items:center;border-bottom:1px solid #f1f5f9;padding-bottom:16px;margin-bottom:16px;">
             <div style="width:48px;height:48px;border-radius:6px;background:#10b981;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700">AR</div>
             <div>
@@ -162,10 +162,6 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
             <div style="min-width:160px">
               <div style="font-size:12px;color:#64748b;margin-bottom:4px">Kontak</div>
               <div>${escapeHtml(data.contact || '')}</div>
-            </div>
-            <div style="min-width:160px">
-              <div style="font-size:12px;color:#64748b;margin-bottom:4px">Status</div>
-              <div style="display:inline-block;padding:6px 10px;border-radius:999px;background:#eef2ff;color:#3730a3;font-weight:600;font-size:12px">${escapeHtml(capitalize(data.status || ''))}</div>
             </div>
           </div>
 
@@ -198,9 +194,12 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
             </table>
           </div>
 
-          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:0 0 16px 0">
-            ${data.payment_proof_url ? `<div style="display:flex;flex-direction:column;align-items:center"><img src="${escapeAttr(data.payment_proof_url)}" crossorigin="anonymous" style="max-width:140px;max-height:140px;object-fit:contain;border:1px solid #e6eef6;padding:8px;border-radius:8px" alt="Bukti Pembayaran"/><div style="font-size:13px;color:#64748b;margin-top:6px">Bukti Pembayaran</div></div>` : ''}
-            <div style="flex:1"><div style="font-size:13px;color:#64748b">Catatan</div><div>${escapeHtml(data.notes || '')}</div></div>
+          <div style="padding:0 0 12px 0">
+            <div style="font-size:13px;color:#64748b;margin-bottom:6px">Catatan</div>
+            <div style="margin-bottom:8px">${escapeHtml(data.notes || '')}</div>
+          </div>
+          <div style="flex:1;display:flex;align-items:center;justify-content:center;padding-top:8px;overflow:hidden;box-sizing:border-box">
+            ${data.payment_proof_url ? `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:12px;box-sizing:border-box;overflow:hidden"><div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center"><img src="${escapeAttr(data.payment_proof_url)}" crossorigin="anonymous" style="max-width:100%;max-height:calc(100% - 28px);object-fit:contain;border:1px solid #e6eef6;border-radius:8px;display:block" alt="Bukti Pembayaran"/><div style="font-size:14px;color:#64748b;margin-top:8px">Bukti Pembayaran</div></div></div>` : ''}
           </div>
         </div>
       `;
