@@ -369,48 +369,48 @@ export default function Admin() {
         <div className="container mx-auto">
 
         {/* Delete confirmation modal */}
-        <AlertDialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Hapus file</AlertDialogTitle>
-              <AlertDialogDescription>
+        <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Hapus file</DialogTitle>
+              <DialogDescription>
                 Hapus file terkait pesanan ini sekarang? Tindakan ini tidak dapat dibatalkan.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => { setDeleteModalOpen(false); setDeleteTargetId(null); }}>
-                Batal
-              </AlertDialogCancel>
-              <AlertDialogAction asChild>
-                <Button variant="destructive" className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={confirmDeleteFile} disabled={deleting}>
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => { setDeleteModalOpen(false); setDeleteTargetId(null); }}>
+                  Batal
+                </Button>
+                <Button variant="destructive" onClick={confirmDeleteFile} disabled={deleting}>
                   {deleting ? 'Menghapus...' : 'Hapus file'}
                 </Button>
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+              </div>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Cancel confirmation modal */}
-        <AlertDialog open={cancelModalOpen} onOpenChange={setCancelModalOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Batalkan pesanan</AlertDialogTitle>
-              <AlertDialogDescription>
+        <Dialog open={cancelModalOpen} onOpenChange={setCancelModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Batalkan pesanan</DialogTitle>
+              <DialogDescription>
                 Apakah Anda yakin ingin membatalkan pesanan ini? Pesanan yang dibatalkan tidak akan diproses.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => { setCancelModalOpen(false); setCancelTargetId(null); }}>
-                Batal
-              </AlertDialogCancel>
-              <AlertDialogAction asChild>
-                <Button variant="destructive" className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={confirmCancelOrder} disabled={cancelling}>
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => { setCancelModalOpen(false); setCancelTargetId(null); }}>
+                  Batal
+                </Button>
+                <Button variant="destructive" onClick={confirmCancelOrder} disabled={cancelling}>
                   {cancelling ? 'Membatalkan...' : 'Batalkan pesanan'}
                 </Button>
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+              </div>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Payment proof modal */}
         <Dialog open={proofModalOpen} onOpenChange={setProofModalOpen}>
