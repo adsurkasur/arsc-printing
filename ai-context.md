@@ -8,6 +8,20 @@
 
 ---
 
+## Recent Work: Admin Cancel Flow Fix
+- **Phase**: IMPLEMENT → COMPLETE ✅
+- **Task**: Fix admin "Batalkan pesanan" action failing due to server-side RLS/auth mismatch
+- **Last Updated**: 2026-01-01
+- **Status**: Implemented client-side Supabase update for order status; lint errors fixed and verified
+- **Files Modified**:
+  - `src/contexts/OrderContext.tsx` (use client `supabase.from('orders').update(...)`)
+  - `src/app/api/orders/route.ts` (typed payloads)
+  - `src/app/api/delete-file/route.ts` (typed payloads)
+- **Next Step**: Manual verify on a dev instance with Supabase configured (login as admin → cancel a pending order)
+- **Chosen Fix**: Option 2 — send access token from client to server; server forwards request to PostgREST with the token so RLS is enforced on the DB side.
+
+---
+
 ## Completed Implementation: Supabase Schema Update
 
 ### Changes Made to `supabase-schema.sql`

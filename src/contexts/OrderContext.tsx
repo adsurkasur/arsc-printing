@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from "react";
 import { Order, CreateOrderInput } from "@/types/order";
 import { createClient } from "@/lib/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface OrderContextType {
   orders: Order[];
@@ -48,6 +49,7 @@ const demoOrders: Order[] = [
 ];
 
 export function OrderProvider({ children }: { children: ReactNode }) {
+  const { toast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -232,22 +234,57 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const response = await fetch('/api/orders', {
+      // Prefer server-side update but include the user's access token so the server can perform actions on behalf of the user (RLS enforced)
+      const supabase = createClient();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token ?? null;
+
+      if (!token) {
+        setError('Admin session not available. Please login.');
+        toast({ title: 'Harap login sebagai admin', description: 'Harap login sebagai admin untuk melakukan aksi ini.', variant: 'destructive' });
+        return;
+      }
+
+      const updatePayload: { status: Order["status"]; file_expires_at?: string | null; file_deleted?: boolean; payment_proof_expires_at?: string | null; payment_proof_deleted?: boolean } = { status };
+      if (status === 'completed') {
+        updatePayload.file_expires_at = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+        updatePayload.file_deleted = false;
+        updatePayload.payment_proof_expires_at = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+        updatePayload.payment_proof_deleted = false;
+      } else {
+        updatePayload.file_expires_at = null;
+        updatePayload.payment_proof_expires_at = null;
+      }
+
+      const res = await fetch('/api/orders', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({ id, status }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to update order');
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        console.error('Server PATCH error:', errBody);
+        const message = errBody?.error || errBody?.message || 'Gagal memperbarui pesanan';
+        setError(message);
+        if (res.status === 401 || res.status === 403) {
+          toast({ title: 'Harap login sebagai admin', description: 'Harap login sebagai admin untuk membatalkan pesanan', variant: 'destructive' });
+        } else {
+          toast({ title: 'Gagal', description: message, variant: 'destructive' });
+        }
+        return;
       }
 
-      // Real-time subscription will handle updating state
-    } catch (err) {
+      // Ensure UI is current
+      await refreshOrders();
+    } catch (err: unknown) {
       console.error('Error updating order:', err);
-      setError('Failed to update order');
+      const message = err instanceof Error ? err.message : 'Gagal memperbarui pesanan';
+      setError(message);
+      toast({ title: 'Gagal', description: message, variant: 'destructive' });
     }
   };
 

@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient()
 
     // Build insert payload dynamically
-    const insertPayload: any = {
+    const insertPayload: { customer_name: string; contact: string; file_name: string; file_url?: string | null; file_path?: string | null; color_mode: string; copies: number; paper_size: string; status: string; estimated_time: number; notes?: string | null; payment_proof_url?: string | null; payment_proof_path?: string | null; payment_proof_expires_at?: string | null; payment_proof_deleted?: boolean } = {
       customer_name: body.customer_name,
       contact: body.contact,
       file_name: body.file_name,
@@ -167,9 +167,7 @@ export async function PATCH(request: NextRequest) {
       })
     }
 
-    const supabase = await createClient()
-
-    let updatePayload: any = { status };
+    const updatePayload: { status: string; file_expires_at?: string | null; file_deleted?: boolean; payment_proof_expires_at?: string | null; payment_proof_deleted?: boolean } = { status };
 
     // If marking as completed, set expiry 1 hour from now for file and payment proof
     if (status === 'completed') {
@@ -183,18 +181,56 @@ export async function PATCH(request: NextRequest) {
       updatePayload.payment_proof_expires_at = null;
     }
 
-    const { data, error } = await supabase
-      .from('orders')
-      .update(updatePayload)
-      .eq('id', id)
-      .select()
-      .single()
+    // If Authorization header present, forward update to PostgREST using the provided token (so RLS is applied based on the JWT)
+    const authHeader = request.headers.get('authorization');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      try {
+        const restUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/orders?id=eq.${encodeURIComponent(id)}`;
+        const restRes = await fetch(restUrl, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+            'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+            'Prefer': 'return=representation',
+          },
+          body: JSON.stringify(updatePayload),
+        });
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+        const body = await restRes.json().catch(() => null);
+        if (!restRes.ok) {
+          return NextResponse.json({ error: body?.message || 'Unauthorized or invalid token' }, { status: restRes.status });
+        }
+
+        // PostgREST returns an array when using return=representation. Return first item for compatibility
+        return NextResponse.json(Array.isArray(body) ? body[0] ?? body : body);
+      } catch (error) {
+        console.error('PostgREST update error:', error);
+        return NextResponse.json({ error: 'Failed to update order via PostgREST' }, { status: 500 });
+      }
     }
 
-    return NextResponse.json(data)
+    // Fallback: use server-side client (will rely on cookies/session)
+    try {
+      const supabase = await createClient()
+
+      const { data, error } = await supabase
+        .from('orders')
+        .update(updatePayload)
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 })
+      }
+
+      return NextResponse.json(data)
+    } catch (error) {
+      console.error('Server update error:', error)
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    }
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }

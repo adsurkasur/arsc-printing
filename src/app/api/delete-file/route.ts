@@ -71,12 +71,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Update order row depending on type
-    let updatePayload: any = {}
-    if (type === 'payment_proof') {
-      updatePayload = { payment_proof_url: null, payment_proof_path: null, payment_proof_deleted: true }
-    } else {
-      updatePayload = { file_url: null, file_path: null, file_deleted: true }
-    }
+    const updatePayload: { payment_proof_url?: null; payment_proof_path?: null; payment_proof_deleted?: boolean; file_url?: null; file_path?: null; file_deleted?: boolean } =
+      type === 'payment_proof'
+        ? { payment_proof_url: null, payment_proof_path: null, payment_proof_deleted: true }
+        : { file_url: null, file_path: null, file_deleted: true }
 
     const { error: updateError } = await supabase
       .from('orders')
