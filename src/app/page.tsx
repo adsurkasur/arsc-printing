@@ -204,6 +204,9 @@ export default function Home() {
           <div className="container relative mx-auto px-4">
             <FadeInUp className="mx-auto max-w-md">
               <QueueWidget />
+              <div className="mt-4 flex justify-center">
+                <Button size="sm" variant="ghost" onClick={() => router.push('/queue')}>Lihat Status Antrian</Button>
+              </div>
             </FadeInUp>
           </div>
         </section>
