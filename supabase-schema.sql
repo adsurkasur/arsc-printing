@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS orders (
   file_url TEXT,
   color_mode TEXT NOT NULL CHECK (color_mode IN ('bw', 'color')),
   copies INTEGER NOT NULL DEFAULT 1,
+  pages INTEGER NOT NULL DEFAULT 1,
   paper_size TEXT NOT NULL DEFAULT 'A4' CHECK (paper_size = 'A4'),
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'printing', 'completed', 'delivered', 'cancelled')),
   estimated_time INTEGER NOT NULL DEFAULT 5,
@@ -211,6 +212,11 @@ ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_proof_deleted BOOLEAN DEFAUL
 -- Public URL for uploaded payment proof (if any). Nullable to support demo mode and legacy rows.
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_proof_url TEXT;
 COMMENT ON COLUMN public.orders.payment_proof_url IS 'Public URL for uploaded payment proof (if any)';
+
+-- Add pages column for number of pages per copy (backfill-friendly)
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS pages INTEGER NOT NULL DEFAULT 1;
+COMMENT ON COLUMN public.orders.pages IS 'Number of pages per copy';
+CREATE INDEX IF NOT EXISTS idx_orders_pages ON orders(pages);
 
 CREATE INDEX IF NOT EXISTS idx_orders_file_expires_at ON orders(file_expires_at);
 CREATE INDEX IF NOT EXISTS idx_orders_file_deleted ON orders(file_deleted);

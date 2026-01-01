@@ -94,6 +94,7 @@ export async function POST(request: NextRequest) {
         payment_proof_expires_at: null,
         color_mode: body.color_mode,
         copies: body.copies,
+        pages: body.pages || 1,
         paper_size: body.paper_size,
         status: 'pending' as const,
         estimated_time,
@@ -107,7 +108,7 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient()
 
     // Build insert payload dynamically
-    const insertPayload: { customer_name: string; contact: string; file_name: string; file_url?: string | null; file_path?: string | null; color_mode: string; copies: number; paper_size: string; status: string; estimated_time: number; notes?: string | null; payment_proof_url?: string | null; payment_proof_path?: string | null; payment_proof_expires_at?: string | null; payment_proof_deleted?: boolean } = {
+    const insertPayload: { customer_name: string; contact: string; file_name: string; file_url?: string | null; file_path?: string | null; color_mode: string; copies: number; pages?: number; paper_size: string; status: string; estimated_time: number; notes?: string | null; payment_proof_url?: string | null; payment_proof_path?: string | null; payment_proof_expires_at?: string | null; payment_proof_deleted?: boolean } = {
       customer_name: body.customer_name,
       contact: body.contact,
       file_name: body.file_name,
@@ -115,6 +116,7 @@ export async function POST(request: NextRequest) {
       file_path: body.file_path || null,
       color_mode: body.color_mode,
       copies: body.copies,
+      pages: body.pages ?? 1,
       paper_size: body.paper_size,
       status: 'pending',
       estimated_time,

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
+import { formatCurrency } from '@/lib/utils';
 import { useOrders } from "@/contexts/OrderContext";
 import { Upload, FileText, CheckCircle, Loader2, ArrowRight, ArrowLeft, Palette, Copy, User, CreditCard } from "lucide-react";
 import { motion, PageTransition, FadeInUp } from "@/components/animations";
@@ -31,8 +32,13 @@ export default function Order() {
     contact: "",
     colorMode: "bw" as "bw" | "color",
     copies: 1,
+    pages: 1,
     paperSize: "A4" as const,
   });
+
+  // Pricing per page (read from env vars, fallback to defaults)
+  const priceBw = Number(process.env.NEXT_PUBLIC_PRICE_BW ?? '') || 500;
+  const priceColor = Number(process.env.NEXT_PUBLIC_PRICE_COLOR ?? '') || 750;
 
   // Payment proof state
   const [paymentFile, setPaymentFile] = useState<File | null>(null);
@@ -228,6 +234,11 @@ export default function Order() {
     setSubmitting(true);
 
     try {
+      const pricePerPage = formData.colorMode === 'color' ? priceColor : priceBw;
+      const totalPages = formData.pages * formData.copies;
+      const totalPrice = pricePerPage * totalPages;
+      const notes = `Halaman: ${formData.pages} per salinan, Salinan: ${formData.copies}, Total Halaman: ${totalPages}, Harga: ${formatCurrency(totalPrice)}`;
+
       const order = await addOrder({
         customer_name: formData.customerName,
         contact: formData.contact,
@@ -239,6 +250,7 @@ export default function Order() {
         color_mode: formData.colorMode,
         copies: formData.copies,
         paper_size: formData.paperSize,
+        notes,
       }, fileUrl || undefined, filePath || undefined, paymentFileUrl || undefined, paymentFilePath || undefined);
 
       if (order) {
@@ -484,6 +496,7 @@ export default function Order() {
                               <RadioGroupItem value={option.value} className="sr-only" />
                               <span className="font-semibold text-foreground">{option.label}</span>
                               <span className="text-xs text-muted-foreground mt-1">{option.desc}</span>
+                              <span className="text-xs text-muted-foreground mt-1">{formatCurrency(option.value === 'bw' ? priceBw : priceColor)} / halaman</span>
                               {formData.colorMode === option.value && (
                                 <motion.div
                                   initial={{ scale: 0 }}
@@ -529,6 +542,43 @@ export default function Order() {
                             size="icon"
                             className="h-12 w-12 rounded-xl"
                             onClick={() => setFormData({ ...formData, copies: Math.min(20, formData.copies + 1) })}
+                          >
+                            +
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="pages" className="text-base font-medium mb-4 block">
+                          Jumlah Halaman
+                        </Label>
+                        <div className="flex items-center gap-4">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="h-12 w-12 rounded-xl"
+                            onClick={() => setFormData({ ...formData, pages: Math.max(1, formData.pages - 1) })}
+                          >
+                            -
+                          </Button>
+                          <Input
+                            id="pages"
+                            type="number"
+                            min="1"
+                            max="9999"
+                            value={formData.pages}
+                            onChange={(e) =>
+                              setFormData({ ...formData, pages: Math.max(1, parseInt(e.target.value) || 1) })
+                            }
+                            className="h-12 text-center text-lg font-semibold flex-1"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="h-12 w-12 rounded-xl"
+                            onClick={() => setFormData({ ...formData, pages: Math.min(9999, formData.pages + 1) })}
                           >
                             +
                           </Button>
@@ -637,9 +687,18 @@ export default function Order() {
                             <span className="font-medium">{formData.copies}x</span>
                           </div>
                           <div className="flex justify-between">
+                            <span className="text-muted-foreground">Halaman</span>
+                            <span className="font-medium">{formData.copies} x {formData.pages} = {formData.copies * formData.pages}</span>
+                          </div>
+                          <div className="flex justify-between">
                             <span className="text-muted-foreground">Ukuran</span>
                             <span className="font-medium">A4</span>
                           </div>
+
+                          <div className="flex justify-between pt-2">
+                            <span className="text-muted-foreground">Harga</span>
+                            <span className="font-medium">{formatCurrency((formData.colorMode === 'color' ? priceColor : priceBw) * formData.pages * formData.copies)}</span>
+                          </div> 
                         </div>
                       </div>
 

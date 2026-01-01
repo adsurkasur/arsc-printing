@@ -16,6 +16,7 @@ export interface Order {
   payment_proof_deleted?: boolean;
   color_mode: "bw" | "color";
   copies: number;
+  pages: number;
   paper_size: "A4";
   status: OrderStatus;
   created_at: string;
@@ -34,9 +35,10 @@ export interface CreateOrderInput {
   payment_proof_path?: string | null;
   color_mode: "bw" | "color";
   copies: number;
+  pages?: number;
   paper_size: "A4";
   notes?: string;
-}
+} 
 
 // Database type for Supabase
 export type Database = {

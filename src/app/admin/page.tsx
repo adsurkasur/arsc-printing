@@ -820,6 +820,8 @@ export default function Admin() {
                       <TableHead>Bukti Bayar</TableHead>
                       <TableHead>Mode</TableHead>
                       <TableHead>Salinan</TableHead>
+                      <TableHead>Ukuran</TableHead>
+                      <TableHead>Halaman</TableHead>
                       <TableHead>Waktu</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Aksi</TableHead>
@@ -828,7 +830,7 @@ export default function Admin() {
                   <TableBody>
                     {loading ? (
                       <TableRow>
-                        <TableCell colSpan={9} className="text-center py-12">
+                        <TableCell colSpan={11} className="text-center py-12">
                           <motion.div
                             animate={{ rotate: 360 }}
                             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
@@ -841,7 +843,7 @@ export default function Admin() {
                       </TableRow>
                     ) : orders.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={9} className="text-center py-12">
+                        <TableCell colSpan={11} className="text-center py-12">
                           <div className="h-16 w-16 mx-auto mb-4 rounded-2xl bg-muted flex items-center justify-center">
                             <Printer className="h-8 w-8 text-muted-foreground" />
                           </div>
@@ -916,7 +918,9 @@ export default function Admin() {
                           <TableCell>
                             <ColorModeBadge mode={order.color_mode} />
                           </TableCell>
-                          <TableCell>{order.copies}x {order.paper_size}</TableCell>
+                          <TableCell>{order.copies}x</TableCell>
+                          <TableCell>{order.paper_size}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground">{`${order.copies} x ${order.pages ?? 1} = ${ (order.pages ?? 1) * order.copies }`}</TableCell>
                           <TableCell className="text-sm text-muted-foreground">
                             {formatDistanceToNow(new Date(order.created_at), { addSuffix: true, locale: idLocale })}
                           </TableCell>
