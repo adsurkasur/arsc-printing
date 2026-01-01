@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { QueueWidget } from '@/components/QueueWidget'
-import { CheckCircle, Clock, Shield, Zap, ArrowRight, Sparkles, ChevronUp } from 'lucide-react'
+import { CheckCircle, Clock, Shield, Zap, ArrowRight, Sparkles, ChevronUp, ChevronDown } from 'lucide-react'
 import { motion, FadeInUp, StaggerContainer, StaggerItem, PageTransition } from '@/components/animations'
 import { AnimatePresence } from 'framer-motion'
 
@@ -29,6 +29,12 @@ export default function Home() {
 
   const scrollToNext = () => {
     nextSectionRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  const scrollToTop = () => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
   }
 
   const features = [
@@ -205,7 +211,7 @@ export default function Home() {
                 transition={{ duration: 1.2, repeat: Infinity, delay: 0 }}
                 className="text-white/80"
               >
-                <ChevronUp className="h-4 w-4" />
+                <ChevronDown className="h-4 w-4" />
               </motion.div>
 
               <motion.div
@@ -213,7 +219,7 @@ export default function Home() {
                 transition={{ duration: 1.2, repeat: Infinity, delay: 0.18 }}
                 className="text-white/80"
               >
-                <ChevronUp className="h-4 w-4" />
+                <ChevronDown className="h-4 w-4" />
               </motion.div>
 
               <motion.div
@@ -221,7 +227,7 @@ export default function Home() {
                 transition={{ duration: 1.2, repeat: Infinity, delay: 0.36 }}
                 className="text-white/80"
               >
-                <ChevronUp className="h-4 w-4" />
+                <ChevronDown className="h-4 w-4" />
               </motion.div>
 
               <span className="sr-only">Scroll down</span>
@@ -287,7 +293,7 @@ export default function Home() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-24 relative overflow-hidden">
+        <section className="py-16 relative overflow-hidden">
           <div className="absolute inset-0 animated-gradient opacity-90" />
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0aC0ydi00aDJ2NHptMC02aC0ydi00aDJ2NHptLTQgNmgtMnYtNGgydjR6bTAtNmgtMnYtNGgydjR6Ii8+PC9nPjwvZz48L3N2Zz4=')]" />
           
@@ -299,6 +305,40 @@ export default function Home() {
                 transition={{ duration: 0.5 }}
                 className="max-w-3xl mx-auto"
               >
+                <div className="flex justify-center mb-8">
+                  <button
+                    onClick={scrollToTop}
+                    aria-label="Scroll to top"
+                    className="flex flex-col items-center bg-transparent focus:outline-none focus:ring-2 focus:ring-white/60 p-2 rounded-full"
+                  >
+                    <motion.div
+                      animate={{ y: [0, -8, 0], opacity: [0.6, 1, 0.6] }}
+                      transition={{ duration: 1.0, repeat: Infinity, delay: 0 }}
+                      className="text-white/80"
+                    >
+                      <ChevronUp className="h-4 w-4" />
+                    </motion.div>
+
+                    <motion.div
+                      animate={{ y: [0, -8, 0], opacity: [0.6, 1, 0.6] }}
+                      transition={{ duration: 1.0, repeat: Infinity, delay: 0.14 }}
+                      className="text-white/80"
+                    >
+                      <ChevronUp className="h-4 w-4" />
+                    </motion.div>
+
+                    <motion.div
+                      animate={{ y: [0, -8, 0], opacity: [0.6, 1, 0.6] }}
+                      transition={{ duration: 1.0, repeat: Infinity, delay: 0.28 }}
+                      className="text-white/80"
+                    >
+                      <ChevronUp className="h-4 w-4" />
+                    </motion.div>
+
+                    <span className="sr-only">Scroll to top</span>
+                  </button>
+                </div>
+
                 <h2 className="mb-6 text-3xl font-bold text-white md:text-5xl tracking-tight">
                   Siap Untuk Mencetak?
                 </h2>
