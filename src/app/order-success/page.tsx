@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle, Home, Search, Copy, Check, Sparkles, PartyPopper } from "lucide-react";
+import { CheckCircle, Home, Search, Copy, Check, Sparkles, PartyPopper, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { motion, PageTransition, FadeInUp, ScaleIn, StaggerContainer, StaggerItem } from "@/components/animations";
 
@@ -39,6 +39,7 @@ export default function OrderSuccess() {
   const [orderId, setOrderId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [showConfetti, setShowConfetti] = useState(true);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     const id = sessionStorage.getItem('lastOrderId');
@@ -60,6 +61,35 @@ export default function OrderSuccess() {
         description: "Gunakan ID ini untuk melacak pesanan Anda",
       });
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const downloadReceipt = async () => {
+    if (!orderId) return;
+    setDownloading(true);
+    try {
+      const res = await fetch(`/api/orders?id=${orderId}`);
+      if (!res.ok) throw new Error('Gagal mengambil data pesanan');
+      const data = await res.json();
+
+      const receipt = `ARSC Printing - Bukti Pesanan\n\nID: ${data.id}\nNama: ${data.customer_name}\nKontak: ${data.contact}\nFile: ${data.file_name}\nMode: ${data.color_mode === 'bw' ? 'B/W' : 'Warna'}\nSalinan: ${data.copies}\nUkuran: ${data.paper_size}\nStatus: ${data.status}\nWaktu: ${data.created_at}\n\nTerima kasih telah menggunakan ARSC Printing.`;
+
+      const blob = new Blob([receipt], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `arsc-receipt-${data.id}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      toast({ title: 'Unduhan dimulai', description: 'Bukti pesanan berhasil diunduh.' });
+    } catch (err) {
+      console.error('Download receipt error:', err);
+      toast({ title: 'Gagal', description: 'Tidak dapat mengunduh bukti pesanan', variant: 'destructive' });
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -184,7 +214,23 @@ export default function OrderSuccess() {
                     </Button>
                   </motion.div>
                 </StaggerItem>
-                
+
+                {/* Download receipt button */}
+                <StaggerItem>
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Button
+                      onClick={downloadReceipt}
+                      className="w-full h-12 rounded-xl border-border/50"
+                      size="lg"
+                      variant="outline"
+                      disabled={!orderId || downloading}
+                    >
+                      <Download className="mr-2 h-5 w-5" />
+                      {downloading ? 'Mengunduh...' : 'Unduh Bukti Pesanan'}
+                    </Button>
+                  </motion.div>
+                </StaggerItem>
+
                 <StaggerItem>
                   <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                     <Button
