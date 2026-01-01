@@ -239,6 +239,7 @@ export default function AdminLogin() {
                 </motion.div>
               </form>
 
+{/*
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -264,6 +265,7 @@ export default function AdminLogin() {
                   </p>
                 </div>
               </motion.div>
+*/}
             </Card>
           </ScaleIn>
 
@@ -274,7 +276,7 @@ export default function AdminLogin() {
             transition={{ delay: 0.8 }}
             className="text-center text-xs text-muted-foreground mt-6"
           >
-            ARSC Printing Admin Dashboard
+            © 2026 Agritech Research and Study Club (ARSC)
           </motion.p>
         </div>
       </div>
