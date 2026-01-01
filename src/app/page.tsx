@@ -198,13 +198,16 @@ export default function Home() {
         </section>
 
         {/* Queue Status Section */}
-        <section className="py-16 relative">
+        <section className="pt-24 md:pt-28 pb-12 md:pb-14 relative">
           <div className="absolute inset-0 bg-gradient-to-b from-muted/30 to-transparent" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_hsl(var(--primary)/0.05)_0%,_transparent_70%)]" />
           <div className="container relative mx-auto px-4">
-            <FadeInUp className="mx-auto max-w-md">
-              <QueueWidget />
-              <div className="mt-4 flex justify-center">
+            <FadeInUp className="mx-auto max-w-3xl space-y-4">
+              <div className="mx-auto max-w-xl">
+                <QueueWidget />
+              </div>
+
+              <div className="flex justify-center">
                 <Button size="sm" variant="ghost" onClick={() => router.push('/queue')}>Lihat Status Antrian</Button>
               </div>
             </FadeInUp>
@@ -212,7 +215,7 @@ export default function Home() {
         </section>
 
         {/* Features Section */}
-        <section className="py-24 md:py-32 relative">
+        <section className="py-12 md:py-14 relative">
           <div className="container mx-auto px-4">
             <FadeInUp className="text-center mb-16">
               <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
