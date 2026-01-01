@@ -89,16 +89,16 @@ export default function QueuePage() {
     <PageTransition>
       <div className="min-h-full py-8 px-4 w-full">
         <div className="mx-auto w-full max-w-screen-xl">
-          <FadeInUp className="mb-8">
+          <FadeInUp className="mb-6 sm:mb-8">
             <div className="mb-2">
-              <h1 className="text-3xl font-bold">Status Antrean</h1>
-              <p className="text-sm text-muted-foreground">Lihat antrean cetak: jumlah dan status</p>
+              <h1 className="text-2xl sm:text-3xl font-bold">Status Antrean</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground">Lihat antrean cetak: jumlah dan status</p>
             </div>
 
             <div className="flex items-center gap-3 justify-between">
               <div className="text-sm text-muted-foreground">
-                <div>Dalam Antrean</div>
-                <div className="text-lg font-semibold">{loading ? '—' : `${count} dokumen`}</div>
+                <div className="text-xs sm:text-sm">Dalam Antrean</div>
+                <div className="text-base sm:text-lg font-semibold">{loading ? '—' : `${count} dokumen`}</div>
               </div>
 
               <div>
@@ -151,7 +151,56 @@ export default function QueuePage() {
           </FadeInUp>
 
           <FadeInUp>
-            <Card className="w-full">
+            {/* Mobile Card View */}
+            <div className="block sm:hidden space-y-3">
+              {/* Loading states */}
+              {loading && !slowLoading && (
+                <Card className="p-6 text-center text-muted-foreground">Memuat...</Card>
+              )}
+
+              {loading && slowLoading && (
+                <Card className="p-6">
+                  <div className="flex flex-col items-center gap-3">
+                    <p className="text-sm text-muted-foreground">Proses memakan waktu atau gagal memuat data.</p>
+                    <Button size="sm" variant="outline" onClick={async () => { setRefreshing(true); try { await refreshOrders(); if (error) toast({ title: 'Gagal', description: error, variant: 'destructive' }); else toast({ title: 'Sukses', description: 'Status antrean diperbarui' }); } catch (err) { toast({ title: 'Gagal', description: 'Terjadi kesalahan saat menyegarkan', variant: 'destructive' }); } finally { setRefreshing(false); } }}>Segarkan</Button>
+                  </div>
+                </Card>
+              )}
+
+              {/* Error state */}
+              {(!loading && error) && (
+                <Card className="p-6">
+                  <div className="flex flex-col items-center gap-3">
+                    <p className="text-sm text-destructive">{error}</p>
+                    <Button size="sm" onClick={async () => { setRefreshing(true); try { await refreshOrders(); if (error) toast({ title: 'Gagal', description: error, variant: 'destructive' }); else toast({ title: 'Sukses', description: 'Status antrean diperbarui' }); } catch (err) { toast({ title: 'Gagal', description: 'Terjadi kesalahan saat menyegarkan', variant: 'destructive' }); } finally { setRefreshing(false); } }}>Segarkan</Button>
+                  </div>
+                </Card>
+              )}
+
+              {/* Empty state */}
+              {(!loading && !error && queue.length === 0) && (
+                <Card className="p-6 text-center text-muted-foreground">Tidak ada antrean saat ini</Card>
+              )}
+
+              {/* Queue cards */}
+              {queue.map((order, idx) => (
+                <Card key={order.id} className="p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded">#{idx + 1}</span>
+                        {statusBadge(order.status)}
+                      </div>
+                      <p className="font-medium truncate">{order.customer_name}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{new Date(order.created_at).toLocaleString()}</p>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+
+            {/* Desktop Table View */}
+            <Card className="w-full hidden sm:block">
               <Table>
                 <TableHeader>
                   <TableRow>

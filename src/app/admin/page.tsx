@@ -647,28 +647,28 @@ export default function Admin() {
           </DialogContent>
         </Dialog>
           {/* Header */}
-          <FadeInUp className="mb-8">
-            <div className="flex items-start justify-between flex-wrap gap-4">
-              <div className="flex items-center gap-4">
+          <FadeInUp className="mb-6 sm:mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: "spring", bounce: 0.5 }}
-                  className="h-14 w-14 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg"
+                  className="h-10 w-10 sm:h-14 sm:w-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg"
                 >
-                  <Shield className="h-7 w-7 text-white" />
+                  <Shield className="h-5 w-5 sm:h-7 sm:w-7 text-white" />
                 </motion.div>
                 <div>
-                  <h1 className="text-3xl font-bold text-foreground md:text-4xl tracking-tight">
+                  <h1 className="text-xl sm:text-3xl font-bold text-foreground md:text-4xl tracking-tight">
                     Dashboard Admin
                   </h1>
-                  <div className="mt-1 text-muted-foreground flex items-center gap-2 flex-wrap">
-                    <span>{user ? `${user.email}` : 'Kelola pesanan cetak dokumen'}</span>
+                  <div className="mt-1 text-sm sm:text-base text-muted-foreground flex items-center gap-2 flex-wrap">
+                    <span className="truncate max-w-[200px] sm:max-w-none">{user ? `${user.email}` : 'Kelola pesanan cetak dokumen'}</span>
                     {demoMode && <Badge variant="outline">Demo</Badge>}
                   </div>
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 self-end sm:self-auto">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
@@ -724,25 +724,25 @@ export default function Admin() {
           </FadeInUp>
 
           {/* Stats Cards */}
-          <StaggerContainer className="mb-8 grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+          <StaggerContainer className="mb-6 sm:mb-8 grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
             {/* Total Pesanan */}
             <StaggerItem>
                 <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ duration: 0.2 }}>
-                  <Card className="p-6 border-border/50 shadow-smooth bg-gradient-to-br from-primary/10 to-primary/5">
+                  <Card className="p-4 sm:p-6 border-border/50 shadow-smooth bg-gradient-to-br from-primary/10 to-primary/5">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-muted-foreground">Total Pesanan</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">Total Pesanan</p>
                         <motion.p
                           key={orders.length}
                           initial={{ scale: 0.5, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
-                          className="text-3xl font-bold text-primary"
+                          className="text-2xl sm:text-3xl font-bold text-primary"
                         >
                           {orders.length}
                         </motion.p>
                       </div>
-                      <div className="rounded-xl bg-primary/10 p-3">
-                        <TrendingUp className="h-6 w-6 text-primary" />
+                      <div className="rounded-lg sm:rounded-xl bg-primary/10 p-2 sm:p-3">
+                        <TrendingUp className="h-4 w-4 sm:h-6 sm:w-6 text-primary" />
                       </div>
                     </div>
                   </Card>
@@ -752,21 +752,21 @@ export default function Admin() {
               {/* Menunggu */}
               <StaggerItem>
                 <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ duration: 0.2 }}>
-                  <Card className="p-6 border-border/50 shadow-smooth bg-gradient-to-br from-yellow-500/10 to-yellow-500/5">
+                  <Card className="p-4 sm:p-6 border-border/50 shadow-smooth bg-gradient-to-br from-yellow-500/10 to-yellow-500/5">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-muted-foreground">Menunggu</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">Menunggu</p>
                         <motion.p
                           key={orders.filter((o) => o.status === "pending").length}
                           initial={{ scale: 0.5, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
-                          className="text-3xl font-bold text-yellow-600"
+                          className="text-2xl sm:text-3xl font-bold text-yellow-600"
                         >
                           {orders.filter((o) => o.status === "pending").length}
                         </motion.p>
                       </div>
-                      <div className="rounded-xl bg-yellow-500/10 p-3">
-                        <Clock className="h-6 w-6 text-yellow-600" />
+                      <div className="rounded-lg sm:rounded-xl bg-yellow-500/10 p-2 sm:p-3">
+                        <Clock className="h-4 w-4 sm:h-6 sm:w-6 text-yellow-600" />
                       </div>
                     </div>
                   </Card>
@@ -776,21 +776,21 @@ export default function Admin() {
               {/* Sedang Dicetak */}
               <StaggerItem>
                 <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ duration: 0.2 }}>
-                  <Card className="p-6 border-border/50 shadow-smooth bg-gradient-to-br from-blue-500/10 to-blue-500/5">
+                  <Card className="p-4 sm:p-6 border-border/50 shadow-smooth bg-gradient-to-br from-blue-500/10 to-blue-500/5">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-muted-foreground">Sedang Dicetak</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">Sedang Dicetak</p>
                         <motion.p
                           key={orders.filter((o) => o.status === "printing").length}
                           initial={{ scale: 0.5, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
-                          className="text-3xl font-bold text-blue-600"
+                          className="text-2xl sm:text-3xl font-bold text-blue-600"
                         >
                           {orders.filter((o) => o.status === "printing").length}
                         </motion.p>
                       </div>
-                      <div className="rounded-xl bg-blue-500/10 p-3">
-                        <Printer className="h-6 w-6 text-blue-600" />
+                      <div className="rounded-lg sm:rounded-xl bg-blue-500/10 p-2 sm:p-3">
+                        <Printer className="h-4 w-4 sm:h-6 sm:w-6 text-blue-600" />
                       </div>
                     </div>
                   </Card>
@@ -800,21 +800,21 @@ export default function Admin() {
               {/* Selesai */}
               <StaggerItem>
                 <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ duration: 0.2 }}>
-                  <Card className="p-6 border-border/50 shadow-smooth bg-gradient-to-br from-green-500/10 to-green-500/5">
+                  <Card className="p-4 sm:p-6 border-border/50 shadow-smooth bg-gradient-to-br from-green-500/10 to-green-500/5">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-muted-foreground">Selesai</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">Selesai</p>
                         <motion.p
                           key={orders.filter((o) => o.status === "completed").length}
                           initial={{ scale: 0.5, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
-                          className="text-3xl font-bold text-green-600"
+                          className="text-2xl sm:text-3xl font-bold text-green-600"
                         >
                           {orders.filter((o) => o.status === "completed").length}
                         </motion.p>
                       </div>
-                      <div className="rounded-xl bg-green-500/10 p-3">
-                        <CheckCircle className="h-6 w-6 text-green-600" />
+                      <div className="rounded-lg sm:rounded-xl bg-green-500/10 p-2 sm:p-3">
+                        <CheckCircle className="h-4 w-4 sm:h-6 sm:w-6 text-green-600" />
                       </div>
                     </div>
                   </Card>
@@ -824,21 +824,21 @@ export default function Admin() {
               {/* Diambil */}
               <StaggerItem>
                 <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ duration: 0.2 }}>
-                  <Card className="p-6 border-border/50 shadow-smooth bg-gradient-to-br from-indigo-500/10 to-indigo-500/5">
+                  <Card className="p-4 sm:p-6 border-border/50 shadow-smooth bg-gradient-to-br from-indigo-500/10 to-indigo-500/5">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-muted-foreground">Diambil</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">Diambil</p>
                         <motion.p
                           key={orders.filter((o) => o.status === "delivered").length}
                           initial={{ scale: 0.5, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
-                          className="text-3xl font-bold text-indigo-600"
+                          className="text-2xl sm:text-3xl font-bold text-indigo-600"
                         >
                           {orders.filter((o) => o.status === "delivered").length}
                         </motion.p>
                       </div>
-                      <div className="rounded-xl bg-indigo-500/10 p-3">
-                        <Home className="h-6 w-6 text-indigo-600" />
+                      <div className="rounded-lg sm:rounded-xl bg-indigo-500/10 p-2 sm:p-3">
+                        <Home className="h-4 w-4 sm:h-6 sm:w-6 text-indigo-600" />
                       </div>
                     </div>
                   </Card>
@@ -848,7 +848,127 @@ export default function Admin() {
 
           {/* Orders Table */}
           <FadeInUp delay={0.2}>
-            <Card className="shadow-smooth border-border/50 overflow-hidden">
+            {/* Mobile Card View */}
+            <div className="block lg:hidden space-y-3">
+              <div className="p-3 sm:p-4 border-b border-border bg-muted/30 rounded-t-lg">
+                <h2 className="font-semibold text-sm sm:text-base">Daftar Pesanan</h2>
+              </div>
+              
+              {loading ? (
+                <Card className="p-6 text-center">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className="inline-block"
+                  >
+                    <RefreshCw className="h-6 w-6 text-primary mx-auto mb-2" />
+                  </motion.div>
+                  <p className="text-sm text-muted-foreground">Memuat pesanan...</p>
+                </Card>
+              ) : orders.length === 0 ? (
+                <Card className="p-6 text-center">
+                  <div className="h-12 w-12 mx-auto mb-3 rounded-xl bg-muted flex items-center justify-center">
+                    <Printer className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">Belum ada pesanan</p>
+                </Card>
+              ) : (
+                orders.map((order, index) => (
+                  <motion.div
+                    key={order.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.03 }}
+                  >
+                    <Card className="p-3 sm:p-4">
+                      {/* Header: Name + Status */}
+                      <div className="flex items-start justify-between gap-2 mb-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium truncate">{order.customer_name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{order.contact}</p>
+                        </div>
+                        {getStatusBadge(order.status)}
+                      </div>
+                      
+                      {/* Details Grid */}
+                      <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+                        <div>
+                          <span className="text-muted-foreground">File:</span>
+                          <p className="font-medium truncate">{order.file_name}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Mode:</span>
+                          <div><ColorModeBadge mode={order.color_mode} /></div>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Halaman:</span>
+                          <p className="font-medium">{`${order.pages ?? 1} x ${order.copies} = ${(order.pages ?? 1) * order.copies}`}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Ukuran:</span>
+                          <p className="font-medium">{order.paper_size}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="text-xs text-muted-foreground mb-3">
+                        {formatDistanceToNow(new Date(order.created_at), { addSuffix: true, locale: idLocale })}
+                      </div>
+                      
+                      {/* Actions */}
+                      <div className="flex flex-wrap gap-2">
+                        {/* File actions */}
+                        {order.file_deleted || !order.file_url ? (
+                          <span className="text-xs text-muted-foreground flex items-center gap-1"><XCircle className="h-3 w-3" /> File dihapus</span>
+                        ) : (
+                          <DownloadWithCountdown fileUrl={order.file_url} expiresAt={order.file_expires_at} />
+                        )}
+                        
+                        {/* Payment proof */}
+                        {!order.payment_proof_deleted && order.payment_proof_url && (
+                          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => openProofModal(order)}>
+                            <FileText className="h-3 w-3 mr-1" /> Bukti
+                          </Button>
+                        )}
+                        
+                        {/* Status actions */}
+                        {order.status === "pending" && (
+                          <>
+                            <Button size="sm" className="h-7 text-xs" onClick={() => handleStatusUpdate(order.id, order.status)}>
+                              Cetak
+                            </Button>
+                            <Button size="sm" variant="outline" className="h-7 text-xs hover:!bg-destructive/90 hover:!text-destructive-foreground" onClick={() => requestCancelOrder(order.id)}>
+                              <XCircle className="h-3 w-3" />
+                            </Button>
+                          </>
+                        )}
+                        {order.status === "printing" && (
+                          <Button size="sm" className="h-7 text-xs" onClick={() => handleStatusUpdate(order.id, order.status)}>
+                            Selesai
+                          </Button>
+                        )}
+                        {order.status === "completed" && (
+                          <Button size="sm" className="h-7 text-xs" onClick={async () => {
+                            const ok = await updateOrderStatus(order.id, 'delivered');
+                            if (ok) toast({ title: 'Diambil', description: 'Pesanan ditandai sebagai diambil' });
+                            else toast({ title: 'Gagal', description: 'Tidak dapat menandai sebagai diambil', variant: 'destructive' });
+                          }}>
+                            Diambil
+                          </Button>
+                        )}
+                        {(order.status === "completed" || order.status === "delivered" || order.status === "cancelled") && (order.file_url || order.file_path) && !order.file_deleted && (
+                          <Button size="sm" variant="outline" className="h-7 text-xs hover:!bg-destructive/90 hover:!text-destructive-foreground" onClick={() => requestDeleteFile(order.id)}>
+                            <Trash className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+                    </Card>
+                  </motion.div>
+                ))
+              )}
+            </div>
+
+            {/* Desktop Table View */}
+            <Card className="shadow-smooth border-border/50 overflow-hidden hidden lg:block">
               <div className="p-4 border-b border-border bg-muted/30">
                 <h2 className="font-semibold">Daftar Pesanan</h2>
               </div>

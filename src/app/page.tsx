@@ -112,7 +112,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.2 }}
-                className="mb-6 text-4xl font-extrabold leading-tight text-white md:text-5xl lg:text-7xl tracking-tight"
+                className="mb-6 text-3xl font-extrabold leading-tight text-white sm:text-4xl md:text-5xl lg:text-7xl tracking-tight"
               >
                 Cetak Dokumen
                 <br />
@@ -136,7 +136,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.4 }}
-                className="mb-10 text-lg text-white/80 md:text-xl max-w-2xl mx-auto leading-relaxed"
+                className="mb-8 sm:mb-10 text-base sm:text-lg text-white/80 md:text-xl max-w-2xl mx-auto leading-relaxed px-2"
               >
                 Layanan cetak oleh ARSC. Upload dokumen dari mana saja,
                 pantau status real-time, dan ambil hasil cetak kapan siap.
@@ -178,7 +178,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.8 }}
-                className="mt-16 grid grid-cols-3 gap-8 max-w-lg mx-auto"
+                className="mt-10 sm:mt-16 grid grid-cols-3 gap-4 sm:gap-8 max-w-lg mx-auto px-2"
               >
                 {[
                   { value: '24/7', label: 'Akses Online' },
@@ -186,8 +186,8 @@ export default function Home() {
                   { value: 'ALL', label: 'Format Support' }
                 ].map((stat, i) => (
                   <div key={i} className="text-center">
-                    <div className="text-2xl md:text-3xl font-bold text-white">{stat.value}</div>
-                    <div className="text-sm text-white/60">{stat.label}</div>
+                    <div className="text-xl sm:text-2xl md:text-3xl font-bold text-white">{stat.value}</div>
+                    <div className="text-xs sm:text-sm text-white/60">{stat.label}</div>
                   </div>
                 ))}
               </motion.div>
@@ -251,11 +251,11 @@ export default function Home() {
         {/* Features Section */}
         <section className="py-12 md:py-14 relative">
           <div className="container mx-auto px-4">
-            <FadeInUp className="text-center mb-16">
+            <FadeInUp className="text-center mb-10 sm:mb-16">
               <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
                 Keunggulan Kami
               </span>
-              <h2 className="text-3xl font-bold text-foreground md:text-5xl tracking-tight">
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground md:text-5xl tracking-tight">
                 Kenapa Pilih <span className="gradient-text">ARSC Printing?</span>
               </h2>
               <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">
@@ -263,13 +263,13 @@ export default function Home() {
               </p>
             </FadeInUp>
 
-            <StaggerContainer className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <StaggerContainer className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               {features.map((feature, index) => (
                 <StaggerItem key={index}>
                   <motion.div
                     whileHover={{ y: -8, scale: 1.02 }}
                     transition={{ duration: 0.3 }}
-                    className="group relative p-8 rounded-2xl bg-card border border-border hover:border-primary/30 hover:shadow-xl transition-all duration-300"
+                    className="group relative p-5 sm:p-8 rounded-2xl bg-card border border-border hover:border-primary/30 hover:shadow-xl transition-all duration-300"
                   >
                     {/* Glow effect on hover */}
                     <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/5 to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -339,10 +339,10 @@ export default function Home() {
                   </button>
                 </div>
 
-                <h2 className="mb-6 text-3xl font-bold text-white md:text-5xl tracking-tight">
+                <h2 className="mb-4 sm:mb-6 text-2xl sm:text-3xl font-bold text-white md:text-5xl tracking-tight">
                   Siap Untuk Mencetak?
                 </h2>
-                <p className="mb-10 text-lg text-white/80 max-w-xl mx-auto">
+                <p className="mb-6 sm:mb-10 text-base sm:text-lg text-white/80 max-w-xl mx-auto px-2">
                   Mulai cetak dokumen Anda sekarang dan hemat waktu berharga Anda
                 </p>
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>

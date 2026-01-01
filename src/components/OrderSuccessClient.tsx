@@ -147,7 +147,7 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
 
   return (
     <PageTransition>
-      <div className="min-h-full py-16 px-4 flex items-center justify-center relative overflow-hidden">
+      <div className="min-h-full py-8 sm:py-16 px-4 flex items-center justify-center relative overflow-hidden">
         {/* Confetti animation (only when we actually have an orderId) */}
         {orderId && showConfetti && (
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -184,15 +184,15 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
           ) : (
             // Success UI — shown only when we have an orderId
             <>
-              <FadeInUp className="text-center mb-8">
+              <FadeInUp className="text-center mb-6 sm:mb-8">
                 <motion.div
                   initial={{ scale: 0, rotate: -180 }}
                   animate={{ scale: 1, rotate: 0 }}
                   transition={{ type: "spring", bounce: 0.5, duration: 0.8 }}
                   className="relative inline-block"
                 >
-                  <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600 shadow-lg">
-                    <CheckCircle className="h-14 w-14 text-white" />
+                  <div className="mx-auto flex h-16 w-16 sm:h-24 sm:w-24 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600 shadow-lg">
+                    <CheckCircle className="h-10 w-10 sm:h-14 sm:w-14 text-white" />
                   </div>
                   {/* Sparkle decorations */}
                   <motion.div
@@ -213,12 +213,12 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
               </FadeInUp>
 
               <ScaleIn delay={0.3}>
-                <Card className="p-8 text-center shadow-smooth border-border/50 bg-card/80 backdrop-blur-sm">
+                <Card className="p-5 sm:p-8 text-center shadow-smooth border-border/50 bg-card/80 backdrop-blur-sm">
                   <motion.h1
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 }}
-                    className="mb-3 text-3xl font-bold text-foreground tracking-tight"
+                    className="mb-3 text-2xl sm:text-3xl font-bold text-foreground tracking-tight"
                   >
                     Pesanan Berhasil! 🎉
                   </motion.h1>
@@ -247,9 +247,9 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.6 }}
-                    className="mb-8 rounded-2xl bg-gradient-to-r from-muted to-muted/50 p-6 border border-border/50"
+                    className="mb-6 sm:mb-8 rounded-xl sm:rounded-2xl bg-gradient-to-r from-muted to-muted/50 p-4 sm:p-6 border border-border/50"
                   >
-                    <p className="text-xs text-muted-foreground mb-3 uppercase tracking-wider font-medium">
+                    <p className="text-xs text-muted-foreground mb-2 sm:mb-3 uppercase tracking-wider font-medium">
                       ID Pesanan Anda
                     </p>
 
@@ -258,8 +258,8 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
                     ) : lookupError ? (
                       <p className="text-sm text-destructive">{lookupError}</p>
                     ) : (
-                      <div className="flex items-center justify-center gap-3">
-                        <code className="text-xl font-mono font-bold bg-background px-4 py-2 rounded-xl break-all">
+                      <div className="flex items-center justify-center gap-2 sm:gap-3">
+                        <code className="text-sm sm:text-xl font-mono font-bold bg-background px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl break-all max-w-full overflow-hidden">
                           {orderId}
                         </code>
                         {/* Copy ID UI disabled for now (kept for future re-enable)
@@ -300,10 +300,10 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
                       <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                         <Button
                           onClick={() => router.push("/queue")}
-                          className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity"
+                          className="w-full h-10 sm:h-12 rounded-xl bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity"
                           size="lg"
                         >
-                          <Search className="mr-2 h-5 w-5" />
+                          <Search className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                           Status Antrean
                         </Button>
                       </motion.div>
@@ -314,12 +314,12 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
                       <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                         <Button
                           onClick={downloadReceipt}
-                          className="w-full h-12 rounded-xl border-border/50"
+                          className="w-full h-10 sm:h-12 rounded-xl border-border/50"
                           size="lg"
                           variant="outline"
                           disabled={!orderId || downloading}
                         >
-                          <Download className="mr-2 h-5 w-5" />
+                          <Download className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                           {downloading ? 'Mengunduh...' : 'Unduh Bukti Pesanan'}
                         </Button>
                       </motion.div>
@@ -330,10 +330,10 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
                         <Button
                           onClick={() => router.push("/")}
                           variant="outline"
-                          className="w-full h-12 rounded-xl border-border/50"
+                          className="w-full h-10 sm:h-12 rounded-xl border-border/50"
                           size="lg"
                         >
-                          <Home className="mr-2 h-5 w-5" />
+                          <Home className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                           Kembali ke Beranda
                         </Button>
                       </motion.div>
@@ -343,7 +343,7 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
                       <Button
                         onClick={() => router.push("/order")}
                         variant="outline"
-                        className="w-full h-12 rounded-xl border-border/50"
+                        className="w-full h-10 sm:h-12 rounded-xl border-border/50"
                         size="lg"
                       >
                         Buat Pesanan Baru
