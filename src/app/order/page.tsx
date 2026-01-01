@@ -752,6 +752,13 @@ export default function Order() {
                         <div className="w-full rounded-xl overflow-hidden border border-border bg-muted/30 flex items-center justify-center" style={{ aspectRatio: '1135 / 1600' }}>
                           <img src={process.env.NEXT_PUBLIC_QRIS_URL || '/qris-placeholder.svg'} alt="QRIS" className="w-full h-full object-contain" />
                         </div>
+
+                      <div className="mt-4 p-4 rounded-xl bg-muted/10 border border-border text-center">
+                        <p className="text-sm text-muted-foreground">Total Pembayaran</p>
+                        <p className="text-2xl font-bold mt-1">{formatCurrency((formData.colorMode === 'color' ? priceColor : priceBw) * formData.pages * formData.copies)}</p>
+                        <p className="text-xs text-muted-foreground mt-1">({formatCurrency(formData.colorMode === 'color' ? priceColor : priceBw)} / halaman × {formData.pages} halaman × {formData.copies} salinan)</p>
+                      </div>
+
                       </div>
 
                       <div>
