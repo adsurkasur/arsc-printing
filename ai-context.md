@@ -1,7 +1,33 @@
 # AI Context Log
 
-_Cleared by user on 2026-01-01_
+## Current Task: Mobile View Optimization
+- **Phase**: Study → Propose
+- **Task**: Fix overflows and unoptimized sizes for mobile view
+- **Last Updated**: 2026-01-01
 
+## Issues Identified
+1. **Home page (page.tsx)**:
+   - Hero section large paddings, text-7xl not responsive
+   - Features grid cols-4 doesn't scale for small screens
+   - Stats grid cols-3 can overflow
+
+2. **Order page (order/page.tsx)**:
+   - Step indicator overflow on small screens
+   - Cards p-8 padding too much on mobile
+
+3. **Queue page (queue/page.tsx)**:
+   - Table causes horizontal overflow
+
+4. **Admin page (admin/page.tsx)**:
+   - Stats cards cramped on mobile
+   - 11-column table causes major overflow
+
+5. **OrderSuccessClient.tsx**:
+   - Code ID display overflow, fixed paddings
+
+---
+
+_Previous session context below_
 
 ---
 
@@ -28,6 +54,7 @@ _Cleared by user on 2026-01-01_
 ### Completed Features
 1. ✅ **Supabase Integration**
    - Browser client (`src/lib/supabase/client.ts`)
+
    - Server client (`src/lib/supabase/server.ts`)
    - Middleware for session management (`src/lib/supabase/middleware.ts`)
 
