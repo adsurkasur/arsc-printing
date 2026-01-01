@@ -381,8 +381,10 @@ export default function Admin() {
               <AlertDialogCancel onClick={() => { setDeleteModalOpen(false); setDeleteTargetId(null); }}>
                 Batal
               </AlertDialogCancel>
-              <AlertDialogAction onClick={confirmDeleteFile} className="bg-destructive text-white">
-                {deleting ? 'Menghapus...' : 'Hapus file'}
+              <AlertDialogAction asChild>
+                <Button variant="destructive" className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={confirmDeleteFile} disabled={deleting}>
+                  {deleting ? 'Menghapus...' : 'Hapus file'}
+                </Button>
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -401,8 +403,10 @@ export default function Admin() {
               <AlertDialogCancel onClick={() => { setCancelModalOpen(false); setCancelTargetId(null); }}>
                 Batal
               </AlertDialogCancel>
-              <AlertDialogAction onClick={confirmCancelOrder} className="bg-destructive text-white">
-                {cancelling ? 'Membatalkan...' : 'Batalkan pesanan'}
+              <AlertDialogAction asChild>
+                <Button variant="destructive" className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={confirmCancelOrder} disabled={cancelling}>
+                  {cancelling ? 'Membatalkan...' : 'Batalkan pesanan'}
+                </Button>
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -733,7 +737,7 @@ export default function Admin() {
                                         <Button
                                           size="sm"
                                           variant="outline"
-                                          className="rounded-lg hover:bg-red-500/10 hover:text-red-600"
+                                          className="rounded-lg hover:!bg-destructive/90 hover:!text-destructive-foreground focus-visible:!ring-destructive"
                                           onClick={() => requestCancelOrder(order.id)}
                                         >
                                           <XCircle className="h-4 w-4" />
@@ -766,7 +770,7 @@ export default function Admin() {
                                         <Button
                                           size="sm"
                                           variant="outline"
-                                          className="rounded-lg hover:bg-red-500/10 hover:text-red-600"
+                                          className="rounded-lg hover:!bg-destructive/90 hover:!text-destructive-foreground focus-visible:!ring-destructive"
                                           onClick={() => requestDeleteFile(order.id)}
                                         >
                                           <Trash className="h-4 w-4" />
