@@ -207,7 +207,11 @@ export default function QueuePage() {
                       <TableCell className="font-medium">{idx + 1}</TableCell>
                       <TableCell>{order.customer_name}</TableCell>
                       <TableCell>{order.copies}</TableCell>
-                      <TableCell className="capitalize">{order.color_mode}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="rounded-lg">
+                          {order.color_mode === "bw" ? "B/W" : "Warna"}
+                        </Badge>
+                      </TableCell>
                       <TableCell>
                         {statusBadge(order.status)}
                       </TableCell>
