@@ -292,9 +292,11 @@ export default function Order() {
         <div className="container mx-auto max-w-2xl">
           {/* Header */}
           <FadeInUp className="mb-10 text-center">
-            <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
-              Pesan Cetak
-            </span>
+            {/*
+                  <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+                    Pesan Cetak
+                  </span>
+            */}
             <h1 className="text-3xl font-bold text-foreground md:text-4xl tracking-tight">
               Buat Pesanan Baru
             </h1>
@@ -808,7 +810,7 @@ export default function Order() {
                                   <Upload className="h-6 w-6 text-muted-foreground" />
                                 </div>
                                 <p className="text-lg font-medium text-foreground">Pilih file bukti pembayaran</p>
-                                <p className="mt-2 text-sm text-muted-foreground">Didukung: PNG, JPEG, WEBP, atau PDF (Maks 5MB)</p>
+                                <p className="mt-2 text-sm text-muted-foreground">Didukung: PNG, JPEG, WEBP, atau PDF. <br /> (Maks 5MB)</p>
                               </div>
                             )}
                           </motion.label>
