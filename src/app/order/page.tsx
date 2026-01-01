@@ -152,10 +152,11 @@ export default function Order() {
           description: "Pesanan Anda telah diterima dan akan segera diproses",
         });
 
-        // Store order ID for success page
+        // Store order ID for success page and redirect with explicit param
         sessionStorage.setItem('lastOrderId', order.id);
 
-        router.push("/order-success");
+        // Prefer passing the order id in the URL so it's bookmarkable and won't be overwritten by later orders
+        router.push(`/order-success?orderId=${order.id}`);
       } else {
         throw new Error('Failed to create order');
       }
