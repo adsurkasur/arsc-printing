@@ -88,7 +88,7 @@ function DownloadWithCountdown({ fileUrl, expiresAt }: { fileUrl: string; expire
           <Download className="h-4 w-4" />
         </motion.button>
       </TooltipTrigger>
-      <TooltipContent side="top">{remaining ? `Hapus file dalam ${remaining}` : 'Download'}</TooltipContent>
+      <TooltipContent side="top">{remaining ? `Hapus file dalam ${remaining}` : 'Unduh file'}</TooltipContent>
     </Tooltip>
   );
 }
