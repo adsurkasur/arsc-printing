@@ -10,7 +10,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from '@/lib/utils';
 import { useOrders } from "@/contexts/OrderContext";
-import { Upload, FileText, CheckCircle, Loader2, ArrowRight, ArrowLeft, Palette, Copy, User, CreditCard } from "lucide-react";
+import { Upload, FileText, CheckCircle, Loader2, ArrowRight, ArrowLeft, Palette, Copy, User, CreditCard, Download } from "lucide-react";
 import { motion, PageTransition, FadeInUp } from "@/components/animations";
 import { AnimatePresence } from "framer-motion";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
@@ -196,6 +196,32 @@ export default function Order() {
       toast({ title: 'Bukti pembayaran dipilih (Demo Mode)', description: 'Upload akan berfungsi setelah Supabase dikonfigurasi' });
     } finally {
       setPaymentUploading(false);
+    }
+  };
+
+  // Download QRIS helper: try programmatic fetch/download, fallback to opening in new tab
+  const downloadQris = async () => {
+    const url = process.env.NEXT_PUBLIC_QRIS_URL || '/qris-placeholder.svg';
+
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Network response was not ok');
+      const blob = await res.blob();
+      const contentType = res.headers.get('content-type') || '';
+      const ext = contentType.split('/').pop() || 'svg';
+      const filename = `qris.${ext}`;
+
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      // Fallback to opening the image in a new tab (works for cross-origin assets)
+      window.open(url, '_blank');
     }
   };
 
@@ -756,6 +782,13 @@ export default function Order() {
                           <img src={process.env.NEXT_PUBLIC_QRIS_URL || '/qris-placeholder.svg'} alt="QRIS" className="w-full h-full object-contain" />
                         </div>
 
+                        <div className="flex justify-center mt-3">
+                          <Button variant="outline" size="sm" className="h-9 sm:h-10 px-3 sm:px-4" onClick={downloadQris} aria-label="Unduh QRIS">
+                            <Download className="mr-2 h-4 w-4" />
+                            Unduh QRIS
+                          </Button>
+                        </div>
+
                       <div className="mt-3 sm:mt-4 p-3 sm:p-4 rounded-xl bg-muted/10 border border-border text-center">
                         <p className="text-sm text-muted-foreground">Total Pembayaran</p>
                         <p className="text-xl sm:text-2xl font-bold mt-1">{formatCurrency((formData.colorMode === 'color' ? priceColor : priceBw) * formData.pages * formData.copies)}</p>
@@ -805,7 +838,7 @@ export default function Order() {
                                 <p className="mt-2 text-sm text-muted-foreground">✓ Bukti pembayaran siap</p>
                               </div>
                             ) : (
-                              <div className="text-center">
+                              <div className="text-center py-4">
                                 <div className="mx-auto mb-3 sm:mb-4 h-10 w-10 sm:h-12 sm:w-12 rounded-2xl bg-muted flex items-center justify-center">
                                   <Upload className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
                                 </div>
