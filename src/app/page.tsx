@@ -294,14 +294,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Footer */}
-        <footer className="py-8 border-t border-border">
-          <div className="container mx-auto px-4 text-center">
-            <p className="text-sm text-muted-foreground">
-              © 2026 Agritech Research and Study Club (ARSC)
-            </p>
-          </div>
-        </footer>
+
       </div>
     </PageTransition>
   )

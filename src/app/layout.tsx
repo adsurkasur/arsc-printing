@@ -38,6 +38,11 @@ export default function RootLayout({
           <main className="flex-1">
             {children}
           </main>
+          <footer className="py-6 border-t border-border bg-background">
+            <div className="container mx-auto px-4 text-center">
+              <p className="text-sm text-muted-foreground">© 2026 Agritech Research and Study Club (ARSC)</p>
+            </div>
+          </footer>
         </Providers>
         <Analytics />
       </body>

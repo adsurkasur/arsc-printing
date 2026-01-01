@@ -270,14 +270,7 @@ export default function AdminLogin() {
           </ScaleIn>
 
           {/* Footer */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
-            className="text-center text-xs text-muted-foreground mt-6"
-          >
-            © 2026 Agritech Research and Study Club (ARSC)
-          </motion.p>
+
         </div>
       </div>
     </PageTransition>
