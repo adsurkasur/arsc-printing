@@ -33,6 +33,7 @@
 - **Kept**: "Anyone can create orders" (INSERT for anon/authenticated)
 - **Kept**: "Anyone can read orders" (SELECT for anon/authenticated)  
 - **Changed**: "Authenticated users can update" → "Only admins can update orders"
+- **Fix applied**: Added `DROP POLICY IF EXISTS "Only admins can update orders"` so re-running the schema is idempotent and won't fail if the policy already exists.
   - Now uses `public.is_admin()` check
   - Added DROP POLICY IF EXISTS to handle upgrades
 - **New**: "Only admins can delete orders" (DELETE policy)
@@ -297,6 +298,7 @@
 - `src/app/api/orders/route.ts` - Accept `payment_proof_*` fields and set expiry (default 24h)
 - `src/app/api/delete-file/route.ts` - Support deleting `payment_proof`
 - `supabase-schema.sql` - Added payment proof columns + indexes
+  - Added `payment_proof_url` column and comment
 - `public/qris-placeholder.svg` - QRIS placeholder image
 - `README.md` - Supabase setup instructions
 
@@ -319,6 +321,28 @@
 
 1. Create Supabase project at https://database.new
 2. Run `supabase-schema.sql` in SQL Editor
+
+> **Verification note (2026-01-01):** You ran the verification queries and the `payment_proof_url` column now exists (type: text). ✅
+>
+> **Recommended test (dev/test environment):** Run the following statements to insert a test order, confirm it, and then remove the test row:
+>
+> ```sql
+> -- Insert a test order (dev/test only)
+> INSERT INTO public.orders (customer_name, contact, file_name, color_mode, copies, paper_size, estimated_time, payment_proof_url)
+> VALUES ('Test User','+000000000','test.pdf','bw',1,'A4',5,'https://example.com/documents/test-proof.pdf');
+>
+> -- Confirm the inserted test row
+> SELECT id, customer_name, payment_proof_url, payment_proof_expires_at
+> FROM public.orders
+> WHERE customer_name = 'Test User'
+> ORDER BY created_at DESC
+> LIMIT 1;
+>
+> -- Clean up test row
+> DELETE FROM public.orders WHERE customer_name = 'Test User';
+> ```
+>
+> If you run these and paste the results here, I will confirm everything looks correct and update the schema notes accordingly.
 3. Create admin user in Authentication > Users
 4. Copy `.env.local.example` to `.env.local`
 5. Add Supabase URL and anon key

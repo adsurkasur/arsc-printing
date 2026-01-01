@@ -77,12 +77,14 @@ ALTER TABLE user_roles ENABLE ROW LEVEL SECURITY;
 -- ============================================================================
 
 -- Policy: Anyone can create orders (for customers submitting print jobs)
+DROP POLICY IF EXISTS "Anyone can create orders" ON orders;
 CREATE POLICY "Anyone can create orders"
   ON orders FOR INSERT
   TO anon, authenticated
   WITH CHECK (true);
 
 -- Policy: Anyone can read orders (for tracking via order ID)
+DROP POLICY IF EXISTS "Anyone can read orders" ON orders;
 CREATE POLICY "Anyone can read orders"
   ON orders FOR SELECT
   TO anon, authenticated
@@ -90,6 +92,7 @@ CREATE POLICY "Anyone can read orders"
 
 -- Policy: Only admins can update orders (status changes, etc.)
 DROP POLICY IF EXISTS "Authenticated users can update orders" ON orders;
+DROP POLICY IF EXISTS "Only admins can update orders" ON orders;
 CREATE POLICY "Only admins can update orders"
   ON orders FOR UPDATE
   TO authenticated
@@ -97,6 +100,7 @@ CREATE POLICY "Only admins can update orders"
   WITH CHECK (public.is_admin());
 
 -- Policy: Only admins can delete orders
+DROP POLICY IF EXISTS "Only admins can delete orders" ON orders;
 CREATE POLICY "Only admins can delete orders"
   ON orders FOR DELETE
   TO authenticated
@@ -107,18 +111,21 @@ CREATE POLICY "Only admins can delete orders"
 -- ============================================================================
 
 -- Policy: Only admins can read user roles
+DROP POLICY IF EXISTS "Only admins can read user roles" ON user_roles;
 CREATE POLICY "Only admins can read user roles"
   ON user_roles FOR SELECT
   TO authenticated
   USING (public.is_admin());
 
 -- Policy: Only admins can insert user roles
+DROP POLICY IF EXISTS "Only admins can insert user roles" ON user_roles;
 CREATE POLICY "Only admins can insert user roles"
   ON user_roles FOR INSERT
   TO authenticated
   WITH CHECK (public.is_admin());
 
 -- Policy: Only admins can update user roles
+DROP POLICY IF EXISTS "Only admins can update user roles" ON user_roles;
 CREATE POLICY "Only admins can update user roles"
   ON user_roles FOR UPDATE
   TO authenticated
@@ -126,6 +133,7 @@ CREATE POLICY "Only admins can update user roles"
   WITH CHECK (public.is_admin());
 
 -- Policy: Only admins can delete user roles
+DROP POLICY IF EXISTS "Only admins can delete user roles" ON user_roles;
 CREATE POLICY "Only admins can delete user roles"
   ON user_roles FOR DELETE
   TO authenticated
@@ -141,18 +149,21 @@ VALUES ('documents', 'documents', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- Storage policy: Anyone can upload documents
+DROP POLICY IF EXISTS "Anyone can upload documents" ON storage.objects;
 CREATE POLICY "Anyone can upload documents"
   ON storage.objects FOR INSERT
   TO anon, authenticated
   WITH CHECK (bucket_id = 'documents');
 
 -- Storage policy: Anyone can read documents
+DROP POLICY IF EXISTS "Anyone can read documents" ON storage.objects;
 CREATE POLICY "Anyone can read documents"
   ON storage.objects FOR SELECT
   TO anon, authenticated
   USING (bucket_id = 'documents');
 
 -- Storage policy: Only admins can delete documents (for cleanup)
+DROP POLICY IF EXISTS "Only admins can delete documents" ON storage.objects;
 CREATE POLICY "Only admins can delete documents"
   ON storage.objects FOR DELETE
   TO authenticated
@@ -166,21 +177,36 @@ CREATE POLICY "Only admins can delete documents"
 -- ============================================================================
 
 -- Enable realtime for orders table
-ALTER PUBLICATION supabase_realtime ADD TABLE orders;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+      AND schemaname = 'public'
+      AND tablename = 'orders'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.orders;
+  END IF;
+END
+$$;
 
 -- Create indexes for faster queries
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at DESC);
 
 -- Add file lifecycle columns
-ALTER TABLE IF EXISTS orders ADD COLUMN IF NOT EXISTS file_path TEXT;
-ALTER TABLE IF NOT EXISTS orders ADD COLUMN IF NOT EXISTS file_expires_at TIMESTAMP WITH TIME ZONE;
-ALTER TABLE IF EXISTS orders ADD COLUMN IF NOT EXISTS file_deleted BOOLEAN DEFAULT FALSE;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS file_path TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS file_expires_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS file_deleted BOOLEAN DEFAULT FALSE;
 
 -- Add payment proof lifecycle columns
-ALTER TABLE IF EXISTS orders ADD COLUMN IF NOT EXISTS payment_proof_path TEXT;
-ALTER TABLE IF EXISTS orders ADD COLUMN IF NOT EXISTS payment_proof_expires_at TIMESTAMP WITH TIME ZONE;
-ALTER TABLE IF EXISTS orders ADD COLUMN IF NOT EXISTS payment_proof_deleted BOOLEAN DEFAULT FALSE;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_proof_path TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_proof_expires_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_proof_deleted BOOLEAN DEFAULT FALSE;
+-- Public URL for uploaded payment proof (if any). Nullable to support demo mode and legacy rows.
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_proof_url TEXT;
+COMMENT ON COLUMN public.orders.payment_proof_url IS 'Public URL for uploaded payment proof (if any)';
 
 CREATE INDEX IF NOT EXISTS idx_orders_file_expires_at ON orders(file_expires_at);
 CREATE INDEX IF NOT EXISTS idx_orders_file_deleted ON orders(file_deleted);
@@ -269,4 +295,18 @@ ON CONFLICT (user_id, role) DO NOTHING;
 --
 -- Test is_admin() function:
 -- SELECT public.is_admin(); -- Should return true if you're logged in as admin
+
+-- Verify `payment_proof_url` column exists on `orders`:
+-- SELECT column_name, data_type
+-- FROM information_schema.columns
+-- WHERE table_schema = 'public' AND table_name = 'orders' AND column_name = 'payment_proof_url';
+
+-- Test inserting an order with a `payment_proof_url` (run in a dev or test environment):
+-- INSERT INTO public.orders (customer_name, contact, file_name, color_mode, copies, paper_size, estimated_time, payment_proof_url)
+-- VALUES ('Test User','+000000000','test.pdf','bw',1,'A4',5,'https://example.com/documents/test-proof.pdf');
+
+-- SELECT id, customer_name, payment_proof_url, payment_proof_expires_at FROM public.orders WHERE customer_name = 'Test User' ORDER BY created_at DESC LIMIT 1;
+
+-- After testing, optionally delete the test row:
+-- DELETE FROM public.orders WHERE customer_name = 'Test User';
 
