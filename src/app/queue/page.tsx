@@ -27,6 +27,20 @@ export default function QueuePage() {
     .filter((o) => o.status === "pending" || o.status === "printing")
     .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
+  // If loading takes longer than this threshold, show a helpful message instead of indefinite "Memuat..."
+  const [slowLoading, setSlowLoading] = useState(false);
+  useEffect(() => {
+    if (!loading) {
+      setSlowLoading(false);
+      return;
+    }
+    const t = setTimeout(() => setSlowLoading(true), 2000); // 2s
+    return () => {
+      clearTimeout(t);
+      setSlowLoading(false);
+    };
+  }, [loading]);
+
   const statusVariant = (status: string) => {
     switch (status) {
       case "pending":
@@ -49,7 +63,7 @@ export default function QueuePage() {
           <FadeInUp className="mb-8">
             <div className="mb-2">
               <h1 className="text-3xl font-bold">Status Antrian</h1>
-              <p className="text-sm text-muted-foreground">Lihat antrian cetak: jumlah dan estimasi waktu</p>
+              <p className="text-sm text-muted-foreground">Lihat antrian cetak: jumlah dan status</p>
             </div>
 
             <div className="flex items-center gap-3 justify-between">
@@ -121,15 +135,44 @@ export default function QueuePage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {loading ? (
+                  {/* Loading short -> show spinner text; if loading persists, show a helpful message with action */}
+                  {loading && !slowLoading && (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Memuat...</TableCell>
                     </TableRow>
-                  ) : queue.length === 0 ? (
+                  )}
+
+                  {loading && slowLoading && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8">
+                        <div className="flex flex-col items-center gap-3">
+                          <p className="text-sm text-muted-foreground">Proses memakan waktu atau gagal memuat data.</p>
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline" onClick={async () => { setRefreshing(true); try { await refreshOrders(); if (error) toast({ title: 'Gagal', description: error, variant: 'destructive' }); else toast({ title: 'Sukses', description: 'Status antrian diperbarui' }); } catch (err) { toast({ title: 'Gagal', description: 'Terjadi kesalahan saat menyegarkan', variant: 'destructive' }); } finally { setRefreshing(false); } }}>Segarkan</Button>
+                          </div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+
+                  {/* Error state (non-loading) */}
+                  {(!loading && error) && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8">
+                        <div className="flex flex-col items-center gap-3">
+                          <p className="text-sm text-destructive">{error}</p>
+                          <Button size="sm" onClick={async () => { setRefreshing(true); try { await refreshOrders(); if (error) toast({ title: 'Gagal', description: error, variant: 'destructive' }); else toast({ title: 'Sukses', description: 'Status antrian diperbarui' }); } catch (err) { toast({ title: 'Gagal', description: 'Terjadi kesalahan saat menyegarkan', variant: 'destructive' }); } finally { setRefreshing(false); } }}>Segarkan</Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+
+                  {/* Empty state when not loading */}
+                  {(!loading && !error && queue.length === 0) && (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Tidak ada antrian saat ini</TableCell>
                     </TableRow>
-                  ) : null}
+                  )}
 
                   {queue.map((order, idx) => (
                     <TableRow key={order.id}>
@@ -138,7 +181,6 @@ export default function QueuePage() {
                       <TableCell>{order.copies}</TableCell>
                       <TableCell className="capitalize">{order.color_mode}</TableCell>
                       <TableCell>
-                        {/* @ts-expect-error: Badge variant expects predefined variants */}
                         <Badge variant={statusVariant(order.status)}>
                           {order.status}
                         </Badge>

@@ -8,6 +8,16 @@
 
 ---
 
+## Recent Work: Queue fetch timeout & infinite load fix
+- **Phase**: IMPLEMENT → COMPLETE ✅
+- **Task**: Fix repeated fetch / infinite loading on `/queue` due to unstable `refreshOrders`
+- **Last Updated**: 2026-01-01
+- **Status**: Fixed; `refreshOrders` memoized and abort handling improved
+- **Files Modified**:
+  - `src/contexts/OrderContext.tsx` (memoize `refreshOrders`, avoid treating abort as error, improved JSON parse handling)
+
+---
+
 ## Recent Work: Admin Cancel Flow Fix
 - **Phase**: IMPLEMENT → COMPLETE ✅
 - **Task**: Fix admin "Batalkan pesanan" action failing due to server-side RLS/auth mismatch

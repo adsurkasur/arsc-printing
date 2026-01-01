@@ -57,15 +57,26 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   const channelRef = useRef<ReturnType<ReturnType<typeof createClient>['channel']> | null>(null);
 
   const fetchOrders = useCallback(async () => {
+    // Use AbortController to avoid hanging fetches
+    const controller = new AbortController();
+    const timeoutMs = 8000; // 8s timeout
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
     try {
-      const response = await fetch('/api/orders');
+      const response = await fetch('/api/orders', { signal: controller.signal });
       let data;
 
       // Try parsing JSON safely
       try {
         data = await response.json();
       } catch (jsonErr) {
-        console.error('Failed to parse orders response:', jsonErr);
+        const je = jsonErr as { name?: string; message?: string };
+        console.warn('Failed to parse orders response:', je?.message ?? jsonErr);
+        // If parsing failed due to an abort, treat it as non-error (it'll be handled in outer catch)
+        if (je?.name === 'AbortError' || /aborted/i.test(je?.message ?? '')) {
+          console.info('Orders response parsing aborted');
+          return;
+        }
         // Don't immediately switch to demo mode on parse errors; keep previous state and surface an error
         setError('Failed to parse orders response');
         return;
@@ -94,11 +105,19 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         setOrders(Array.isArray(data) ? data : []);
         setError(null);
       }
-    } catch (err) {
-      // Network errors: surface error but do not auto-fallback to demo to avoid UI flicker
-      console.error('Network error fetching orders:', err);
-      setError('Failed to fetch orders');
+    } catch (err: unknown) {
+      const e = err as { name?: string; message?: string };
+      if (e?.name === 'AbortError') {
+        // Expected timeout - log at info level (not an error)
+        console.info('Orders fetch aborted due to timeout');
+        // Do not set an error here to avoid UI flip-flopping when requests are aborted
+      } else {
+        // Network errors: surface a concise warning but avoid noisy stack traces
+        console.warn('Network error fetching orders:', e?.message ?? err);
+        setError('Failed to fetch orders');
+      }
     } finally {
+      clearTimeout(timeout);
       setLoading(false);
     }
   }, []);
@@ -123,7 +142,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
               table: 'orders',
             },
             (payload) => {
-              console.log('Real-time update:', payload);
+              console.debug('Real-time update:', payload);
               
               if (payload.eventType === 'INSERT') {
                 setOrders((prev) => [payload.new as Order, ...prev]);
@@ -148,7 +167,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
           }
         };
       } catch (error) {
-        console.error('Failed to set up realtime subscription:', error);
+        console.warn('Failed to set up realtime subscription:', (error as Error)?.message ?? error);
       }
     }
   }, [fetchOrders]);
@@ -318,10 +337,10 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     return { count: pendingOrders.length, estimatedTime: totalTime };
   };
 
-  const refreshOrders = async () => {
+  const refreshOrders = useCallback(async () => {
     setLoading(true);
     await fetchOrders();
-  };
+  }, [fetchOrders]);
 
   return (
     <OrderContext.Provider
