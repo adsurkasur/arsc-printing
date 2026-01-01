@@ -1,5 +1,10 @@
 ﻿-- ARSC Printing Database Schema
 -- Run this in your Supabase SQL Editor
+-- Last Updated: 2026-01-01
+
+-- ============================================================================
+-- ORDERS TABLE
+-- ============================================================================
 
 -- Create orders table
 CREATE TABLE IF NOT EXISTS orders (
@@ -17,27 +22,118 @@ CREATE TABLE IF NOT EXISTS orders (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Enable Row Level Security
+COMMENT ON TABLE orders IS 'Stores printing orders from customers';
+
+-- ============================================================================
+-- USER ROLES TABLE
+-- ============================================================================
+
+-- Create user_roles table for role-based access control (RBAC)
+CREATE TABLE IF NOT EXISTS user_roles (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  role TEXT NOT NULL CHECK (role IN ('admin', 'customer')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id, role)
+);
+
+COMMENT ON TABLE user_roles IS 'Tracks user roles for RBAC. Users can have multiple roles.';
+COMMENT ON COLUMN user_roles.role IS 'User role: admin (can manage all orders) or customer (can only view own orders)';
+
+-- Create index for faster role lookups
+CREATE INDEX IF NOT EXISTS idx_user_roles_user_id ON user_roles(user_id);
+
+-- ============================================================================
+-- HELPER FUNCTIONS
+-- ============================================================================
+
+-- Function to check if current user is an admin
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 
+    FROM public.user_roles 
+    WHERE user_id = auth.uid() 
+    AND role = 'admin'
+  );
+END;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+
+COMMENT ON FUNCTION public.is_admin() IS 'Returns true if the current authenticated user has admin role';
+
+-- ============================================================================
+-- ROW LEVEL SECURITY (RLS)
+-- ============================================================================
+
+-- Enable RLS on orders table
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 
--- Policy: Anyone can create orders (for customers)
+-- Enable RLS on user_roles table
+ALTER TABLE user_roles ENABLE ROW LEVEL SECURITY;
+
+-- ============================================================================
+-- RLS POLICIES: ORDERS TABLE
+-- ============================================================================
+
+-- Policy: Anyone can create orders (for customers submitting print jobs)
 CREATE POLICY "Anyone can create orders"
   ON orders FOR INSERT
   TO anon, authenticated
   WITH CHECK (true);
 
--- Policy: Anyone can read their order by ID (for tracking)
+-- Policy: Anyone can read orders (for tracking via order ID)
 CREATE POLICY "Anyone can read orders"
   ON orders FOR SELECT
   TO anon, authenticated
   USING (true);
 
--- Policy: Only authenticated users can update orders
-CREATE POLICY "Authenticated users can update orders"
+-- Policy: Only admins can update orders (status changes, etc.)
+DROP POLICY IF EXISTS "Authenticated users can update orders" ON orders;
+CREATE POLICY "Only admins can update orders"
   ON orders FOR UPDATE
   TO authenticated
-  USING (true)
-  WITH CHECK (true);
+  USING (public.is_admin())
+  WITH CHECK (public.is_admin());
+
+-- Policy: Only admins can delete orders
+CREATE POLICY "Only admins can delete orders"
+  ON orders FOR DELETE
+  TO authenticated
+  USING (public.is_admin());
+
+-- ============================================================================
+-- RLS POLICIES: USER_ROLES TABLE
+-- ============================================================================
+
+-- Policy: Only admins can read user roles
+CREATE POLICY "Only admins can read user roles"
+  ON user_roles FOR SELECT
+  TO authenticated
+  USING (public.is_admin());
+
+-- Policy: Only admins can insert user roles
+CREATE POLICY "Only admins can insert user roles"
+  ON user_roles FOR INSERT
+  TO authenticated
+  WITH CHECK (public.is_admin());
+
+-- Policy: Only admins can update user roles
+CREATE POLICY "Only admins can update user roles"
+  ON user_roles FOR UPDATE
+  TO authenticated
+  USING (public.is_admin())
+  WITH CHECK (public.is_admin());
+
+-- Policy: Only admins can delete user roles
+CREATE POLICY "Only admins can delete user roles"
+  ON user_roles FOR DELETE
+  TO authenticated
+  USING (public.is_admin());
+
+-- ============================================================================
+-- STORAGE BUCKET & POLICIES
+-- ============================================================================
 
 -- Create storage bucket for documents
 INSERT INTO storage.buckets (id, name, public)
@@ -56,9 +152,106 @@ CREATE POLICY "Anyone can read documents"
   TO anon, authenticated
   USING (bucket_id = 'documents');
 
+-- Storage policy: Only admins can delete documents (for cleanup)
+CREATE POLICY "Only admins can delete documents"
+  ON storage.objects FOR DELETE
+  TO authenticated
+  USING (
+    bucket_id = 'documents' AND 
+    public.is_admin()
+  );
+
+-- ============================================================================
+-- REALTIME & INDEXES
+-- ============================================================================
+
 -- Enable realtime for orders table
 ALTER PUBLICATION supabase_realtime ADD TABLE orders;
 
--- Create an index for faster status queries
+-- Create indexes for faster queries
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at DESC);
+
+-- ============================================================================
+-- DEMO ADMIN USER
+-- ============================================================================
+
+-- NOTE: To create the demo admin user, you have two options:
+--
+-- OPTION 1 (RECOMMENDED): Create via Supabase Dashboard
+--   1. Go to Authentication > Users
+--   2. Click "Add user" > "Create new user"
+--   3. Email: admin@arsc-printing.com
+--   4. Password: admin123
+--   5. After creation, run the INSERT below to assign admin role
+--
+-- OPTION 2: Create via SQL (Advanced)
+--   Uncomment and run the following SQL statements:
+--
+-- First, insert the user into auth.users (password is 'admin123' hashed with bcrypt)
+-- NOTE: This requires proper password hashing. It's better to use the Dashboard.
+--
+-- INSERT INTO auth.users (
+--   instance_id,
+--   id,
+--   aud,
+--   role,
+--   email,
+--   encrypted_password,
+--   email_confirmed_at,
+--   created_at,
+--   updated_at,
+--   raw_app_meta_data,
+--   raw_user_meta_data,
+--   is_super_admin,
+--   confirmation_token,
+--   email_change,
+--   email_change_token_new,
+--   recovery_token
+-- ) VALUES (
+--   '00000000-0000-0000-0000-000000000000',
+--   gen_random_uuid(),
+--   'authenticated',
+--   'authenticated',
+--   'admin@arsc-printing.com',
+--   crypt('admin123', gen_salt('bf')), -- Requires pgcrypto extension
+--   NOW(),
+--   NOW(),
+--   NOW(),
+--   '{"provider":"email","providers":["email"]}',
+--   '{}',
+--   false,
+--   '',
+--   '',
+--   '',
+--   ''
+-- )
+-- ON CONFLICT (email) DO NOTHING;
+
+-- Assign admin role to the demo admin user
+-- Run this AFTER creating the user (via Dashboard or SQL above)
+-- Replace the email with the actual admin email if different
+INSERT INTO public.user_roles (user_id, role)
+SELECT id, 'admin'
+FROM auth.users
+WHERE email = 'admin@arsc-printing.com'
+ON CONFLICT (user_id, role) DO NOTHING;
+
+-- ============================================================================
+-- VERIFICATION QUERIES
+-- ============================================================================
+
+-- Uncomment these queries to verify the setup:
+--
+-- Check if admin user exists:
+-- SELECT id, email, created_at FROM auth.users WHERE email = 'admin@arsc-printing.com';
+--
+-- Check if admin role is assigned:
+-- SELECT ur.*, u.email 
+-- FROM public.user_roles ur
+-- JOIN auth.users u ON u.id = ur.user_id
+-- WHERE u.email = 'admin@arsc-printing.com';
+--
+-- Test is_admin() function:
+-- SELECT public.is_admin(); -- Should return true if you're logged in as admin
+

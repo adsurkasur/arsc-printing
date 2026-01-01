@@ -2,8 +2,180 @@
 
 ## Current Task Status
 - **Phase**: COMPLETE ✅
-- **Task**: Professional Animations & UI/UX Revamp
-- **Last Updated**: 2025-01-22
+- **Task**: Supabase Schema Update & Demo Admin Account
+- **Last Updated**: 2026-01-01
+- **Status**: Successfully implemented RBAC and demo admin setup
+
+---
+
+## Completed Implementation: Supabase Schema Update
+
+### Changes Made to `supabase-schema.sql`
+
+#### ✅ 1. Added User Roles Table
+- Created `public.user_roles` table with:
+  - `id` (UUID primary key)
+  - `user_id` (foreign key to `auth.users` with ON DELETE CASCADE)
+  - `role` (CHECK constraint: 'admin' or 'customer')
+  - `created_at` timestamp
+  - UNIQUE constraint on (user_id, role)
+- Added index on `user_id` for faster role lookups
+- Added table and column comments for documentation
+
+#### ✅ 2. Created Helper Function
+- `public.is_admin()` function:
+  - Returns BOOLEAN
+  - Checks if current user (`auth.uid()`) has 'admin' role
+  - STABLE SECURITY DEFINER for use in RLS policies
+  - Well-documented with comments
+
+#### ✅ 3. Updated RLS Policies for Orders Table
+- **Kept**: "Anyone can create orders" (INSERT for anon/authenticated)
+- **Kept**: "Anyone can read orders" (SELECT for anon/authenticated)  
+- **Changed**: "Authenticated users can update" → "Only admins can update orders"
+  - Now uses `public.is_admin()` check
+  - Added DROP POLICY IF EXISTS to handle upgrades
+- **New**: "Only admins can delete orders" (DELETE policy)
+
+#### ✅ 4. Added RLS Policies for User Roles Table
+- "Only admins can read user roles" (SELECT)
+- "Only admins can insert user roles" (INSERT)
+- "Only admins can update user roles" (UPDATE)
+- "Only admins can delete user roles" (DELETE)
+- All policies use `public.is_admin()` check
+
+#### ✅ 5. Enhanced Storage Policies
+- **Kept**: "Anyone can upload documents" (INSERT)
+- **Kept**: "Anyone can read documents" (SELECT)
+- **New**: "Only admins can delete documents" (DELETE)
+  - Uses `public.is_admin()` AND `bucket_id = 'documents'`
+
+#### ✅ 6. Added Demo Admin User Setup
+- Comprehensive documentation with two options:
+  - **OPTION 1 (Recommended)**: Create via Supabase Dashboard (step-by-step)
+  - **OPTION 2**: Create via SQL (commented out, advanced)
+- Automated role assignment SQL:
+  ```sql
+  INSERT INTO public.user_roles (user_id, role)
+  SELECT id, 'admin'
+  FROM auth.users
+  WHERE email = 'admin@arsc-printing.com'
+  ON CONFLICT (user_id, role) DO NOTHING;
+  ```
+- Matches app demo credentials: `admin@arsc-printing.com` / `admin123`
+
+#### ✅ 7. Added Verification Queries
+- Check if admin user exists
+- Check if admin role is assigned  
+- Test `is_admin()` function
+- All queries provided as commented examples
+
+#### ✅ 8. Improved Organization & Documentation
+- Added clear section headers with `===` separators
+- Added descriptive comments throughout
+- Organized into logical sections:
+  1. Tables (Orders, User Roles)
+  2. Helper Functions
+  3. RLS Enablement
+  4. RLS Policies (Orders, User Roles)
+  5. Storage Bucket & Policies
+  6. Realtime & Indexes
+  7. Demo Admin User
+  8. Verification Queries
+
+### Security Improvements
+
+**Before:**
+- ANY authenticated user could update orders ❌
+- No role differentiation ❌
+- No storage cleanup policies ❌
+
+**After:**
+- Only admin users can update/delete orders ✅
+- Proper RBAC implementation ✅
+- Admin-only storage deletion ✅
+- Role management restricted to admins ✅
+
+### Backwards Compatibility
+
+✅ All existing functionality maintained:
+- Anonymous users can still create orders
+- Anyone can still read orders (for tracking)
+- Anonymous users can still upload documents
+- Anyone can still read documents
+- Realtime subscriptions still work
+- Existing indexes preserved
+
+### Usage Instructions
+
+**For New Supabase Projects:**
+1. Run entire `supabase-schema.sql` in SQL Editor
+2. Create admin user via Dashboard (Authentication > Users)
+3. Email: `admin@arsc-printing.com`, Password: `admin123`
+4. Role assignment happens automatically via the INSERT statement
+5. Verify with provided queries
+
+**For Existing Projects:**
+- Schema is idempotent (safe to re-run)
+- Uses `CREATE TABLE IF NOT EXISTS`
+- Uses `CREATE POLICY` with `DROP POLICY IF EXISTS` for updates
+- Uses `ON CONFLICT DO NOTHING` for safety
+
+---
+
+### Current Schema Review
+**File**: `supabase-schema.sql`
+
+**Existing Components:**
+1. ✅ Orders table with proper constraints
+2. ✅ RLS policies for orders (anyone can create/read, auth users can update)
+3. ✅ Storage bucket for documents
+4. ✅ Storage policies (anyone can upload/read)
+5. ✅ Realtime enabled for orders
+6. ✅ Indexes for performance (status, created_at)
+
+**Missing Components:**
+1. ❌ No user roles/permissions table
+2. ❌ No admin role tracking
+3. ❌ No user profiles table (best practice for referencing auth.users)
+4. ❌ No trigger for auto-creating user profiles
+5. ❌ No RBAC (Role-Based Access Control) implementation
+6. ❌ No demo admin user SQL insert statement
+7. ❌ No storage policies for DELETE operations (cleanup)
+8. ❌ No explicit admin-only policies for orders UPDATE
+
+### Research Findings
+
+**Supabase Best Practices:**
+1. **User Profiles Pattern**: Create `public.profiles` table referencing `auth.users` with `on delete cascade`
+2. **RBAC Pattern**: Use custom claims via Auth Hooks or simple role tables
+3. **Demo Users**: Can be created via SQL INSERT into `auth.users` (encrypted password)
+4. **Row Level Security**: Policies should check user roles for admin operations
+
+**Key Insights:**
+- Auth users are stored in `auth.users` (managed by Supabase)
+- Custom user data should be in `public` schema
+- RLS policies can reference `auth.uid()` for current user
+- For admin operations, best practice is to check role in RLS policies
+- Demo admin can be created via SQL or through Supabase Dashboard
+
+### Project Context Analysis
+
+**Current Authentication Flow:**
+- Demo mode: localStorage-based fake auth (`demo_admin_auth`)
+- Real mode: Supabase Auth with `signInWithPassword`
+- Hardcoded credentials: `admin@arsc-printing.com` / `admin123`
+- Admin pages protected via middleware
+
+**Current RLS Policies:**
+- `"Anyone can create orders"` - FOR INSERT TO anon, authenticated
+- `"Anyone can read orders"` - FOR SELECT TO anon, authenticated  
+- `"Authenticated users can update orders"` - FOR UPDATE TO authenticated
+  
+**Issues with Current Policies:**
+- ANY authenticated user can update orders (not admin-only)
+- No role differentiation between customers and admins
+- Storage has no DELETE policy (orphaned files)
 
 ---
 
