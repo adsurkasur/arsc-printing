@@ -9,7 +9,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useOrders } from "@/contexts/OrderContext";
 import { motion, PageTransition, FadeInUp } from "@/components/animations";
-import { RefreshCw } from "lucide-react"; 
+import { RefreshCw, Clock, Printer, CheckCircle, XCircle } from "lucide-react"; 
 
 export default function QueuePage() {
   const { orders, loading, error, getQueueInfo, refreshOrders } = useOrders();
@@ -41,18 +41,39 @@ export default function QueuePage() {
     };
   }, [loading]);
 
-  const statusVariant = (status: string) => {
+  // Match admin dashboard badge styles for consistency
+  const statusBadge = (status: string) => {
     switch (status) {
       case "pending":
-        return "secondary";
+        return (
+          <Badge className="bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20">
+            <Clock className="mr-1 h-3 w-3" />
+            Pending
+          </Badge>
+        );
       case "printing":
-        return "default";
+        return (
+          <Badge className="bg-blue-500/10 text-blue-600 hover:bg-blue-500/20">
+            <Printer className="mr-1 h-3 w-3" />
+            Printing
+          </Badge>
+        );
       case "completed":
-        return "destructive";
+        return (
+          <Badge className="bg-green-500/10 text-green-600 hover:bg-green-500/20">
+            <CheckCircle className="mr-1 h-3 w-3" />
+            Selesai
+          </Badge>
+        );
       case "cancelled":
-        return "outline";
+        return (
+          <Badge className="bg-red-500/10 text-red-600 hover:bg-red-500/20">
+            <XCircle className="mr-1 h-3 w-3" />
+            Dibatalkan
+          </Badge>
+        );
       default:
-        return "outline";
+        return <Badge variant="outline">{status}</Badge>;
     }
   };
 
@@ -181,9 +202,7 @@ export default function QueuePage() {
                       <TableCell>{order.copies}</TableCell>
                       <TableCell className="capitalize">{order.color_mode}</TableCell>
                       <TableCell>
-                        <Badge variant={statusVariant(order.status)}>
-                          {order.status}
-                        </Badge>
+                        {statusBadge(order.status)}
                       </TableCell>
                       <TableCell>{new Date(order.created_at).toLocaleString()}</TableCell>
                     </TableRow>
