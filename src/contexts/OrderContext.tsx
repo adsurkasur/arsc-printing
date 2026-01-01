@@ -65,40 +65,38 @@ export function OrderProvider({ children }: { children: ReactNode }) {
       try {
         data = await response.json();
       } catch (jsonErr) {
-        console.error('Failed to parse orders response, using demo mode:', jsonErr);
-        setDemoMode(true);
-        setOrders(demoOrders);
-        setError('Failed to fetch orders');
+        console.error('Failed to parse orders response:', jsonErr);
+        // Don't immediately switch to demo mode on parse errors; keep previous state and surface an error
+        setError('Failed to parse orders response');
         return;
       }
 
-      // Handle non-OK responses without throwing so we don't spam the console
+      // Handle non-OK responses
       if (!response.ok) {
-        if (data?.demoMode || data?.error) {
+        // If server explicitly requested demo mode, use demo data
+        if (data?.demoMode) {
           setDemoMode(true);
           setOrders(demoOrders);
           setError(null);
         } else {
-          setDemoMode(true);
-          setOrders(demoOrders);
           setError(data?.error || 'Failed to fetch orders');
         }
         return;
       }
 
-      // Check if it's an error response (Supabase not configured)
-      if (data.error || data.demoMode) {
+      // Check if it's a demo-mode response
+      if (data?.demoMode) {
         setDemoMode(true);
         setOrders(demoOrders);
         setError(null);
       } else {
+        setDemoMode(false);
         setOrders(Array.isArray(data) ? data : []);
         setError(null);
       }
     } catch (err) {
-      console.error('Network error fetching orders, using demo mode:', err);
-      setDemoMode(true);
-      setOrders(demoOrders);
+      // Network errors: surface error but do not auto-fallback to demo to avoid UI flicker
+      console.error('Network error fetching orders:', err);
       setError('Failed to fetch orders');
     } finally {
       setLoading(false);
