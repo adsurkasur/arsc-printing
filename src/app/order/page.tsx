@@ -325,13 +325,7 @@ export default function Order() {
             <AnimatePresence mode="wait">
               {/* Step 1: File Upload */}
               {step === 1 && (
-                <motion.div
-                  key="step1"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ duration: 0.3 }}
-                >
+                <FadeInUp key="step1">
                   <Card className="p-8 shadow-smooth border-border/50">
                     <div className="mb-6 flex items-center gap-3">
                       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-secondary text-primary-foreground shadow-lg">
@@ -409,7 +403,7 @@ export default function Order() {
                       </motion.label>
                     </div>
                   </Card>
-                </motion.div>
+                </FadeInUp>
               )}
 
               {/* Step 2: Print Settings */}
