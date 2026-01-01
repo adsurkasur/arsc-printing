@@ -681,7 +681,7 @@ export default function Admin() {
                                       <XCircle className="h-4 w-4" />
                                     </motion.span>
                                   </TooltipTrigger>
-                                  <TooltipContent side="top">Bukti pembayaran belum tersedia</TooltipContent>
+                                  <TooltipContent side="top">Bukti pembayaran tidak tersedia</TooltipContent>
                                 </Tooltip>
                               ) : (
                                 // Show button to open modal preview
@@ -712,25 +712,36 @@ export default function Admin() {
                             <div className="flex gap-1">
                               {order.status === "pending" && (
                                 <>
-                                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                    <Button
-                                      size="sm"
-                                      className="rounded-lg"
-                                      onClick={() => handleStatusUpdate(order.id, order.status)}
-                                    >
-                                      Cetak
-                                    </Button>
-                                  </motion.div>
-                                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="rounded-lg"
-                                      onClick={() => requestCancelOrder(order.id)}
-                                    >
-                                      <XCircle className="h-4 w-4" />
-                                    </Button>
-                                  </motion.div>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                                        <Button
+                                          size="sm"
+                                          className="rounded-lg"
+                                          onClick={() => handleStatusUpdate(order.id, order.status)}
+                                        >
+                                          Cetak
+                                        </Button>
+                                      </motion.div>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top">Mulai cetak (tandai sebagai sedang dicetak)</TooltipContent>
+                                  </Tooltip>
+
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          className="rounded-lg hover:bg-red-500/10 hover:text-red-600"
+                                          onClick={() => requestCancelOrder(order.id)}
+                                        >
+                                          <XCircle className="h-4 w-4" />
+                                        </Button>
+                                      </motion.div>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top">Batalkan pesanan</TooltipContent>
+                                  </Tooltip>
                                 </>
                               )}
 
@@ -755,7 +766,7 @@ export default function Admin() {
                                         <Button
                                           size="sm"
                                           variant="outline"
-                                          className="rounded-lg"
+                                          className="rounded-lg hover:bg-red-500/10 hover:text-red-600"
                                           onClick={() => requestDeleteFile(order.id)}
                                         >
                                           <Trash className="h-4 w-4" />
