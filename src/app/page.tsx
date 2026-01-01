@@ -208,10 +208,6 @@ export default function Home() {
               <div className="mx-auto max-w-xl">
                 <QueueWidget />
               </div>
-
-              <div className="flex justify-center">
-                <Button size="sm" variant="ghost" onClick={() => router.push('/queue')}>Lihat Status Antrian</Button>
-              </div>
             </FadeInUp>
           </div>
         </section>

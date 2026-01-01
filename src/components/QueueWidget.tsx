@@ -1,13 +1,16 @@
 "use client";
 
-import { Clock, FileText, Users, Timer } from "lucide-react";
+import { FileText, Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { useOrders } from "@/contexts/OrderContext";
 import { motion } from "@/components/animations";
+import { useRouter } from "next/navigation";
 
 export function QueueWidget() {
   const { getQueueInfo } = useOrders();
   const { count, estimatedTime } = getQueueInfo();
+  const router = useRouter();
 
   return (
     <motion.div
@@ -58,24 +61,19 @@ export function QueueWidget() {
               <span className="text-xs text-muted-foreground">dokumen</span>
             </motion.div>
 
-            {/* Estimated Time */}
+            {/* View Queue Button (replaces Estimasi) */}
             <motion.div 
               whileHover={{ scale: 1.02 }}
-              className="relative p-4 rounded-xl bg-gradient-to-br from-secondary/5 to-secondary/10 border border-secondary/10"
+              className="relative"
             >
-              <div className="flex items-center gap-2 mb-2">
-                <Timer className="h-4 w-4 text-secondary" />
-                <span className="text-xs font-medium text-muted-foreground">Estimasi</span>
-              </div>
-              <motion.div 
-                key={estimatedTime}
-                initial={{ scale: 0.5, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="text-3xl font-bold text-secondary"
+              <Button
+                size="default"
+                variant="ghost"
+                onClick={() => router.push('/queue')}
+                className="w-full h-full p-4 rounded-xl bg-gradient-to-br from-secondary/5 to-secondary/10 border border-secondary/10 text-secondary font-semibold"
               >
-                {estimatedTime}
-              </motion.div>
-              <span className="text-xs text-muted-foreground">menit</span>
+                Lihat Status Antrian
+              </Button>
             </motion.div>
           </div>
 
