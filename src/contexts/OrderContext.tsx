@@ -196,7 +196,8 @@ const fetchOrders = useCallback(async () => {
         file_path: filePath || null,
         payment_proof_url: paymentProofUrl || null,
         payment_proof_path: paymentProofPath || null,
-        payment_proof_expires_at: paymentProofUrl ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() : null,
+        // Timer should start only when status becomes 'delivered' — do not set expiry on upload
+        payment_proof_expires_at: null,
         color_mode: orderData.color_mode,
         copies: orderData.copies,
         paper_size: orderData.paper_size,
@@ -246,9 +247,10 @@ const fetchOrders = useCallback(async () => {
           if (order.id === id) {
             const updated = { ...order, status } as Order & { file_expires_at?: string | null, payment_proof_expires_at?: string | null };
             if (status === 'delivered') {
-              updated.file_expires_at = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+              const twentyFourHours = 24 * 60 * 60 * 1000;
+              updated.file_expires_at = new Date(Date.now() + twentyFourHours).toISOString();
               updated.file_deleted = false;
-              updated.payment_proof_expires_at = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+              updated.payment_proof_expires_at = new Date(Date.now() + twentyFourHours).toISOString();
               updated.payment_proof_deleted = false;
             } else {
               updated.file_expires_at = null;
@@ -275,10 +277,11 @@ const fetchOrders = useCallback(async () => {
       }
 
       const updatePayload: { status: Order["status"]; file_expires_at?: string | null; file_deleted?: boolean; payment_proof_expires_at?: string | null; payment_proof_deleted?: boolean } = { status };
-      if (status === 'completed') {
-        updatePayload.file_expires_at = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+      if (status === 'delivered') {
+        const twentyFourHours = 24 * 60 * 60 * 1000;
+        updatePayload.file_expires_at = new Date(Date.now() + twentyFourHours).toISOString();
         updatePayload.file_deleted = false;
-        updatePayload.payment_proof_expires_at = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+        updatePayload.payment_proof_expires_at = new Date(Date.now() + twentyFourHours).toISOString();
         updatePayload.payment_proof_deleted = false;
       } else {
         updatePayload.file_expires_at = null;

@@ -168,7 +168,8 @@ export default function Order() {
         console.log('Upload API not available, using demo mode');
         setPaymentFileUrl(null);
         setPaymentFilePath(null);
-        setPaymentFileExpiresAt(new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString());
+        // Do not start expiry timer on upload; timer starts when status becomes 'delivered'
+        setPaymentFileExpiresAt(null);
         toast({ title: 'Bukti pembayaran dipilih (Demo Mode)', description: 'Upload akan berfungsi setelah Supabase dikonfigurasi' });
         return;
       }
@@ -176,14 +177,15 @@ export default function Order() {
       const data = await response.json();
       setPaymentFileUrl(data.fileUrl);
       setPaymentFilePath(data.filePath || null);
-      // Local optimistic expiry based on TTL
-      setPaymentFileExpiresAt(new Date(Date.now() + (Number(process.env.NEXT_PUBLIC_PAYMENT_PROOF_TTL_HOURS || 24) * 60 * 60 * 1000)).toISOString());
+      // Do not start expiry timer on upload; timer will be set when order is marked as 'delivered'
+      setPaymentFileExpiresAt(null);
       toast({ title: 'Bukti pembayaran berhasil diupload' });
     } catch (err) {
       console.error('Payment proof upload error:', err);
       setPaymentFileUrl(null);
       setPaymentFilePath(null);
-      setPaymentFileExpiresAt(new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString());
+      // Keep expiry unset until order is marked delivered
+      setPaymentFileExpiresAt(null);
       toast({ title: 'Bukti pembayaran dipilih (Demo Mode)', description: 'Upload akan berfungsi setelah Supabase dikonfigurasi' });
     } finally {
       setPaymentUploading(false);

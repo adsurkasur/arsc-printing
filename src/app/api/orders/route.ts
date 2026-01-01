@@ -90,8 +90,8 @@ export async function POST(request: NextRequest) {
         file_path: body.file_path || null,
         payment_proof_url: body.payment_proof_url || null,
         payment_proof_path: body.payment_proof_path || null,
-        // If payment proof provided, set demo expiry to 24 hours
-        payment_proof_expires_at: body.payment_proof_url ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() : null,
+        // Payment proof expiry is set only when the order is marked as 'delivered' (24 hours). Don't start timer on upload.
+        payment_proof_expires_at: null,
         color_mode: body.color_mode,
         copies: body.copies,
         paper_size: body.paper_size,
@@ -121,11 +121,10 @@ export async function POST(request: NextRequest) {
       notes: body.notes || null,
     }
 
-    // If payment proof present, set an expiry (default 24 hours)
+    // If payment proof present, store metadata. The expiry is NOT set here; it will be set when the order is marked as 'delivered' (24 hours from that moment).
     if (body.payment_proof_url) {
       insertPayload.payment_proof_url = body.payment_proof_url
       insertPayload.payment_proof_path = body.payment_proof_path || null
-      insertPayload.payment_proof_expires_at = new Date(Date.now() + (Number(process.env.PAYMENT_PROOF_TTL_HOURS || 24) * 60 * 60 * 1000)).toISOString();
       insertPayload.payment_proof_deleted = false
     }
 
@@ -169,11 +168,12 @@ export async function PATCH(request: NextRequest) {
 
     const updatePayload: { status: string; file_expires_at?: string | null; file_deleted?: boolean; payment_proof_expires_at?: string | null; payment_proof_deleted?: boolean } = { status };
 
-    // If marking as delivered, set expiry 1 hour from now for file and payment proof
+    // If marking as delivered, set expiry 24 hours from now for file and payment proof
     if (status === 'delivered') {
-      updatePayload.file_expires_at = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+      const twentyFourHours = 24 * 60 * 60 * 1000;
+      updatePayload.file_expires_at = new Date(Date.now() + twentyFourHours).toISOString();
       updatePayload.file_deleted = false;
-      updatePayload.payment_proof_expires_at = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+      updatePayload.payment_proof_expires_at = new Date(Date.now() + twentyFourHours).toISOString();
       updatePayload.payment_proof_deleted = false;
     } else {
       // Clear expiry for other statuses
