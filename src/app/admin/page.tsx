@@ -156,6 +156,7 @@ function ProofTooltipContent({ expiresAt }: { expiresAt?: string | null }) {
 
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
+import StatusBadge from "@/components/StatusBadge";
 import ColorModeBadge from "../../components/ColorModeBadge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -261,47 +262,8 @@ export default function Admin() {
     router.refresh();
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "pending":
-        return (
-          <Badge className="bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20">
-            <Clock className="mr-1 h-3 w-3" />
-            Pending
-          </Badge>
-        );
-      case "printing":
-        return (
-          <Badge className="bg-blue-500/10 text-blue-600 hover:bg-blue-500/20">
-            <Printer className="mr-1 h-3 w-3" />
-            Printing
-          </Badge>
-        );
-      case "completed":
-        return (
-          <Badge className="bg-green-500/10 text-green-600 hover:bg-green-500/20">
-            <CheckCircle className="mr-1 h-3 w-3" />
-            Selesai
-          </Badge>
-        );
-      case "delivered":
-        return (
-          <Badge className="bg-indigo-500/10 text-indigo-600 hover:bg-indigo-500/20">
-            <Home className="mr-1 h-3 w-3" />
-            Diambil
-          </Badge>
-        );
-      case "cancelled":
-        return (
-          <Badge className="bg-red-500/10 text-red-600 hover:bg-red-500/20">
-            <XCircle className="mr-1 h-3 w-3" />
-            Dibatalkan
-          </Badge>
-        );
-      default:
-        return null;
-    }
-  };
+  // Use the reusable StatusBadge component (see src/components/StatusBadge.tsx)
+  // Replaced local getStatusBadge function with component usage below.
 
   const handleStatusUpdate = async (id: string, currentStatus: string) => {
     if (currentStatus === "pending") {
@@ -887,7 +849,7 @@ export default function Admin() {
                           <p className="font-medium truncate">{order.customer_name}</p>
                           <p className="text-xs text-muted-foreground truncate">{order.contact}</p>
                         </div>
-                        {getStatusBadge(order.status)}
+                        <StatusBadge status={order.status} />
                       </div>
                       
                       {/* Details Grid */}
@@ -1086,7 +1048,7 @@ export default function Admin() {
                           <TableCell className="text-sm text-muted-foreground">
                             {formatDistanceToNow(new Date(order.created_at), { addSuffix: true, locale: idLocale })}
                           </TableCell>
-                          <TableCell>{getStatusBadge(order.status)}</TableCell>
+                          <TableCell><StatusBadge status={order.status} /></TableCell>
                           <TableCell>
                             <div className="flex gap-1">
                               {order.status === "pending" && (

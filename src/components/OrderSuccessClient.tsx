@@ -9,6 +9,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CheckCircle, Home, Search, Copy, Check, Sparkles, PartyPopper, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { motion, PageTransition, FadeInUp, ScaleIn, StaggerContainer, StaggerItem } from "@/components/animations";
+import { formatCurrency } from "@/lib/utils";
+
+// Dynamic imports use libraries that may not be installed in the dev environment.
+// We attempt a dynamic import and fall back to loading via CDN; silence TS where necessary.
 
 type Props = {
   initialOrderId?: string | null;
@@ -88,6 +92,202 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
   const [lookupId, setLookupId] = useState('');
   const [lookupError, setLookupError] = useState<string | null>(null);
 
+  // Pricing defaults for receipt calculations
+  const priceBw = Number(process.env.NEXT_PUBLIC_PRICE_BW ?? '') || 500;
+  const priceColor = Number(process.env.NEXT_PUBLIC_PRICE_COLOR ?? '') || 750;
+
+  // Small helpers for generating safe HTML
+  const escapeHtml = (str: string) => {
+    return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  };
+  const escapeAttr = (str: string) => {
+    return String(str || '').replace(/"/g, '%22');
+  };
+  const capitalize = (s?: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+
+  // Load external script by URL and wait for global var to appear
+  const loadScript = (src: string, globalName?: string) => {
+    return new Promise<void>((resolve, reject) => {
+      // If global already available, resolve
+      if (globalName && (window as unknown as Record<string, unknown>)[globalName]) return resolve();
+      const existing = document.querySelector(`script[src="${src}"]`);
+      if (existing) {
+        existing.addEventListener('load', () => resolve());
+        existing.addEventListener('error', () => reject(new Error('Failed to load script')));
+        return;
+      }
+      const s = document.createElement('script');
+      s.src = src;
+      s.async = true;
+      s.onload = () => resolve();
+      s.onerror = () => reject(new Error('Failed to load script'));
+      document.head.appendChild(s);
+    });
+  };
+
+  const downloadReceiptPdf = async () => {
+    if (!orderId) return;
+    setDownloading(true);
+    let wrapper: HTMLDivElement | null = null;
+    try {
+      // Ensure we have the order data
+      let data = orderData;
+      if (!data) {
+        const res = await fetch(`/api/orders?id=${orderId}`);
+        if (!res.ok) throw new Error('Gagal mengambil data pesanan');
+        data = await res.json();
+      }
+
+      // Build the same HTML as the html receipt but in a hidden wrapper
+      const createdAt = new Date(data.created_at).toLocaleString();
+      const totalPages = (data.pages ?? 1) * data.copies;
+      const pricePer = data.color_mode === 'color' ? priceColor : priceBw;
+      const totalPrice = pricePer * totalPages;
+
+      const receiptHtml = `
+        <div style="box-sizing:border-box;background:#fff;padding:24px;font-family:Inter,Arial,sans-serif;color:#0f172a;width:210mm;min-height:297mm;">
+          <div style="display:flex;gap:16px;align-items:center;border-bottom:1px solid #f1f5f9;padding-bottom:16px;margin-bottom:16px;">
+            <div style="width:48px;height:48px;border-radius:6px;background:#10b981;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700">AR</div>
+            <div>
+              <div style="font-weight:700;font-size:18px">ARSC Printing — Bukti Pesanan</div>
+              <div style="color:#64748b;font-size:13px">ID: ${escapeHtml(data.id)} • ${createdAt}</div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:16px">
+            <div style="min-width:160px">
+              <div style="font-size:12px;color:#64748b;margin-bottom:4px">Nama</div>
+              <div style="font-weight:600">${escapeHtml(data.customer_name || '')}</div>
+            </div>
+            <div style="min-width:160px">
+              <div style="font-size:12px;color:#64748b;margin-bottom:4px">Kontak</div>
+              <div>${escapeHtml(data.contact || '')}</div>
+            </div>
+            <div style="min-width:160px">
+              <div style="font-size:12px;color:#64748b;margin-bottom:4px">Status</div>
+              <div style="display:inline-block;padding:6px 10px;border-radius:999px;background:#eef2ff;color:#3730a3;font-weight:600;font-size:12px">${escapeHtml(capitalize(data.status || ''))}</div>
+            </div>
+          </div>
+
+          <div style="margin-bottom:12px">
+            <table style="width:100%;border-collapse:collapse">
+              <thead>
+                <tr style="text-align:left;color:#64748b;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:0.02em">
+                  <th style="padding:8px">Item</th>
+                  <th style="padding:8px">Keterangan</th>
+                  <th style="padding:8px">Halaman</th>
+                  <th style="padding:8px">Salinan</th>
+                  <th style="padding:8px">Harga</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="padding:8px">Cetak Dokumen</td>
+                  <td style="padding:8px">${escapeHtml(data.file_name || '—')}</td>
+                  <td style="padding:8px">${data.pages ?? 1}</td>
+                  <td style="padding:8px">${data.copies}</td>
+                  <td style="padding:8px">${formatCurrency(totalPrice)}</td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="4" style="text-align:right;padding:12px 8px;font-weight:700">Total</td>
+                  <td style="padding:12px 8px;font-weight:700">${formatCurrency(totalPrice)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:0 0 16px 0">
+            ${data.payment_proof_url ? `<div style="display:flex;flex-direction:column;align-items:center"><img src="${escapeAttr(data.payment_proof_url)}" crossorigin="anonymous" style="max-width:140px;max-height:140px;object-fit:contain;border:1px solid #e6eef6;padding:8px;border-radius:8px" alt="Bukti Pembayaran"/><div style="font-size:13px;color:#64748b;margin-top:6px">Bukti Pembayaran</div></div>` : ''}
+            <div style="flex:1"><div style="font-size:13px;color:#64748b">Catatan</div><div>${escapeHtml(data.notes || '')}</div></div>
+          </div>
+        </div>
+      `;
+
+      // Create offscreen wrapper
+      wrapper = document.createElement('div');
+      wrapper.style.position = 'fixed';
+      wrapper.style.left = '-9999px';
+      wrapper.style.top = '0';
+      wrapper.style.width = '210mm';
+      wrapper.style.height = '297mm';
+      wrapper.style.background = '#fff';
+      wrapper.innerHTML = receiptHtml;
+      document.body.appendChild(wrapper);
+
+      // Try dynamic imports first
+      let html2canvas: unknown = null;
+      let jsPDF: unknown = null;
+      try {
+        // @ts-expect-error - optional dependency, may not exist in dev environment
+        const html2canvasImp = await import('html2canvas');
+        html2canvas = html2canvasImp.default || html2canvasImp;
+        // @ts-expect-error - optional dependency
+        const jsPDFImp = await import('jspdf');
+        jsPDF = jsPDFImp.jsPDF || jsPDFImp.default || jsPDFImp;
+      } catch (e) {
+        // Try loading from CDN as fallback
+        try {
+          await loadScript('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js', 'html2canvas');
+          await loadScript('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js', 'jspdf');
+          const win = window as unknown as Record<string, unknown>;
+          html2canvas = (win.html2canvas as unknown) as unknown;
+          // jspdf UMD exposes window.jspdf.jsPDF
+          jsPDF = ((win.jspdf as unknown) && ((win.jspdf as unknown) as Record<string, unknown>)['jsPDF']) as unknown;
+        } catch (err) {
+          // Unable to load libs; fallback to HTML receipt
+          toast({ title: 'PDF tidak tersedia', description: 'Ekspor PDF memerlukan dependensi. Mengunduh HTML sebagai gantinya.' });
+          // reuse existing HTML download flow
+          const blob = new Blob([`ARSC Printing - Bukti Pesanan\n\nID: ${data.id}\nNama: ${data.customer_name}`], { type: 'text/plain' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `arsc-receipt-${data.id}.txt`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+          return;
+        }
+      }
+
+      // Render wrapper to canvas
+      const options = { scale: 2, useCORS: true, backgroundColor: '#ffffff' };
+      const html2canvasFn = html2canvas as unknown as (el: HTMLElement, opts?: Record<string, unknown>) => Promise<HTMLCanvasElement>;
+      const canvas = await html2canvasFn(wrapper, options);
+
+      // Generate PDF (A4 size, 210 x 297 mm, with 10mm margin)
+      const JsPDFCtor = jsPDF as unknown as { new (opts?: Record<string, unknown>): { addImage: (img: string, format: string, x: number, y: number, w: number, h: number) => void; save: (filename?: string) => void } };
+      const pdf = new JsPDFCtor({ unit: 'mm', format: 'a4' });
+      const pageWidth = 210;
+      const pageHeight = 297;
+      const margin = 10;
+      // Convert canvas to image
+      const imgData = (canvas as HTMLCanvasElement).toDataURL('image/jpeg', 0.95);
+      // Calculate dimensions in mm preserving aspect ratio
+      const imgWidthPx = (canvas as HTMLCanvasElement).width;
+      const imgHeightPx = (canvas as HTMLCanvasElement).height;
+      const pxToMm = (px: number) => px * 25.4 / 96; // assuming 96 DPI
+      const imgWidthMm = pageWidth - margin * 2;
+      const imgHeightMm = (imgHeightPx * imgWidthMm) / imgWidthPx;
+
+      const y = margin;
+      pdf.addImage(imgData, 'JPEG', margin, y, imgWidthMm, imgHeightMm);
+
+      // Save PDF
+      pdf.save(`arsc-receipt-${data.id}.pdf`);
+
+      toast({ title: 'Unduhan PDF dimulai', description: 'Bukti pesanan berhasil diunduh (PDF).' });
+    } catch (err) {
+      console.error('Download receipt PDF error:', err);
+      toast({ title: 'Gagal', description: 'Tidak dapat mengunduh bukti pesanan sebagai PDF', variant: 'destructive' });
+    } finally {
+      setDownloading(false);
+      if (wrapper && wrapper.parentNode) wrapper.parentNode.removeChild(wrapper);
+    }
+  };
+
   // Fetch order details when orderId is set
   useEffect(() => {
     const load = async () => {
@@ -112,38 +312,11 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
     load();
   }, [orderId]);
 
-  const downloadReceipt = async () => {
-    if (!orderId) return;
-    setDownloading(true);
-    try {
-      // Prefer using fetched order data if available to avoid refetch
-      let data = orderData;
-      if (!data) {
-        const res = await fetch(`/api/orders?id=${orderId}`);
-        if (!res.ok) throw new Error('Gagal mengambil data pesanan');
-        data = await res.json();
-      }
 
-      const receipt = `ARSC Printing - Bukti Pesanan\n\nID: ${data.id}\nNama: ${data.customer_name}\nKontak: ${data.contact}\nFile: ${data.file_name}\nMode: ${data.color_mode === 'bw' ? 'B/W' : 'Warna'}\nSalinan: ${data.copies}\nHalaman per Salinan: ${data.pages ?? 1}\nTotal Halaman: ${(data.pages ?? 1) * data.copies}\nUkuran: ${data.paper_size}\nStatus: ${data.status}\nWaktu: ${data.created_at}\n\nTerima kasih telah menggunakan ARSC Printing.`;
 
-      const blob = new Blob([receipt], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `arsc-receipt-${data.id}.txt`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
 
-      toast({ title: 'Unduhan dimulai', description: 'Bukti pesanan berhasil diunduh.' });
-    } catch (err) {
-      console.error('Download receipt error:', err);
-      toast({ title: 'Gagal', description: 'Tidak dapat mengunduh bukti pesanan', variant: 'destructive' });
-    } finally {
-      setDownloading(false);
-    }
-  };
+
+
 
   return (
     <PageTransition>
@@ -284,19 +457,20 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
 
                   <StaggerContainer className="space-y-3">
                     <StaggerItem>
-                      {/* Original 'Lacak Pesanan' button (disabled for now)
                       <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                         <Button
-                          onClick={() => router.push("/track")}
-                          className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity"
+                          onClick={downloadReceiptPdf}
+                          className="w-full h-10 sm:h-12 rounded-xl bg-gradient-to-r from-primary to-secondary hover:opacity-90"
                           size="lg"
+                          disabled={!orderId || downloading}
                         >
-                          <Search className="mr-2 h-5 w-5" />
-                          Lacak Pesanan
+                          <Download className="mr-2 h-4 w-4" />
+                          {downloading ? 'Mengunduh...' : 'Unduh Bukti Pesanan'}
                         </Button>
                       </motion.div>
-                      */}
+                    </StaggerItem>
 
+                    <StaggerItem>
                       <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                         <Button
                           onClick={() => router.push("/queue")}
@@ -305,22 +479,6 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
                         >
                           <Search className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                           Status Antrean
-                        </Button>
-                      </motion.div>
-                    </StaggerItem>
-
-                    {/* Download receipt button */}
-                    <StaggerItem>
-                      <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                        <Button
-                          onClick={downloadReceipt}
-                          className="w-full h-10 sm:h-12 rounded-xl border-border/50"
-                          size="lg"
-                          variant="outline"
-                          disabled={!orderId || downloading}
-                        >
-                          <Download className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-                          {downloading ? 'Mengunduh...' : 'Unduh Bukti Pesanan'}
                         </Button>
                       </motion.div>
                     </StaggerItem>

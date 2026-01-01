@@ -10,7 +10,8 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useOrders } from "@/contexts/OrderContext";
 import { motion, PageTransition, FadeInUp } from "@/components/animations";
-import { RefreshCw, Clock, Printer, CheckCircle, XCircle, Home } from "lucide-react"; 
+import { RefreshCw, Clock, Printer, CheckCircle, XCircle, Home } from "lucide-react";
+import StatusBadge from "@/components/StatusBadge"; 
 
 export default function QueuePage() {
   const { orders, loading, error, getQueueInfo, refreshOrders } = useOrders();
@@ -42,48 +43,9 @@ export default function QueuePage() {
     };
   }, [loading]);
 
-  // Match admin dashboard badge styles for consistency
-  const statusBadge = (status: string) => {
-    switch (status) {
-      case "pending":
-        return (
-          <Badge className="bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20">
-            <Clock className="mr-1 h-3 w-3" />
-            Pending
-          </Badge>
-        );
-      case "printing":
-        return (
-          <Badge className="bg-blue-500/10 text-blue-600 hover:bg-blue-500/20">
-            <Printer className="mr-1 h-3 w-3" />
-            Printing
-          </Badge>
-        );
-      case "completed":
-        return (
-          <Badge className="bg-green-500/10 text-green-600 hover:bg-green-500/20">
-            <CheckCircle className="mr-1 h-3 w-3" />
-            Selesai
-          </Badge>
-        );
-      case "delivered":
-        return (
-          <Badge className="bg-indigo-500/10 text-indigo-600 hover:bg-indigo-500/20">
-            <Home className="mr-1 h-3 w-3" />
-            Diambil
-          </Badge>
-        );
-      case "cancelled":
-        return (
-          <Badge className="bg-red-500/10 text-red-600 hover:bg-red-500/20">
-            <XCircle className="mr-1 h-3 w-3" />
-            Dibatalkan
-          </Badge>
-        );
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
+  // Use reusable StatusBadge component for consistency
+  // Replaced inline helper with component usage below
+  // (component located at src/components/StatusBadge.tsx)
 
   return (
     <PageTransition>
@@ -189,7 +151,7 @@ export default function QueuePage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded">#{idx + 1}</span>
-                        {statusBadge(order.status)}
+                        <StatusBadge status={order.status} />
                       </div>
                       <p className="font-medium truncate">{order.customer_name}</p>
                       <p className="text-xs text-muted-foreground mt-1">{new Date(order.created_at).toLocaleString()}</p>
@@ -255,7 +217,7 @@ export default function QueuePage() {
                       <TableCell className="font-medium">{idx + 1}</TableCell>
                       <TableCell>{order.customer_name}</TableCell>
                       <TableCell>
-                        {statusBadge(order.status)}
+                        <StatusBadge status={order.status} />
                       </TableCell>
                       <TableCell>{new Date(order.created_at).toLocaleString()}</TableCell>
                     </TableRow>
