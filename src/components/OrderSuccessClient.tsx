@@ -144,7 +144,7 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
 
   return (
     <PageTransition>
-      <div className="min-h-full bg-gradient-to-b from-transparent via-green-50/20 to-transparent py-16 px-4 flex items-center justify-center relative overflow-hidden">
+      <div className="min-h-full py-16 px-4 flex items-center justify-center relative overflow-hidden">
         {/* Confetti animation (only when we actually have an orderId) */}
         {orderId && showConfetti && (
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -158,15 +158,17 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
           </div>
         )}
 
-        {/* Background decorative elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 0.1 }}
-            transition={{ duration: 1 }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-green-500 rounded-full blur-3xl"
-          />
-        </div>
+        {/* Background decorative elements (show only when an order exists to avoid seams) */}
+        {orderId && (
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <motion.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 0.1 }}
+              transition={{ duration: 1 }}
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-green-500/10 rounded-full blur-3xl"
+            />
+          </div>
+        )}
 
         <div className="max-w-md w-full relative z-10">
           {!checkedSession ? (
