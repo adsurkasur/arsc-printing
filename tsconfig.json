@@ -33,7 +33,6 @@
         "name": "next"
       }
     ],
-    "ignoreDeprecations": "6.0"
   },
   "include": [
     "next-env.d.ts",
