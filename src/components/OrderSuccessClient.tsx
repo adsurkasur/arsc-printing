@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CheckCircle, Home, Search, Copy, Check, Sparkles, PartyPopper, Download } from "lucide-react";
+import { CheckCircle, Home, Search, Copy, Check, Sparkles, PartyPopper, Download, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { motion, PageTransition, FadeInUp, ScaleIn, StaggerContainer, StaggerItem } from "@/components/animations";
 import { formatCurrency } from "@/lib/utils";
@@ -477,7 +477,7 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
                           size="lg"
                         >
                           <Search className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-                          Status Antrean
+                          Cek Status Antrean
                         </Button>
                       </motion.div>
                     </StaggerItem>
@@ -503,6 +503,7 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
                         className="w-full h-10 sm:h-12 rounded-xl border-border/50"
                         size="lg"
                       >
+                        <Plus className="mr-2 h-4 w-4" />
                         Buat Pesanan Baru
                       </Button>
                     </StaggerItem>
