@@ -207,9 +207,13 @@ function isSupabaseConfigured() {
 export default function Admin() {
   const router = useRouter();
   const { toast } = useToast();
-  const { orders, updateOrderStatus, loading, refreshOrders } = useOrders();
+  const { orders, updateOrderStatus, loading, refreshOrders, error } = useOrders();
   const [user, setUser] = useState<{ email: string } | null>(null);
   const [demoMode, setDemoMode] = useState(false);
+
+  // Refresh state to match /queue 'Segarkan' behavior
+  const [refreshing, setRefreshing] = useState(false);
+  const lastClickRef = useRef<number | null>(null);
 
   useEffect(() => {
     const checkDemoMode = !isSupabaseConfigured();
@@ -665,12 +669,50 @@ export default function Admin() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <Button variant="outline" onClick={refreshOrders} disabled={loading} className="rounded-xl">
-                    <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                    Refresh
-                  </Button>
-                </motion.div>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="sm"
+                      onClick={async () => {
+                        const now = Date.now();
+                        if (refreshing) return;
+                        if (lastClickRef.current && now - lastClickRef.current < 1000) return; // 1s debounce
+                        lastClickRef.current = now;
+
+                        setRefreshing(true);
+                        try {
+                          await refreshOrders();
+                          if ((error as string | null)) {
+                            toast({ title: 'Gagal', description: error as string, variant: 'destructive' });
+                          } else {
+                            toast({ title: 'Sukses', description: 'Status antrian diperbarui' });
+                          }
+                        } catch (err) {
+                          toast({ title: 'Gagal', description: 'Terjadi kesalahan saat menyegarkan', variant: 'destructive' });
+                        } finally {
+                          setRefreshing(false);
+                        }
+                      }}
+                      aria-label="Segarkan antrian"
+                      disabled={refreshing}
+                    >
+                      {refreshing ? (
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          className="mr-2"
+                        >
+                          <RefreshCw className="h-4 w-4" />
+                        </motion.div>
+                      ) : (
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                      )}
+                      {refreshing ? 'Menyegarkan...' : 'Segarkan'}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Segarkan status antrian</TooltipContent>
+                </Tooltip>
+
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <Button variant="outline" onClick={handleLogout} className="rounded-xl">
                     <LogOut className="mr-2 h-4 w-4" />
