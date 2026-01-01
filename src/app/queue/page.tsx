@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import ColorModeBadge from "../../components/ColorModeBadge";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useOrders } from "@/contexts/OrderContext";
@@ -156,8 +157,8 @@ export default function QueuePage() {
                   <TableRow>
                     <TableHead>No.</TableHead>
                     <TableHead>Nama Pelanggan</TableHead>
-                    <TableHead>Copy</TableHead>
-                    <TableHead>Warna</TableHead>
+                    <TableHead>Salinan</TableHead>
+                    <TableHead>Mode</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Masuk</TableHead>
                   </TableRow>
@@ -208,9 +209,7 @@ export default function QueuePage() {
                       <TableCell>{order.customer_name}</TableCell>
                       <TableCell>{order.copies}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="rounded-lg">
-                          {order.color_mode === "bw" ? "B/W" : "Warna"}
-                        </Badge>
+                        <ColorModeBadge mode={order.color_mode} />
                       </TableCell>
                       <TableCell>
                         {statusBadge(order.status)}

@@ -156,6 +156,7 @@ function ProofTooltipContent({ expiresAt }: { expiresAt?: string | null }) {
 
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
+import ColorModeBadge from "../../components/ColorModeBadge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -913,9 +914,7 @@ export default function Admin() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline" className="rounded-lg">
-                              {order.color_mode === "bw" ? "B/W" : "Warna"}
-                            </Badge>
+                            <ColorModeBadge mode={order.color_mode} />
                           </TableCell>
                           <TableCell>{order.copies}x {order.paper_size}</TableCell>
                           <TableCell className="text-sm text-muted-foreground">
