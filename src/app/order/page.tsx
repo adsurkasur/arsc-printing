@@ -299,7 +299,13 @@ export default function Order() {
                       scale: step === s.num ? 1.1 : 1,
                       backgroundColor: step >= s.num ? "hsl(var(--primary))" : "hsl(var(--muted))"
                     }}
-                    className="relative flex items-center gap-2 px-4 py-2 rounded-full transition-colors"
+                    className="relative flex items-center gap-2 px-4 py-2 rounded-full transition-colors cursor-pointer"
+                    role="button"
+                    tabIndex={0}
+                    aria-current={step === s.num ? 'step' : undefined}
+                    onClick={() => setStep(s.num)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setStep(s.num); } }}
+                    title={`Ke langkah ${s.title}`}
                   >
                     <s.icon className={`h-4 w-4 ${step >= s.num ? "text-primary-foreground" : "text-muted-foreground"}`} />
                     <span className={`text-sm font-medium hidden sm:block ${step >= s.num ? "text-primary-foreground" : "text-muted-foreground"}`}>
