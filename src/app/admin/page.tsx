@@ -226,10 +226,17 @@ export default function Admin() {
   const [proofExpiresAt, setProofExpiresAt] = useState<string | null>(null);
   const [proofDeleting, setProofDeleting] = useState(false);
 
-  const openProofModal = (order: any) => {
+  // Minimal typed order shape for payment proof actions
+  type ProofableOrder = {
+    id: string;
+    payment_proof_url?: string | null;
+    payment_proof_expires_at?: string | null;
+  };
+
+  const openProofModal = (order: ProofableOrder) => {
     setProofOrderId(order.id);
-    setProofUrl(order.payment_proof_url || null);
-    setProofExpiresAt(order.payment_proof_expires_at || null);
+    setProofUrl(order.payment_proof_url ?? null);
+    setProofExpiresAt(order.payment_proof_expires_at ?? null);
     // Open modal on next tick
     setTimeout(() => setProofModalOpen(true), 0);
   };
