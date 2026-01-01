@@ -12,6 +12,7 @@ import { useOrders } from "@/contexts/OrderContext";
 import { Upload, FileText, CheckCircle, Loader2, ArrowRight, ArrowLeft, Palette, Copy, User, CreditCard } from "lucide-react";
 import { motion, PageTransition, FadeInUp } from "@/components/animations";
 import { AnimatePresence } from "framer-motion";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 export default function Order() {
   const router = useRouter();
@@ -292,40 +293,62 @@ export default function Order() {
           {/* Progress Steps */}
           <FadeInUp delay={0.1} className="mb-10">
             <div className="flex justify-center items-center gap-2">
-              {stepInfo.map((s, i) => (
-                <div key={s.num} className="flex items-center">
-                  <motion.div
-                    animate={{
-                      scale: step === s.num ? 1.1 : 1,
-                      backgroundColor: step >= s.num ? "hsl(var(--primary))" : "hsl(var(--muted))"
-                    }}
-                    className="relative flex items-center gap-2 px-4 py-2 rounded-full transition-colors cursor-pointer"
-                    role="button"
-                    tabIndex={0}
-                    aria-current={step === s.num ? 'step' : undefined}
-                    onClick={() => setStep(s.num)}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setStep(s.num); } }}
-                    title={`Ke langkah ${s.title}`}
-                  >
-                    <s.icon className={`h-4 w-4 ${step >= s.num ? "text-primary-foreground" : "text-muted-foreground"}`} />
-                    <span className={`text-sm font-medium hidden sm:block ${step >= s.num ? "text-primary-foreground" : "text-muted-foreground"}`}>
-                      {s.title}
-                    </span>
-                    {step > s.num && (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-success flex items-center justify-center"
-                      >
-                        <CheckCircle className="h-3 w-3 text-white" />
-                      </motion.div>
+              {stepInfo.map((s, i) => {
+                const disabledReason = ((): string | null => {
+                  if (s.num === 2 && !fileName) return 'Silakan unggah file terlebih dahulu';
+                  if (s.num === 3 && !fileName) return 'Silakan unggah file terlebih dahulu';
+                  if (s.num === 4) {
+                    if (!fileName) return 'Silakan unggah file terlebih dahulu';
+                    if (!formData.customerName || !formData.contact) return 'Silakan lengkapi informasi kontak terlebih dahulu';
+                  }
+                  return null;
+                })();
+
+                const isDisabled = !!disabledReason;
+
+                return (
+                  <div key={s.num} className="flex items-center">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <motion.div
+                          animate={{
+                            scale: step === s.num ? 1.1 : 1,
+                            backgroundColor: step >= s.num ? "hsl(var(--primary))" : "hsl(var(--muted))"
+                          }}
+                          className={`relative flex items-center gap-2 px-4 py-2 rounded-full transition-colors ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                          role="button"
+                          tabIndex={isDisabled ? -1 : 0}
+                          aria-disabled={isDisabled}
+                          aria-current={step === s.num ? 'step' : undefined}
+                          onClick={() => { if (!isDisabled) setStep(s.num); }}
+                          onKeyDown={(e) => { if (!isDisabled && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); setStep(s.num); } }}
+                        >
+                          <s.icon className={`h-4 w-4 ${step >= s.num ? "text-primary-foreground" : "text-muted-foreground"}`} />
+                          <span className={`text-sm font-medium hidden sm:block ${step >= s.num ? "text-primary-foreground" : "text-muted-foreground"}`}>
+                            {s.title}
+                          </span>
+                          {step > s.num && (
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-success flex items-center justify-center"
+                            >
+                              <CheckCircle className="h-3 w-3 text-white" />
+                            </motion.div>
+                          )}
+                        </motion.div>
+                      </TooltipTrigger>
+                      {isDisabled && (
+                        <TooltipContent side="top">{disabledReason}</TooltipContent>
+                      )}
+                    </Tooltip>
+
+                    {i < stepInfo.length - 1 && (
+                      <div className={`w-8 h-0.5 mx-1 rounded-full transition-colors ${step > s.num ? "bg-primary" : "bg-muted"}`} />
                     )}
-                  </motion.div>
-                  {i < stepInfo.length - 1 && (
-                    <div className={`w-8 h-0.5 mx-1 rounded-full transition-colors ${step > s.num ? "bg-primary" : "bg-muted"}`} />
-                  )}
-                </div>
-              ))}
+                  </div>
+                );
+              })}
             </div>
           </FadeInUp>
 
