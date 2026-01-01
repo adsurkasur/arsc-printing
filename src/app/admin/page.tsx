@@ -41,20 +41,52 @@ function DownloadWithCountdown({ fileUrl, expiresAt }: { fileUrl: string; expire
     computeRemaining();
   };
 
+  // Programmatic download helper (uses fetch to ensure download even when server doesn't set content-disposition)
+  const downloadFile = async (url: string) => {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Network response was not ok');
+      const blob = await res.blob();
+      const contentDisposition = res.headers.get('content-disposition');
+      let filename = 'file';
+      if (contentDisposition) {
+        const match = /filename\*=UTF-8''(.+)|filename="?([^";]+)"?/.exec(contentDisposition);
+        if (match) filename = decodeURIComponent(match[1] || match[2]);
+      } else {
+        try {
+          const urlObj = new URL(url);
+          filename = decodeURIComponent(urlObj.pathname.split('/').pop() || filename);
+        } catch (e) {
+          console.warn('Failed to derive filename from URL', e);
+        }
+      }
+
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      // Fallback: open in new tab
+      window.open(url, '_blank');
+    }
+  };
+
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <motion.a
+        <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          href={fileUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-primary hover:text-primary/80"
           onMouseEnter={handleMouseEnter}
+          onClick={() => downloadFile(fileUrl)}
+          className="text-primary hover:text-primary/80"
         >
           <Download className="h-4 w-4" />
-        </motion.a>
+        </motion.button>
       </TooltipTrigger>
       <TooltipContent side="top">{remaining ? `Hapus file dalam ${remaining}` : 'Download'}</TooltipContent>
     </Tooltip>
@@ -498,8 +530,46 @@ export default function Admin() {
                   const lower = proofUrl.toLowerCase();
                   const isPdf = lower.endsWith('.pdf');
                   const isImage = /\.(png|jpe?g|webp|svg|tiff?|gif)$/.test(lower);
+
+                  // programmatic download helper (we keep this inline to have access to proofUrl)
+                  const downloadProof = async (url: string) => {
+                    try {
+                      const res = await fetch(url);
+                      if (!res.ok) throw new Error('Network response was not ok');
+                      const blob = await res.blob();
+                      const contentDisposition = res.headers.get('content-disposition');
+                      let filename = 'bukti';
+                      if (contentDisposition) {
+                        const match = /filename\*=UTF-8''(.+)|filename="?([^";]+)"?/.exec(contentDisposition);
+                        if (match) filename = decodeURIComponent(match[1] || match[2]);
+                      } else {
+                        try {
+                          const urlObj = new URL(url);
+                          filename = decodeURIComponent(urlObj.pathname.split('/').pop() || filename);
+                        } catch (e) {
+                          console.warn('Failed to derive filename from proof URL', e);
+                        }
+                      }
+
+                      const blobUrl = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = blobUrl;
+                      a.download = filename;
+                      document.body.appendChild(a);
+                      a.click();
+                      a.remove();
+                      URL.revokeObjectURL(blobUrl);
+                    } catch (err) {
+                      window.open(url, '_blank');
+                    }
+                  };
+
                   if (isPdf) {
-                    return <a href={proofUrl} target="_blank" rel="noopener noreferrer" className="text-primary">Buka PDF bukti pembayaran</a>;
+                    return (
+                      <button className="text-primary underline" onClick={() => downloadProof(proofUrl)}>
+                        Buka PDF bukti pembayaran
+                      </button>
+                    );
                   }
                   if (isImage) {
                     return (
@@ -509,7 +579,11 @@ export default function Admin() {
                     );
                   }
                   // Fallback: provide a download/open link
-                  return <a href={proofUrl} target="_blank" rel="noopener noreferrer" className="text-primary">Buka/Unduh bukti pembayaran</a>;
+                  return (
+                    <button className="text-primary underline" onClick={() => downloadProof(proofUrl)}>
+                      Buka/Unduh bukti pembayaran
+                    </button>
+                  );
                 })()
               ) : (
                 <p className="text-muted-foreground">Tidak ada bukti pembayaran</p>
@@ -524,9 +598,43 @@ export default function Admin() {
             <DialogFooter>
               <div className="flex gap-2">
                 {proofUrl && (
-                  <a href={proofUrl} target="_blank" rel="noopener noreferrer" className="inline-block">
-                    <Button variant="outline">Unduh</Button>
-                  </a>
+                  <Button
+                    variant="outline"
+                    onClick={async () => {
+                      try {
+                        // reuse the download helper logic - fetch blob and download
+                        const res = await fetch(proofUrl);
+                        if (!res.ok) throw new Error('Network response was not ok');
+                        const blob = await res.blob();
+                        const contentDisposition = res.headers.get('content-disposition');
+                        let filename = 'bukti';
+                        if (contentDisposition) {
+                          const match = /filename\*=UTF-8''(.+)|filename="?([^";]+)"?/.exec(contentDisposition);
+                          if (match) filename = decodeURIComponent(match[1] || match[2]);
+                        } else {
+                          try {
+                            const urlObj = new URL(proofUrl);
+                            filename = decodeURIComponent(urlObj.pathname.split('/').pop() || filename);
+                          } catch (e) {
+                            console.warn('Failed to derive filename from proof URL', e);
+                          }
+                        }
+
+                        const blobUrl = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = blobUrl;
+                        a.download = filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        URL.revokeObjectURL(blobUrl);
+                      } catch (err) {
+                        window.open(proofUrl, '_blank');
+                      }
+                    }}
+                  >
+                    Unduh
+                  </Button>
                 )}
                 <Button variant="destructive" onClick={confirmDeletePaymentProof} disabled={proofDeleting}>{proofDeleting ? 'Menghapus...' : 'Hapus bukti'}</Button>
               </div>
