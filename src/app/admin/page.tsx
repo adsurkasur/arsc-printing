@@ -449,9 +449,6 @@ export default function Admin() {
                   </a>
                 )}
                 <Button variant="destructive" onClick={confirmDeletePaymentProof} disabled={proofDeleting}>{proofDeleting ? 'Menghapus...' : 'Hapus bukti'}</Button>
-                <DialogClose>
-                  <Button variant="outline">Tutup</Button>
-                </DialogClose>
               </div>
             </DialogFooter>
           </DialogContent>
