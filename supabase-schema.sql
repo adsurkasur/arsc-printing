@@ -218,6 +218,9 @@ ALTER TABLE orders ADD COLUMN IF NOT EXISTS pages INTEGER NOT NULL DEFAULT 1;
 COMMENT ON COLUMN public.orders.pages IS 'Number of pages per copy';
 CREATE INDEX IF NOT EXISTS idx_orders_pages ON orders(pages);
 
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS actual_pages INTEGER;
+COMMENT ON COLUMN public.orders.actual_pages IS 'Actual number of pages extracted from the uploaded PDF';
+
 CREATE INDEX IF NOT EXISTS idx_orders_file_expires_at ON orders(file_expires_at);
 CREATE INDEX IF NOT EXISTS idx_orders_file_deleted ON orders(file_deleted);
 CREATE INDEX IF NOT EXISTS idx_orders_payment_proof_expires_at ON orders(payment_proof_expires_at);

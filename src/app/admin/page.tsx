@@ -437,140 +437,71 @@ export default function Admin() {
       <div className="min-h-full py-8 px-4">
         <div className="container mx-auto">
 
-        {/* Delete confirmation modal */}
-        <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Hapus file</DialogTitle>
-              <DialogDescription>
-                Hapus file terkait pesanan ini sekarang? Tindakan ini tidak dapat dibatalkan.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => { setDeleteModalOpen(false); setDeleteTargetId(null); }}>
-                  Batal
-                </Button>
-                <Button variant="destructive" onClick={confirmDeleteFile} disabled={deleting}>
-                  {deleting ? 'Menghapus...' : 'Hapus file'}
-                </Button>
-              </div>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          {/* Delete confirmation modal */}
+          <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Hapus file</DialogTitle>
+                <DialogDescription>
+                  Hapus file terkait pesanan ini sekarang? Tindakan ini tidak dapat dibatalkan.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => { setDeleteModalOpen(false); setDeleteTargetId(null); }}>
+                    Batal
+                  </Button>
+                  <Button variant="destructive" onClick={confirmDeleteFile} disabled={deleting}>
+                    {deleting ? 'Menghapus...' : 'Hapus file'}
+                  </Button>
+                </div>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
-        {/* Cancel confirmation modal */}
-        <Dialog open={cancelModalOpen} onOpenChange={setCancelModalOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Batalkan pesanan</DialogTitle>
-              <DialogDescription>
-                Apakah Anda yakin ingin membatalkan pesanan ini? Pesanan yang dibatalkan tidak akan diproses.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => { setCancelModalOpen(false); setCancelTargetId(null); }}>
-                  Batal
-                </Button>
-                <Button variant="destructive" onClick={confirmCancelOrder} disabled={cancelling}>
-                  {cancelling ? 'Membatalkan...' : 'Batalkan pesanan'}
-                </Button>
-              </div>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          {/* Cancel confirmation modal */}
+          <Dialog open={cancelModalOpen} onOpenChange={setCancelModalOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Batalkan pesanan</DialogTitle>
+                <DialogDescription>
+                  Apakah Anda yakin ingin membatalkan pesanan ini? Pesanan yang dibatalkan tidak akan diproses.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => { setCancelModalOpen(false); setCancelTargetId(null); }}>
+                    Batal
+                  </Button>
+                  <Button variant="destructive" onClick={confirmCancelOrder} disabled={cancelling}>
+                    {cancelling ? 'Membatalkan...' : 'Batalkan pesanan'}
+                  </Button>
+                </div>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
-        {/* Payment proof modal */}
-        <Dialog open={proofModalOpen} onOpenChange={setProofModalOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Bukti Pembayaran</DialogTitle>
-              <DialogDescription>Preview dan unduh bukti pembayaran</DialogDescription>
-              <DeletionTimer expiresAt={proofExpiresAt} />
-            </DialogHeader>
+          {/* Payment proof modal */}
+          <Dialog open={proofModalOpen} onOpenChange={setProofModalOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Bukti Pembayaran</DialogTitle>
+                <DialogDescription>Preview dan unduh bukti pembayaran</DialogDescription>
+                <DeletionTimer expiresAt={proofExpiresAt} />
+              </DialogHeader>
 
-            <div className="py-4">
-              {proofUrl ? (
-                // Detect file type by extension and show preview for images, link for PDFs, or download link for others
-                (() => {
-                  const lower = proofUrl.toLowerCase();
-                  const isPdf = lower.endsWith('.pdf');
-                  const isImage = /\.(png|jpe?g|webp|svg|tiff?|gif)$/.test(lower);
+              <div className="py-4">
+                {proofUrl ? (
+                  // Detect file type by extension and show preview for images, link for PDFs, or download link for others
+                  (() => {
+                    const lower = proofUrl.toLowerCase();
+                    const isPdf = lower.endsWith('.pdf');
+                    const isImage = /\.(png|jpe?g|webp|svg|tiff?|gif)$/.test(lower);
 
-                  // programmatic download helper (we keep this inline to have access to proofUrl)
-                  const downloadProof = async (url: string) => {
-                    try {
-                      const res = await fetch(url);
-                      if (!res.ok) throw new Error('Network response was not ok');
-                      const blob = await res.blob();
-                      const contentDisposition = res.headers.get('content-disposition');
-                      let filename = 'bukti';
-                      if (contentDisposition) {
-                        const match = /filename\*=UTF-8''(.+)|filename="?([^";]+)"?/.exec(contentDisposition);
-                        if (match) filename = decodeURIComponent(match[1] || match[2]);
-                      } else {
-                        try {
-                          const urlObj = new URL(url);
-                          filename = decodeURIComponent(urlObj.pathname.split('/').pop() || filename);
-                        } catch (e) {
-                          console.warn('Failed to derive filename from proof URL', e);
-                        }
-                      }
-
-                      const blobUrl = URL.createObjectURL(blob);
-                      const a = document.createElement('a');
-                      a.href = blobUrl;
-                      a.download = filename;
-                      document.body.appendChild(a);
-                      a.click();
-                      a.remove();
-                      URL.revokeObjectURL(blobUrl);
-                    } catch (err) {
-                      window.open(url, '_blank');
-                    }
-                  };
-
-                  if (isPdf) {
-                    return (
-                      <button className="text-primary underline" onClick={() => downloadProof(proofUrl)}>
-                        Buka PDF bukti pembayaran
-                      </button>
-                    );
-                  }
-                  if (isImage) {
-                    return (
-                      <div className="w-full h-96 flex items-center justify-center bg-muted/10 rounded-md p-4">
-                        <img src={proofUrl} alt="Bukti pembayaran" className="max-h-full object-contain" />
-                      </div>
-                    );
-                  }
-                  // Fallback: provide a download/open link
-                  return (
-                    <button className="text-primary underline" onClick={() => downloadProof(proofUrl)}>
-                      Buka/Unduh bukti pembayaran
-                    </button>
-                  );
-                })()
-              ) : (
-                <p className="text-muted-foreground">Tidak ada bukti pembayaran</p>
-              )}
-
-              {/* Show helpful note only when no timer is scheduled (the timer is displayed in the header) */}
-              {proofUrl && !proofExpiresAt && (
-                <p className="text-sm text-muted-foreground mt-2">Jadwal penghapusan belum diatur. Penghapusan akan dihitung saat pesanan ditandai sebagai Diambil atau Dibatalkan.</p>
-              )}
-            </div>
-
-            <DialogFooter>
-              <div className="flex gap-2">
-                {proofUrl && (
-                  <Button
-                    variant="outline"
-                    onClick={async () => {
+                    // programmatic download helper (we keep this inline to have access to proofUrl)
+                    const downloadProof = async (url: string) => {
                       try {
-                        // reuse the download helper logic - fetch blob and download
-                        const res = await fetch(proofUrl);
+                        const res = await fetch(url);
                         if (!res.ok) throw new Error('Network response was not ok');
                         const blob = await res.blob();
                         const contentDisposition = res.headers.get('content-disposition');
@@ -580,7 +511,7 @@ export default function Admin() {
                           if (match) filename = decodeURIComponent(match[1] || match[2]);
                         } else {
                           try {
-                            const urlObj = new URL(proofUrl);
+                            const urlObj = new URL(url);
                             filename = decodeURIComponent(urlObj.pathname.split('/').pop() || filename);
                           } catch (e) {
                             console.warn('Failed to derive filename from proof URL', e);
@@ -596,18 +527,87 @@ export default function Admin() {
                         a.remove();
                         URL.revokeObjectURL(blobUrl);
                       } catch (err) {
-                        window.open(proofUrl, '_blank');
+                        window.open(url, '_blank');
                       }
-                    }}
-                  >
-                    Unduh
-                  </Button>
+                    };
+
+                    if (isPdf) {
+                      return (
+                        <button className="text-primary underline" onClick={() => downloadProof(proofUrl)}>
+                          Buka PDF bukti pembayaran
+                        </button>
+                      );
+                    }
+                    if (isImage) {
+                      return (
+                        <div className="w-full h-96 flex items-center justify-center bg-muted/10 rounded-md p-4">
+                          <img src={proofUrl} alt="Bukti pembayaran" className="max-h-full object-contain" />
+                        </div>
+                      );
+                    }
+                    // Fallback: provide a download/open link
+                    return (
+                      <button className="text-primary underline" onClick={() => downloadProof(proofUrl)}>
+                        Buka/Unduh bukti pembayaran
+                      </button>
+                    );
+                  })()
+                ) : (
+                  <p className="text-muted-foreground">Tidak ada bukti pembayaran</p>
                 )}
-                <Button variant="destructive" onClick={confirmDeletePaymentProof} disabled={proofDeleting}>{proofDeleting ? 'Menghapus...' : 'Hapus bukti'}</Button>
+
+                {/* Show helpful note only when no timer is scheduled (the timer is displayed in the header) */}
+                {proofUrl && !proofExpiresAt && (
+                  <p className="text-sm text-muted-foreground mt-2">Jadwal penghapusan belum diatur. Penghapusan akan dihitung saat pesanan ditandai sebagai Diambil atau Dibatalkan.</p>
+                )}
               </div>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+
+              <DialogFooter>
+                <div className="flex gap-2">
+                  {proofUrl && (
+                    <Button
+                      variant="outline"
+                      onClick={async () => {
+                        try {
+                          // reuse the download helper logic - fetch blob and download
+                          const res = await fetch(proofUrl);
+                          if (!res.ok) throw new Error('Network response was not ok');
+                          const blob = await res.blob();
+                          const contentDisposition = res.headers.get('content-disposition');
+                          let filename = 'bukti';
+                          if (contentDisposition) {
+                            const match = /filename\*=UTF-8''(.+)|filename="?([^";]+)"?/.exec(contentDisposition);
+                            if (match) filename = decodeURIComponent(match[1] || match[2]);
+                          } else {
+                            try {
+                              const urlObj = new URL(proofUrl);
+                              filename = decodeURIComponent(urlObj.pathname.split('/').pop() || filename);
+                            } catch (e) {
+                              console.warn('Failed to derive filename from proof URL', e);
+                            }
+                          }
+
+                          const blobUrl = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = blobUrl;
+                          a.download = filename;
+                          document.body.appendChild(a);
+                          a.click();
+                          a.remove();
+                          URL.revokeObjectURL(blobUrl);
+                        } catch (err) {
+                          window.open(proofUrl, '_blank');
+                        }
+                      }}
+                    >
+                      Unduh
+                    </Button>
+                  )}
+                  <Button variant="destructive" onClick={confirmDeletePaymentProof} disabled={proofDeleting}>{proofDeleting ? 'Menghapus...' : 'Hapus bukti'}</Button>
+                </div>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
           {/* Header */}
           <FadeInUp className="mb-6 sm:mb-8">
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
@@ -689,124 +689,124 @@ export default function Admin() {
           <StaggerContainer className="mb-6 sm:mb-8 grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
             {/* Total Pesanan */}
             <StaggerItem>
-                <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ duration: 0.2 }}>
-                  <Card className="p-4 sm:p-6 border-border/50 shadow-smooth bg-gradient-to-br from-primary/10 to-primary/5">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs sm:text-sm text-muted-foreground">Total Pesanan</p>
-                        <motion.p
-                          key={orders.length}
-                          initial={{ scale: 0.5, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          className="text-2xl sm:text-3xl font-bold text-primary"
-                        >
-                          {orders.length}
-                        </motion.p>
-                      </div>
-                      <div className="rounded-lg sm:rounded-xl bg-primary/10 p-2 sm:p-3">
-                        <TrendingUp className="h-4 w-4 sm:h-6 sm:w-6 text-primary" />
-                      </div>
+              <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ duration: 0.2 }}>
+                <Card className="p-4 sm:p-6 border-border/50 shadow-smooth bg-gradient-to-br from-primary/10 to-primary/5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Total Pesanan</p>
+                      <motion.p
+                        key={orders.length}
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="text-2xl sm:text-3xl font-bold text-primary"
+                      >
+                        {orders.length}
+                      </motion.p>
                     </div>
-                  </Card>
-                </motion.div>
-              </StaggerItem>
-              
-              {/* Menunggu */}
-              <StaggerItem>
-                <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ duration: 0.2 }}>
-                  <Card className="p-4 sm:p-6 border-border/50 shadow-smooth bg-gradient-to-br from-yellow-500/10 to-yellow-500/5">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs sm:text-sm text-muted-foreground">Menunggu</p>
-                        <motion.p
-                          key={orders.filter((o) => o.status === "pending").length}
-                          initial={{ scale: 0.5, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          className="text-2xl sm:text-3xl font-bold text-yellow-600"
-                        >
-                          {orders.filter((o) => o.status === "pending").length}
-                        </motion.p>
-                      </div>
-                      <div className="rounded-lg sm:rounded-xl bg-yellow-500/10 p-2 sm:p-3">
-                        <Clock className="h-4 w-4 sm:h-6 sm:w-6 text-yellow-600" />
-                      </div>
+                    <div className="rounded-lg sm:rounded-xl bg-primary/10 p-2 sm:p-3">
+                      <TrendingUp className="h-4 w-4 sm:h-6 sm:w-6 text-primary" />
                     </div>
-                  </Card>
-                </motion.div>
-              </StaggerItem>
-              
-              {/* Sedang Dicetak */}
-              <StaggerItem>
-                <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ duration: 0.2 }}>
-                  <Card className="p-4 sm:p-6 border-border/50 shadow-smooth bg-gradient-to-br from-blue-500/10 to-blue-500/5">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs sm:text-sm text-muted-foreground">Sedang Dicetak</p>
-                        <motion.p
-                          key={orders.filter((o) => o.status === "printing").length}
-                          initial={{ scale: 0.5, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          className="text-2xl sm:text-3xl font-bold text-blue-600"
-                        >
-                          {orders.filter((o) => o.status === "printing").length}
-                        </motion.p>
-                      </div>
-                      <div className="rounded-lg sm:rounded-xl bg-blue-500/10 p-2 sm:p-3">
-                        <Printer className="h-4 w-4 sm:h-6 sm:w-6 text-blue-600" />
-                      </div>
-                    </div>
-                  </Card>
-                </motion.div>
-              </StaggerItem>
-              
-              {/* Selesai */}
-              <StaggerItem>
-                <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ duration: 0.2 }}>
-                  <Card className="p-4 sm:p-6 border-border/50 shadow-smooth bg-gradient-to-br from-green-500/10 to-green-500/5">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs sm:text-sm text-muted-foreground">Selesai</p>
-                        <motion.p
-                          key={orders.filter((o) => o.status === "completed").length}
-                          initial={{ scale: 0.5, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          className="text-2xl sm:text-3xl font-bold text-green-600"
-                        >
-                          {orders.filter((o) => o.status === "completed").length}
-                        </motion.p>
-                      </div>
-                      <div className="rounded-lg sm:rounded-xl bg-green-500/10 p-2 sm:p-3">
-                        <CheckCircle className="h-4 w-4 sm:h-6 sm:w-6 text-green-600" />
-                      </div>
-                    </div>
-                  </Card>
-                </motion.div>
-              </StaggerItem>
+                  </div>
+                </Card>
+              </motion.div>
+            </StaggerItem>
 
-              {/* Diambil */}
-              <StaggerItem>
-                <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ duration: 0.2 }}>
-                  <Card className="p-4 sm:p-6 border-border/50 shadow-smooth bg-gradient-to-br from-indigo-500/10 to-indigo-500/5">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs sm:text-sm text-muted-foreground">Diambil</p>
-                        <motion.p
-                          key={orders.filter((o) => o.status === "delivered").length}
-                          initial={{ scale: 0.5, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          className="text-2xl sm:text-3xl font-bold text-indigo-600"
-                        >
-                          {orders.filter((o) => o.status === "delivered").length}
-                        </motion.p>
-                      </div>
-                      <div className="rounded-lg sm:rounded-xl bg-indigo-500/10 p-2 sm:p-3">
-                        <Home className="h-4 w-4 sm:h-6 sm:w-6 text-indigo-600" />
-                      </div>
+            {/* Menunggu */}
+            <StaggerItem>
+              <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ duration: 0.2 }}>
+                <Card className="p-4 sm:p-6 border-border/50 shadow-smooth bg-gradient-to-br from-yellow-500/10 to-yellow-500/5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Menunggu</p>
+                      <motion.p
+                        key={orders.filter((o) => o.status === "pending").length}
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="text-2xl sm:text-3xl font-bold text-yellow-600"
+                      >
+                        {orders.filter((o) => o.status === "pending").length}
+                      </motion.p>
                     </div>
-                  </Card>
-                </motion.div>
-              </StaggerItem>
-            </StaggerContainer>
+                    <div className="rounded-lg sm:rounded-xl bg-yellow-500/10 p-2 sm:p-3">
+                      <Clock className="h-4 w-4 sm:h-6 sm:w-6 text-yellow-600" />
+                    </div>
+                  </div>
+                </Card>
+              </motion.div>
+            </StaggerItem>
+
+            {/* Sedang Dicetak */}
+            <StaggerItem>
+              <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ duration: 0.2 }}>
+                <Card className="p-4 sm:p-6 border-border/50 shadow-smooth bg-gradient-to-br from-blue-500/10 to-blue-500/5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Sedang Dicetak</p>
+                      <motion.p
+                        key={orders.filter((o) => o.status === "printing").length}
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="text-2xl sm:text-3xl font-bold text-blue-600"
+                      >
+                        {orders.filter((o) => o.status === "printing").length}
+                      </motion.p>
+                    </div>
+                    <div className="rounded-lg sm:rounded-xl bg-blue-500/10 p-2 sm:p-3">
+                      <Printer className="h-4 w-4 sm:h-6 sm:w-6 text-blue-600" />
+                    </div>
+                  </div>
+                </Card>
+              </motion.div>
+            </StaggerItem>
+
+            {/* Selesai */}
+            <StaggerItem>
+              <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ duration: 0.2 }}>
+                <Card className="p-4 sm:p-6 border-border/50 shadow-smooth bg-gradient-to-br from-green-500/10 to-green-500/5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Selesai</p>
+                      <motion.p
+                        key={orders.filter((o) => o.status === "completed").length}
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="text-2xl sm:text-3xl font-bold text-green-600"
+                      >
+                        {orders.filter((o) => o.status === "completed").length}
+                      </motion.p>
+                    </div>
+                    <div className="rounded-lg sm:rounded-xl bg-green-500/10 p-2 sm:p-3">
+                      <CheckCircle className="h-4 w-4 sm:h-6 sm:w-6 text-green-600" />
+                    </div>
+                  </div>
+                </Card>
+              </motion.div>
+            </StaggerItem>
+
+            {/* Diambil */}
+            <StaggerItem>
+              <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ duration: 0.2 }}>
+                <Card className="p-4 sm:p-6 border-border/50 shadow-smooth bg-gradient-to-br from-indigo-500/10 to-indigo-500/5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Diambil</p>
+                      <motion.p
+                        key={orders.filter((o) => o.status === "delivered").length}
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="text-2xl sm:text-3xl font-bold text-indigo-600"
+                      >
+                        {orders.filter((o) => o.status === "delivered").length}
+                      </motion.p>
+                    </div>
+                    <div className="rounded-lg sm:rounded-xl bg-indigo-500/10 p-2 sm:p-3">
+                      <Home className="h-4 w-4 sm:h-6 sm:w-6 text-indigo-600" />
+                    </div>
+                  </div>
+                </Card>
+              </motion.div>
+            </StaggerItem>
+          </StaggerContainer>
 
           {/* Orders Table */}
           <FadeInUp delay={0.2}>
@@ -815,7 +815,7 @@ export default function Admin() {
               <div className="p-3 sm:p-4 border-b border-border bg-muted/30 rounded-t-lg">
                 <h2 className="font-semibold text-sm sm:text-base">Daftar Pesanan</h2>
               </div>
-              
+
               {loading ? (
                 <Card className="p-6 text-center">
                   <motion.div
@@ -851,7 +851,7 @@ export default function Admin() {
                         </div>
                         <StatusBadge status={order.status} />
                       </div>
-                      
+
                       {/* Details Grid */}
                       <div className="grid grid-cols-2 gap-2 text-xs mb-3">
                         <div>
@@ -864,18 +864,25 @@ export default function Admin() {
                         </div>
                         <div>
                           <span className="text-muted-foreground">Halaman:</span>
-                          <p className="font-medium">{`${order.pages ?? 1} x ${order.copies} = ${(order.pages ?? 1) * order.copies}`}</p>
+                          <p className="font-medium">
+                            {`${order.pages ?? 1} x ${order.copies} = ${(order.pages ?? 1) * order.copies}`}
+                            {order.actual_pages && order.actual_pages !== order.pages && (
+                              <span className="text-destructive ml-1 block text-[10px] sm:inline sm:text-xs">
+                                (Asli: {order.actual_pages}) ⚠️
+                              </span>
+                            )}
+                          </p>
                         </div>
                         <div>
                           <span className="text-muted-foreground">Ukuran:</span>
                           <p className="font-medium">{order.paper_size}</p>
                         </div>
                       </div>
-                      
+
                       <div className="text-xs text-muted-foreground mb-3">
                         {formatDistanceToNow(new Date(order.created_at), { addSuffix: true, locale: idLocale })}
                       </div>
-                      
+
                       {/* Actions */}
                       <div className="flex flex-wrap gap-2">
                         {/* File actions */}
@@ -884,14 +891,14 @@ export default function Admin() {
                         ) : (
                           <DownloadWithCountdown fileUrl={order.file_url} expiresAt={order.file_expires_at} />
                         )}
-                        
+
                         {/* Payment proof */}
                         {!order.payment_proof_deleted && order.payment_proof_url && (
                           <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => openProofModal(order)}>
                             <FileText className="h-3 w-3 mr-1" /> Bukti
                           </Button>
                         )}
-                        
+
                         {/* Status actions */}
                         {order.status === "pending" && (
                           <>
@@ -1044,7 +1051,14 @@ export default function Admin() {
                           </TableCell>
                           <TableCell>{order.copies}x</TableCell>
                           <TableCell>{order.paper_size}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground">{`${order.pages ?? 1} x ${order.copies} = ${(order.pages ?? 1) * order.copies}`}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {`${order.pages ?? 1} x ${order.copies} = ${(order.pages ?? 1) * order.copies}`}
+                            {order.actual_pages && order.actual_pages !== order.pages && (
+                              <span className="text-destructive ml-1 font-medium">
+                                (Asli: {order.actual_pages}) ⚠️
+                              </span>
+                            )}
+                          </TableCell>
                           <TableCell className="text-sm text-muted-foreground">
                             {formatDistanceToNow(new Date(order.created_at), { addSuffix: true, locale: idLocale })}
                           </TableCell>

@@ -35,6 +35,7 @@ export default function Order() {
     pages: 1,
     paperSize: "A4" as const,
   });
+  const [actualPages, setActualPages] = useState<number | null>(null);
 
   // Pricing per page (read from env vars, fallback to defaults)
   const priceBw = Number(process.env.NEXT_PUBLIC_PRICE_BW ?? '') || 500;
@@ -116,8 +117,13 @@ export default function Order() {
       const data = await response.json();
       setFileUrl(data.fileUrl);
       setFilePath(data.filePath || null);
+      if (data.actualPages) {
+        setActualPages(data.actualPages);
+      } else {
+        setActualPages(null);
+      }
       setStep(2);
-      
+
       toast({
         title: "File berhasil diupload",
         description: "Lanjutkan ke pengaturan cetak",
@@ -230,7 +236,7 @@ export default function Order() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!fileName) {
       toast({
         title: "Error",
@@ -279,6 +285,7 @@ export default function Order() {
         color_mode: formData.colorMode,
         copies: formData.copies,
         pages: formData.pages,
+        actual_pages: actualPages,
         paper_size: formData.paperSize,
         notes,
       }, fileUrl || undefined, filePath || undefined, paymentFileUrl || undefined, paymentFilePath || undefined);
@@ -411,7 +418,7 @@ export default function Order() {
                         <p className="text-sm text-muted-foreground">Pilih file yang ingin dicetak</p>
                       </div>
                     </div>
-                    
+
                     <div className="relative">
                       <input
                         type="file"
@@ -425,11 +432,10 @@ export default function Order() {
                         htmlFor="file-upload"
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.99 }}
-                        className={`flex min-h-[200px] sm:min-h-[250px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-all ${
-                          fileName 
-                            ? "border-success bg-success/5" 
+                        className={`flex min-h-[200px] sm:min-h-[250px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-all ${fileName
+                            ? "border-success bg-success/5"
                             : "border-border hover:border-primary/50 bg-muted/30 hover:bg-muted/50"
-                        } ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          } ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
                         {uploading ? (
                           <div className="text-center">
@@ -447,7 +453,7 @@ export default function Order() {
                             </p>
                           </div>
                         ) : fileName ? (
-                          <motion.div 
+                          <motion.div
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             className="text-center"
@@ -519,11 +525,10 @@ export default function Order() {
                               key={option.value}
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
-                              className={`relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 p-4 sm:p-6 transition-all ${
-                                formData.colorMode === option.value
+                              className={`relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 p-4 sm:p-6 transition-all ${formData.colorMode === option.value
                                   ? "border-primary bg-primary/5 shadow-lg"
                                   : "border-border hover:border-primary/30"
-                              }`}
+                                }`}
                             >
                               <RadioGroupItem value={option.value} className="sr-only" />
                               <span className="font-semibold text-foreground">{option.label}</span>
@@ -730,7 +735,7 @@ export default function Order() {
                           <div className="flex justify-between pt-2">
                             <span className="text-muted-foreground">Harga</span>
                             <span className="font-medium">{formatCurrency((formData.colorMode === 'color' ? priceColor : priceBw) * formData.pages * formData.copies)}</span>
-                          </div> 
+                          </div>
                         </div>
                       </div>
 
@@ -792,11 +797,11 @@ export default function Order() {
                           </Button>
                         </div>
 
-                      <div className="mt-3 sm:mt-4 p-3 sm:p-4 rounded-xl bg-muted/10 border border-border text-center">
-                        <p className="text-sm text-muted-foreground">Total Pembayaran</p>
-                        <p className="text-xl sm:text-2xl font-bold mt-1">{formatCurrency((formData.colorMode === 'color' ? priceColor : priceBw) * formData.pages * formData.copies)}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{formatCurrency(formData.colorMode === 'color' ? priceColor : priceBw)} / halaman {formData.colorMode === 'color' ? 'warna' : 'hitam putih'} x {formData.pages} halaman x {formData.copies} salinan</p>
-                      </div>
+                        <div className="mt-3 sm:mt-4 p-3 sm:p-4 rounded-xl bg-muted/10 border border-border text-center">
+                          <p className="text-sm text-muted-foreground">Total Pembayaran</p>
+                          <p className="text-xl sm:text-2xl font-bold mt-1">{formatCurrency((formData.colorMode === 'color' ? priceColor : priceBw) * formData.pages * formData.copies)}</p>
+                          <p className="text-xs text-muted-foreground mt-1">{formatCurrency(formData.colorMode === 'color' ? priceColor : priceBw)} / halaman {formData.colorMode === 'color' ? 'warna' : 'hitam putih'} x {formData.pages} halaman x {formData.copies} salinan</p>
+                        </div>
 
                       </div>
 
@@ -815,11 +820,10 @@ export default function Order() {
                             htmlFor="payment-proof"
                             whileHover={{ scale: 1.01 }}
                             whileTap={{ scale: 0.99 }}
-                            className={`flex min-h-[120px] sm:min-h-[160px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-all ${
-                              paymentFileName || paymentFileUrl
+                            className={`flex min-h-[120px] sm:min-h-[160px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-all ${paymentFileName || paymentFileUrl
                                 ? "border-success bg-success/5"
                                 : "border-border hover:border-primary/50 bg-muted/30 hover:bg-muted/50"
-                            } ${paymentUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              } ${paymentUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
                           >
                             {paymentUploading ? (
                               <div className="text-center">

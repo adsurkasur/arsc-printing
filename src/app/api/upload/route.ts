@@ -1,5 +1,6 @@
 ﻿import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { PDFDocument } from 'pdf-lib'
 
 // Check if Supabase is properly configured
 function isSupabaseConfigured() {
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
 
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
-        { error: 'Invalid file type. Only common document and image formats are allowed (PDF/DOC/DOCX/PPTX/ODT/RTF/TXT/PNG/JPEG/WEBP/TIFF/SVG).'},
+        { error: 'Invalid file type. Only common document and image formats are allowed (PDF/DOC/DOCX/PPTX/ODT/RTF/TXT/PNG/JPEG/WEBP/TIFF/SVG).' },
         { status: 400 }
       )
     }
@@ -50,12 +51,27 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    let actualPages: number | null = null;
+
+    try {
+      // If PDF, extract actual pages and validate corruption
+      if (file.type === 'application/pdf') {
+        const fileBuffer = await file.arrayBuffer();
+        const pdfDoc = await PDFDocument.load(fileBuffer, { ignoreEncryption: true });
+        actualPages = pdfDoc.getPageCount();
+      }
+    } catch (err) {
+      console.error('PDF parsing error:', err);
+      return NextResponse.json({ error: 'File PDF corrupt atau diproteksi password.' }, { status: 400 });
+    }
+
     // Return demo response if Supabase not configured
     if (!isSupabaseConfigured()) {
       return NextResponse.json({
         fileName: file.name,
         filePath: `demo/${file.name}`,
         fileUrl: null,
+        actualPages,
         demoMode: true,
       })
     }
@@ -89,6 +105,7 @@ export async function POST(request: NextRequest) {
       fileName: file.name,
       filePath: data.path,
       fileUrl: urlData.publicUrl,
+      actualPages,
     })
   } catch (error) {
     console.error('Upload error:', error)

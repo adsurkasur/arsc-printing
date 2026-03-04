@@ -17,6 +17,7 @@ export interface Order {
   color_mode: "bw" | "color";
   copies: number;
   pages: number;
+  actual_pages?: number | null;
   paper_size: "A4";
   status: OrderStatus;
   created_at: string;
@@ -36,9 +37,10 @@ export interface CreateOrderInput {
   color_mode: "bw" | "color";
   copies: number;
   pages?: number;
+  actual_pages?: number | null;
   paper_size: "A4";
   notes?: string;
-} 
+}
 
 // Database type for Supabase
 export type Database = {
@@ -49,11 +51,13 @@ export type Database = {
         Insert: Omit<Order, "id" | "created_at" | "estimated_time" | "status"> & {
           status?: OrderStatus;
           file_path?: string | null;
+          actual_pages?: number | null;
         };
         Update: Partial<Omit<Order, "id" | "created_at">> & {
           file_expires_at?: string | null;
           file_deleted?: boolean;
           file_path?: string | null;
+          actual_pages?: number | null;
         };
       };
     };
