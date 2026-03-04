@@ -1,0 +1,27 @@
+﻿bun : $ eslint .
+At line:1 char:1
++ bun run lint 2>&1 | 
+Out-File -Encoding 
+utf8 lint_output.txt
++ ~~~~~~~~~~~~~~~~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: ($ eslint .:St   
+ ring) [], RemoteEx    
+ception
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+
+D:\Projects\arsc-printing\src\app\api\orders\route.ts
+  134:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Projects\arsc-printing\src\components\LivePDFPreview.tsx
+  63:22  error  'entry' is never reassigned. Use 'const' instead  prefer-const
+
+Ô£û 2 problems (2 errors, 0 warnings)
+  1 error and 0 warnings potentially fixable with the `--fix` option.
+
+error: script "lint" 
+exited with code 1

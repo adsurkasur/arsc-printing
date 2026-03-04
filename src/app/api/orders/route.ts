@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
     estimated_time += globalWaitTime;
 
     // Build insert payload dynamically
-    const insertPayload: any = {
+    const insertPayload: Record<string, unknown> = {
       customer_name: body.customer_name,
       contact: body.contact,
       file_name: body.file_name,

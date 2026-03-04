@@ -715,13 +715,15 @@ export default function Order() {
                             onClick={() => setStep(3)}
                             className="flex-1 h-10 sm:h-12"
                           >
+                            Lanjut
+                            <ArrowRight className="ml-1 sm:ml-2 h-4 w-4" />
                           </Button>
                         </div>
                       </div>
                       {/* Right Side: Live Preview */}
                       <div className="w-full lg:w-[400px] xl:w-[500px] mt-6 lg:mt-0">
-                        <Label className="text-base font-medium mb-3 sm:mb-4 block">Pratinjau Hasil Cetak</Label>
-                        <div className="h-[400px] lg:h-[600px] border border-border/50 rounded-xl overflow-hidden shadow-inner bg-muted/10 relative">
+                        {/* Title removed, incorporated into the component */}
+                        <div className="h-[500px] lg:h-[700px] relative">
                           {fileUrl ? (
                             <LivePDFPreview
                               fileUrl={fileUrl}
@@ -734,7 +736,7 @@ export default function Order() {
                               claimedPages={formData.pages}
                             />
                           ) : (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground p-6 text-center">
+                            <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground p-6 text-center border border-border/50 rounded-xl bg-muted/10 shadow-inner">
                               <span className="text-sm">Silakan unggah file PDF untuk melihat pratinjau.</span>
                             </div>
                           )}
