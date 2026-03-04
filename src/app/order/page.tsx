@@ -14,6 +14,9 @@ import { Upload, FileText, CheckCircle, Loader2, ArrowRight, ArrowLeft, Palette,
 import { motion, PageTransition, FadeInUp } from "@/components/animations";
 import { AnimatePresence } from "framer-motion";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import dynamic from "next/dynamic";
+
+const LivePDFPreview = dynamic(() => import("@/components/LivePDFPreview"), { ssr: false });
 
 export default function Order() {
   const router = useRouter();
@@ -33,7 +36,11 @@ export default function Order() {
     colorMode: "bw" as "bw" | "color",
     copies: 1,
     pages: 1,
-    paperSize: "A4" as const,
+    paperSize: "A4" as "A4" | "F4",
+    layout: "1-up" as "1-up" | "2-up" | "4-up",
+    scaleMode: "fit" as "fit" | "fill" | "100",
+    orientation: "portrait" as "portrait" | "landscape",
+    userNote: "",
   });
   const [actualPages, setActualPages] = useState<number | null>(null);
 
@@ -287,6 +294,10 @@ export default function Order() {
         pages: formData.pages,
         actual_pages: actualPages,
         paper_size: formData.paperSize,
+        layout: formData.layout,
+        scale_mode: formData.scaleMode,
+        orientation: formData.orientation,
+        user_note: formData.userNote,
         notes,
       }, fileUrl || undefined, filePath || undefined, paymentFileUrl || undefined, paymentFilePath || undefined);
 
@@ -433,8 +444,8 @@ export default function Order() {
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.99 }}
                         className={`flex min-h-[200px] sm:min-h-[250px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-all ${fileName
-                            ? "border-success bg-success/5"
-                            : "border-border hover:border-primary/50 bg-muted/30 hover:bg-muted/50"
+                          ? "border-success bg-success/5"
+                          : "border-border hover:border-primary/50 bg-muted/30 hover:bg-muted/50"
                           } ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
                         {uploading ? (
@@ -507,147 +518,227 @@ export default function Order() {
                       </div>
                     </div>
 
-                    <div className="space-y-6 sm:space-y-8">
-                      <div>
-                        <Label className="text-base font-medium mb-3 sm:mb-4 block">Mode Warna</Label>
-                        <RadioGroup
-                          value={formData.colorMode}
-                          onValueChange={(value: "bw" | "color") =>
-                            setFormData({ ...formData, colorMode: value })
-                          }
-                          className="grid grid-cols-2 gap-3 sm:gap-4"
-                        >
-                          {[
-                            { value: "bw", label: "Hitam Putih", desc: "Lebih ekonomis" },
-                            { value: "color", label: "Berwarna", desc: "Full color" }
-                          ].map((option) => (
-                            <motion.label
-                              key={option.value}
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                              className={`relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 p-4 sm:p-6 transition-all ${formData.colorMode === option.value
+                    <div className="flex flex-col lg:flex-row gap-6 sm:gap-8">
+                      {/* Left Side: Settings */}
+                      <div className="flex-1 space-y-6 sm:space-y-8">
+                        <div>
+                          <Label className="text-base font-medium mb-3 sm:mb-4 block">Mode Warna</Label>
+                          <RadioGroup
+                            value={formData.colorMode}
+                            onValueChange={(value: "bw" | "color") =>
+                              setFormData({ ...formData, colorMode: value })
+                            }
+                            className="grid grid-cols-2 gap-3 sm:gap-4"
+                          >
+                            {[
+                              { value: "bw", label: "Hitam Putih", desc: "Lebih ekonomis" },
+                              { value: "color", label: "Berwarna", desc: "Full color" }
+                            ].map((option) => (
+                              <motion.label
+                                key={option.value}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                className={`relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 p-4 sm:p-6 transition-all ${formData.colorMode === option.value
                                   ? "border-primary bg-primary/5 shadow-lg"
                                   : "border-border hover:border-primary/30"
-                                }`}
+                                  }`}
+                              >
+                                <RadioGroupItem value={option.value} className="sr-only" />
+                                <span className="font-semibold text-foreground">{option.label}</span>
+                                <span className="text-xs text-muted-foreground mt-1">{option.desc}</span>
+                                <span className="text-xs text-muted-foreground mt-1">{formatCurrency(option.value === 'bw' ? priceBw : priceColor)} / halaman</span>
+                                {formData.colorMode === option.value && (
+                                  <motion.div
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-primary flex items-center justify-center shadow-lg"
+                                  >
+                                    <CheckCircle className="h-4 w-4 text-white" />
+                                  </motion.div>
+                                )}
+                              </motion.label>
+                            ))}
+                          </RadioGroup>
+                        </div>
+
+                        <div>
+                          <Label htmlFor="pages" className="text-base font-medium mb-3 sm:mb-4 block">
+                            Jumlah Halaman
+                          </Label>
+                          <div className="flex items-center gap-2 sm:gap-4">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl"
+                              onClick={() => setFormData({ ...formData, pages: Math.max(1, formData.pages - 1) })}
                             >
-                              <RadioGroupItem value={option.value} className="sr-only" />
-                              <span className="font-semibold text-foreground">{option.label}</span>
-                              <span className="text-xs text-muted-foreground mt-1">{option.desc}</span>
-                              <span className="text-xs text-muted-foreground mt-1">{formatCurrency(option.value === 'bw' ? priceBw : priceColor)} / halaman</span>
-                              {formData.colorMode === option.value && (
-                                <motion.div
-                                  initial={{ scale: 0 }}
-                                  animate={{ scale: 1 }}
-                                  className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-primary flex items-center justify-center shadow-lg"
-                                >
-                                  <CheckCircle className="h-4 w-4 text-white" />
-                                </motion.div>
-                              )}
-                            </motion.label>
-                          ))}
-                        </RadioGroup>
-                      </div>
+                              -
+                            </Button>
+                            <Input
+                              id="pages"
+                              type="number"
+                              min="1"
+                              max="9999"
+                              value={formData.pages}
+                              onChange={(e) =>
+                                setFormData({ ...formData, pages: Math.max(1, parseInt(e.target.value) || 1) })
+                              }
+                              className="h-10 sm:h-12 text-center text-base sm:text-lg font-semibold flex-1"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl"
+                              onClick={() => setFormData({ ...formData, pages: Math.min(9999, formData.pages + 1) })}
+                            >
+                              +
+                            </Button>
+                          </div>
+                        </div>
 
-                      <div>
-                        <Label htmlFor="pages" className="text-base font-medium mb-3 sm:mb-4 block">
-                          Jumlah Halaman
-                        </Label>
-                        <div className="flex items-center gap-2 sm:gap-4">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl"
-                            onClick={() => setFormData({ ...formData, pages: Math.max(1, formData.pages - 1) })}
-                          >
-                            -
-                          </Button>
-                          <Input
-                            id="pages"
-                            type="number"
-                            min="1"
-                            max="9999"
-                            value={formData.pages}
-                            onChange={(e) =>
-                              setFormData({ ...formData, pages: Math.max(1, parseInt(e.target.value) || 1) })
-                            }
-                            className="h-10 sm:h-12 text-center text-base sm:text-lg font-semibold flex-1"
+                        <div>
+                          <Label htmlFor="copies" className="text-base font-medium mb-3 sm:mb-4 block">
+                            Jumlah Salinan
+                          </Label>
+                          <div className="flex items-center gap-2 sm:gap-4">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl"
+                              onClick={() => setFormData({ ...formData, copies: Math.max(1, formData.copies - 1) })}
+                            >
+                              -
+                            </Button>
+                            <Input
+                              id="copies"
+                              type="number"
+                              min="1"
+                              max="20"
+                              value={formData.copies}
+                              onChange={(e) =>
+                                setFormData({ ...formData, copies: Math.max(1, parseInt(e.target.value) || 1) })
+                              }
+                              className="h-10 sm:h-12 text-center text-base sm:text-lg font-semibold flex-1"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl"
+                              onClick={() => setFormData({ ...formData, copies: Math.min(20, formData.copies + 1) })}
+                            >
+                              +
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div>
+                          <Label className="text-base font-medium mb-3 sm:mb-4 block">Ukuran Kertas & Orientasi</Label>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label className="text-sm text-muted-foreground mb-2 block">Kertas</Label>
+                              <select
+                                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                value={formData.paperSize}
+                                onChange={(e) => setFormData({ ...formData, paperSize: e.target.value as "A4" | "F4" })}
+                              >
+                                <option value="A4">A4 (21 × 29.7 cm)</option>
+                                <option value="F4">F4 (21.5 × 33 cm)</option>
+                              </select>
+                            </div>
+                            <div>
+                              <Label className="text-sm text-muted-foreground mb-2 block">Orientasi</Label>
+                              <select
+                                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                value={formData.orientation}
+                                onChange={(e) => setFormData({ ...formData, orientation: e.target.value as "portrait" | "landscape" })}
+                              >
+                                <option value="portrait">Potret (Portrait)</option>
+                                <option value="landscape">Lansekap (Landscape)</option>
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label className="text-base font-medium mb-2 block">Layout (Halaman/Lembar)</Label>
+                            <select
+                              className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                              value={formData.layout}
+                              onChange={(e) => setFormData({ ...formData, layout: e.target.value as "1-up" | "2-up" | "4-up" })}
+                            >
+                              <option value="1-up">1 per Lembar (Standar)</option>
+                              <option value="2-up">2 per Lembar</option>
+                              <option value="4-up">4 per Lembar</option>
+                            </select>
+                          </div>
+                          <div>
+                            <Label className="text-base font-medium mb-2 block">Skala (Scaling)</Label>
+                            <select
+                              className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                              value={formData.scaleMode}
+                              onChange={(e) => setFormData({ ...formData, scaleMode: e.target.value as "fit" | "fill" | "100" })}
+                            >
+                              <option value="fit">Fit to Page</option>
+                              <option value="fill">Fill (Crop)</option>
+                              <option value="100">100% (Actual Size)</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div>
+                          <Label className="text-base font-medium mb-2 block">Catatan Tambahan (Opsional)</Label>
+                          <textarea
+                            placeholder="Contoh: Jilid lakban hitam, margin kiri 2cm, dll."
+                            className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            value={formData.userNote}
+                            onChange={(e) => setFormData({ ...formData, userNote: e.target.value })}
                           />
+                        </div>
+
+                        <div className="flex gap-2 sm:gap-3 pt-4">
                           <Button
                             type="button"
                             variant="outline"
-                            size="icon"
-                            className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl"
-                            onClick={() => setFormData({ ...formData, pages: Math.min(9999, formData.pages + 1) })}
+                            onClick={() => setStep(1)}
+                            className="h-10 sm:h-12 px-4 sm:px-6"
                           >
-                            +
+                            <ArrowLeft className="mr-1 sm:mr-2 h-4 w-4" />
+                            Kembali
                           </Button>
-                        </div>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="copies" className="text-base font-medium mb-3 sm:mb-4 block">
-                          Jumlah Salinan
-                        </Label>
-                        <div className="flex items-center gap-2 sm:gap-4">
                           <Button
                             type="button"
-                            variant="outline"
-                            size="icon"
-                            className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl"
-                            onClick={() => setFormData({ ...formData, copies: Math.max(1, formData.copies - 1) })}
+                            onClick={() => setStep(3)}
+                            className="flex-1 h-10 sm:h-12"
                           >
-                            -
-                          </Button>
-                          <Input
-                            id="copies"
-                            type="number"
-                            min="1"
-                            max="20"
-                            value={formData.copies}
-                            onChange={(e) =>
-                              setFormData({ ...formData, copies: Math.max(1, parseInt(e.target.value) || 1) })
-                            }
-                            className="h-10 sm:h-12 text-center text-base sm:text-lg font-semibold flex-1"
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl"
-                            onClick={() => setFormData({ ...formData, copies: Math.min(20, formData.copies + 1) })}
-                          >
-                            +
                           </Button>
                         </div>
                       </div>
-
-                      <div>
-                        <Label className="text-base font-medium mb-3 sm:mb-4 block">Ukuran Kertas</Label>
-                        <div className="flex items-center justify-center rounded-xl border-2 border-primary/30 bg-primary/5 p-3 sm:p-4">
-                          <span className="font-semibold text-primary">A4</span>
-                          <span className="ml-2 text-sm text-muted-foreground">(21 × 29.7 cm)</span>
+                      {/* Right Side: Live Preview */}
+                      <div className="w-full lg:w-[400px] xl:w-[500px] mt-6 lg:mt-0">
+                        <Label className="text-base font-medium mb-3 sm:mb-4 block">Pratinjau Hasil Cetak</Label>
+                        <div className="h-[400px] lg:h-[600px] border border-border/50 rounded-xl overflow-hidden shadow-inner bg-muted/10 relative">
+                          {fileUrl ? (
+                            <LivePDFPreview
+                              fileUrl={fileUrl}
+                              colorMode={formData.colorMode}
+                              layout={formData.layout}
+                              scaleMode={formData.scaleMode}
+                              orientation={formData.orientation}
+                              paperSize={formData.paperSize}
+                              actualPages={actualPages}
+                              claimedPages={formData.pages}
+                            />
+                          ) : (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground p-6 text-center">
+                              <span className="text-sm">Silakan unggah file PDF untuk melihat pratinjau.</span>
+                            </div>
+                          )}
                         </div>
-                      </div>
-
-                      <div className="flex gap-2 sm:gap-3 pt-4">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setStep(1)}
-                          className="h-10 sm:h-12 px-4 sm:px-6"
-                        >
-                          <ArrowLeft className="mr-1 sm:mr-2 h-4 w-4" />
-                          Kembali
-                        </Button>
-                        <Button
-                          type="button"
-                          onClick={() => setStep(3)}
-                          className="flex-1 h-10 sm:h-12"
-                        >
-                          Lanjut
-                          <ArrowRight className="ml-1 sm:ml-2 h-4 w-4" />
-                        </Button>
                       </div>
                     </div>
                   </Card>
@@ -821,8 +912,8 @@ export default function Order() {
                             whileHover={{ scale: 1.01 }}
                             whileTap={{ scale: 0.99 }}
                             className={`flex min-h-[120px] sm:min-h-[160px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-all ${paymentFileName || paymentFileUrl
-                                ? "border-success bg-success/5"
-                                : "border-border hover:border-primary/50 bg-muted/30 hover:bg-muted/50"
+                              ? "border-success bg-success/5"
+                              : "border-border hover:border-primary/50 bg-muted/30 hover:bg-muted/50"
                               } ${paymentUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
                           >
                             {paymentUploading ? (

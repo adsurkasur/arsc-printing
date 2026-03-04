@@ -170,7 +170,10 @@ import {
 } from "@/components/ui/table";
 import { useOrders } from "@/contexts/OrderContext";
 import { createClient } from "@/lib/supabase/client";
-import { CheckCircle, Clock, Printer, LogOut, RefreshCw, Download, XCircle, Shield, TrendingUp, Trash, Home, FileText } from "lucide-react";
+import { CheckCircle, Clock, Printer, LogOut, RefreshCw, Download, XCircle, Shield, TrendingUp, Trash, Home, FileText, Eye } from "lucide-react";
+import dynamic from "next/dynamic";
+
+const LivePDFPreview = dynamic(() => import("@/components/LivePDFPreview"), { ssr: false });
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import {
   AlertDialog,
@@ -196,7 +199,7 @@ import { id as idLocale } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
 import { motion, PageTransition, FadeInUp, StaggerContainer, StaggerItem } from "@/components/animations";
 import { ToastAction } from "@/components/ui/toast";
-import type { OrderStatus } from "@/types/order";
+import type { OrderStatus, Order } from "@/types/order";
 
 // Check if Supabase is properly configured
 function isSupabaseConfigured() {
@@ -300,6 +303,15 @@ export default function Admin() {
     id: string;
     payment_proof_url?: string | null;
     payment_proof_expires_at?: string | null;
+  };
+
+  // Visual audit modal state
+  const [auditModalOpen, setAuditModalOpen] = useState(false);
+  const [auditOrder, setAuditOrder] = useState<Order | null>(null);
+
+  const openAuditModal = (order: Order) => {
+    setAuditOrder(order);
+    setTimeout(() => setAuditModalOpen(true), 0);
   };
 
   const openProofModal = (order: ProofableOrder) => {
@@ -477,6 +489,72 @@ export default function Admin() {
                     {cancelling ? 'Membatalkan...' : 'Batalkan pesanan'}
                   </Button>
                 </div>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Visual Audit Modal */}
+          <Dialog open={auditModalOpen} onOpenChange={setAuditModalOpen}>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Visual Audit: {auditOrder?.file_name}</DialogTitle>
+                <DialogDescription>
+                  Pratinjau struktur dokumen berdasarkan spesifikasi yang diminta pengguna.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="py-4 flex flex-col items-center">
+                {auditOrder?.file_url ? (
+                  <div className="w-full h-[60vh] bg-muted/10 rounded-xl border overflow-hidden relative">
+                    <LivePDFPreview
+                      fileUrl={auditOrder.file_url}
+                      colorMode={auditOrder.color_mode}
+                      layout={auditOrder.layout || '1-up'}
+                      scaleMode={auditOrder.scale_mode || 'fit'}
+                      orientation={auditOrder.orientation || 'portrait'}
+                      paperSize={auditOrder.paper_size}
+                      actualPages={auditOrder.actual_pages}
+                      claimedPages={auditOrder.pages}
+                    />
+                  </div>
+                ) : (
+                  <div className="py-12 text-center text-muted-foreground">
+                    URL file tidak tersedia untuk pratinjau.
+                  </div>
+                )}
+
+                {/* Specs Summary row */}
+                {auditOrder && (
+                  <div className="w-full mt-4 p-4 rounded-xl bg-muted/30 border grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-center">
+                    <div>
+                      <span className="text-muted-foreground block text-xs">Orientasi</span>
+                      <span className="font-medium capitalize">{auditOrder.orientation || 'Portrait'}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground block text-xs">Layout</span>
+                      <span className="font-medium">{auditOrder.layout || '1-up'}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground block text-xs">Skala</span>
+                      <span className="font-medium capitalize">{auditOrder.scale_mode || 'Fit'}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground block text-xs">Kertas</span>
+                      <span className="font-medium">{auditOrder.paper_size}</span>
+                    </div>
+                  </div>
+                )}
+
+                {auditOrder?.user_note && (
+                  <div className="w-full mt-4 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-sm">
+                    <span className="font-semibold text-amber-600 block mb-1">Catatan Pengguna:</span>
+                    <p className="text-amber-700 whitespace-pre-wrap">{auditOrder.user_note}</p>
+                  </div>
+                )}
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setAuditModalOpen(false)}>
+                  Tutup
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -874,10 +952,17 @@ export default function Admin() {
                           </p>
                         </div>
                         <div>
-                          <span className="text-muted-foreground">Ukuran:</span>
-                          <p className="font-medium">{order.paper_size}</p>
+                          <span className="text-muted-foreground">Print Specs:</span>
+                          <p className="font-medium">{order.paper_size} • {order.orientation === 'landscape' ? 'Lansekap' : 'Potret'}</p>
+                          <p className="text-muted-foreground text-[10px] mt-0.5">{order.layout || '1-up'} • {order.scale_mode || 'fit'}</p>
                         </div>
                       </div>
+
+                      {order.user_note && (
+                        <div className="bg-amber-500/10 border border-amber-500/20 p-2 rounded text-xs text-amber-700 mb-3">
+                          <span className="font-semibold">Catatan:</span> {order.user_note}
+                        </div>
+                      )}
 
                       <div className="text-xs text-muted-foreground mb-3">
                         {formatDistanceToNow(new Date(order.created_at), { addSuffix: true, locale: idLocale })}
@@ -885,6 +970,13 @@ export default function Admin() {
 
                       {/* Actions */}
                       <div className="flex flex-wrap gap-2">
+                        {/* Visual Audit */}
+                        {order.file_url && (
+                          <Button size="sm" variant="outline" className="h-7 text-xs border-primary/20 bg-primary/5 text-primary hover:bg-primary/10" onClick={() => openAuditModal(order)}>
+                            <Eye className="h-3 w-3 mr-1" /> Audit
+                          </Button>
+                        )}
+
                         {/* File actions */}
                         {order.file_deleted || !order.file_url ? (
                           <span className="text-xs text-muted-foreground flex items-center gap-1"><XCircle className="h-3 w-3" /> File dihapus</span>
@@ -949,9 +1041,8 @@ export default function Admin() {
                       <TableHead>Kontak</TableHead>
                       <TableHead>File</TableHead>
                       <TableHead>Bukti Bayar</TableHead>
-                      <TableHead>Mode</TableHead>
+                      <TableHead>Print Specs</TableHead>
                       <TableHead>Salinan</TableHead>
-                      <TableHead>Ukuran</TableHead>
                       <TableHead>Halaman</TableHead>
                       <TableHead>Waktu</TableHead>
                       <TableHead>Status</TableHead>
@@ -1047,10 +1138,25 @@ export default function Admin() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <ColorModeBadge mode={order.color_mode} />
+                            <div><ColorModeBadge mode={order.color_mode} /></div>
+                            <div className="text-[10px] mt-1 space-y-0.5">
+                              <p className="font-medium">{order.paper_size} • {order.orientation === 'landscape' ? 'Lansekap' : 'Potret'}</p>
+                              <p className="text-muted-foreground">{order.layout || '1-up'} • {order.scale_mode || 'fit'}</p>
+                            </div>
+                            {order.user_note && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="mt-1 cursor-help flex items-center gap-1 text-[10px] text-amber-600 bg-amber-50 max-w-max px-1.5 py-0.5 rounded border border-amber-200">
+                                    <FileText className="h-3 w-3" /> Catatan
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent side="top">
+                                  <p className="max-w-[200px] whitespace-pre-wrap">{order.user_note}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            )}
                           </TableCell>
                           <TableCell>{order.copies}x</TableCell>
-                          <TableCell>{order.paper_size}</TableCell>
                           <TableCell className="text-sm text-muted-foreground">
                             {`${order.pages ?? 1} x ${order.copies} = ${(order.pages ?? 1) * order.copies}`}
                             {order.actual_pages && order.actual_pages !== order.pages && (
@@ -1065,6 +1171,24 @@ export default function Admin() {
                           <TableCell><StatusBadge status={order.status} /></TableCell>
                           <TableCell>
                             <div className="flex gap-1">
+                              {order.file_url && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="rounded-lg border-primary/20 bg-primary/5 text-primary hover:bg-primary/10"
+                                        onClick={() => openAuditModal(order)}
+                                      >
+                                        <Eye className="h-4 w-4" />
+                                      </Button>
+                                    </motion.div>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top">Visual Audit Print</TooltipContent>
+                                </Tooltip>
+                              )}
+
                               {order.status === "pending" && (
                                 <>
                                   <Tooltip>

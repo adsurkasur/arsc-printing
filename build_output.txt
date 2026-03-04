@@ -1,0 +1,391 @@
+﻿bun : $ next build
+At line:1 char:1
++ bun run build 2>&1 | 
+Out-File -Encoding utf8 
+build_output.txt
++ ~~~~~~~~~~~~~~~~~~
+    + CategoryInfo         
+     : NotSpecified: ($ n  
+  ext build:String) [],    
+ RemoteException
+    + FullyQualifiedErrorI 
+   d : NativeCommandError
+ 
+[baseline-browser-mapping] 
+The data in this module is 
+over two months old.  To 
+ensure accurate Baseline 
+data, please update: `npm 
+i baseline-browser-mapping@
+latest -D`
+Ôû▓ Next.js 16.1.1 (Turbopack)
+- Environments: .env.local
+
+ÔÜá The "middleware" file 
+convention is deprecated. 
+Please use "proxy" 
+instead. Learn more: https:
+//nextjs.org/docs/messages/
+middleware-to-proxy
+  Creating an optimized production build ...
+[baseline-browser-mapping] 
+The data in this module is 
+over two months old.  To 
+ensure accurate Baseline 
+data, please update: `npm 
+i baseline-browser-mapping@
+latest -D`
+[baseline-browser-mapping] 
+The data in this module is 
+over two months old.  To 
+ensure accurate Baseline 
+data, please update: `npm 
+i baseline-browser-mapping@
+latest -D`
+Turbopack build 
+encountered 2 warnings:
+./src/components/OrderSucce
+ssClient.tsx:223:38
+Module not found: Can't 
+resolve 'html2canvas'
+[0m [90m 221 |[39m      
+ [36mtry[39m {
+ [90m 222 |[39m         
+[90m// @ts-expect-error - 
+optional dependency, may 
+not exist in dev 
+environment[39m
+[31m[1m>[22m[39m[90m 
+223 |[39m         
+[36mconst[39m 
+html2canvasImp [33m=[39m 
+[36mawait[39m [36mimport
+[39m([32m'html2canvas'[3
+9m)[33m;[39m
+ [90m     |[39m          
+                           
+ [31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m
+ [90m 224 |[39m         
+html2canvas [33m=[39m htm
+l2canvasImp[33m.[39m[36m
+default[39m [33m||[39m 
+html2canvasImp[33m;[39m
+ [90m 225 |[39m         
+[90m// @ts-expect-error - 
+optional dependency[39m
+ [90m 226 |[39m         
+[36mconst[39m jsPDFImp 
+[33m=[39m 
+[36mawait[39m [36mimport
+[39m([32m'jspdf'[39m)[3
+3m;[39m[0m
+
+
+
+Import trace:
+  Server Component:
+    ./src/components/OrderS
+uccessClient.tsx
+    ./src/app/order-success
+/page.tsx
+
+https://nextjs.org/docs/mes
+sages/module-not-found
+
+
+./src/components/OrderSucce
+ssClient.tsx:226:32
+Module not found: Can't 
+resolve 'jspdf'
+[0m [90m 224 |[39m      
+   html2canvas [33m=[39m 
+html2canvasImp[33m.[39m[
+36mdefault[39m 
+[33m||[39m 
+html2canvasImp[33m;[39m
+ [90m 225 |[39m         
+[90m// @ts-expect-error - 
+optional dependency[39m
+[31m[1m>[22m[39m[90m 
+226 |[39m         
+[36mconst[39m jsPDFImp 
+[33m=[39m 
+[36mawait[39m [36mimport
+[39m([32m'jspdf'[39m)[3
+3m;[39m
+ [90m     |[39m          
+                      [31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m
+ [90m 227 |[39m         
+jsPDF [33m=[39m 
+jsPDFImp[33m.[39mjsPDF 
+[33m||[39m jsPDFImp[33m.
+[39m[36mdefault[39m 
+[33m||[39m 
+jsPDFImp[33m;[39m
+ [90m 228 |[39m       } 
+[36mcatch[39m (e) {
+ [90m 229 |[39m         
+[90m// Try loading from 
+CDN as fallback[39m[0m
+
+
+
+Import trace:
+  Server Component:
+    ./src/components/OrderS
+uccessClient.tsx
+    ./src/app/order-success
+/page.tsx
+
+https://nextjs.org/docs/mes
+sages/module-not-found
+
+
+
+> Build error occurred
+Error: Turbopack build 
+failed with 2 errors:
+./src/components/LivePDFPre
+view.tsx:5:1
+Module not found: Can't 
+resolve 'react-pdf/dist/esm
+/Page/AnnotationLayer.css'
+[0m [90m 3 |[39m 
+[36mimport[39m 
+[33mReact[39m[33m,[39m 
+{ useState } 
+[36mfrom[39m [32m'react'
+[39m[33m;[39m
+ [90m 4 |[39m 
+[36mimport[39m { [33mDoc
+ument[39m[33m,[39m 
+[33mPage[39m[33m,[39m 
+pdfjs } [36mfrom[39m [32
+m'react-pdf'[39m[33m;[39
+m
+[31m[1m>[22m[39m[90m 
+5 |[39m [36mimport[39m 
+[32m'react-pdf/dist/esm/Pag
+e/AnnotationLayer.css'[39m
+[33m;[39m
+ [90m   |[39m [31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m
+ [90m 6 |[39m 
+[36mimport[39m [32m'reac
+t-pdf/dist/esm/Page/TextLay
+er.css'[39m[33m;[39m
+ [90m 7 |[39m 
+[36mimport[39m { 
+[33mAlertCircle[39m } 
+[36mfrom[39m [32m'lucide
+-react'[39m[33m;[39m
+ [90m 8 |[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./src/components/LivePD
+FPreview.tsx [Client 
+Component Browser]
+    
+./src/app/admin/page.tsx 
+[Client Component Browser]
+    
+./src/app/admin/page.tsx 
+[Server Component]
+
+  Client Component SSR:
+    ./src/components/LivePD
+FPreview.tsx [Client 
+Component SSR]
+    
+./src/app/admin/page.tsx 
+[Client Component SSR]
+    
+./src/app/admin/page.tsx 
+[Server Component]
+
+https://nextjs.org/docs/mes
+sages/module-not-found
+
+
+./src/components/LivePDFPre
+view.tsx:6:1
+Module not found: Can't 
+resolve 'react-pdf/dist/esm
+/Page/TextLayer.css'
+[0m [90m 4 |[39m 
+[36mimport[39m { [33mDoc
+ument[39m[33m,[39m 
+[33mPage[39m[33m,[39m 
+pdfjs } [36mfrom[39m [32
+m'react-pdf'[39m[33m;[39
+m
+ [90m 5 |[39m 
+[36mimport[39m [32m'reac
+t-pdf/dist/esm/Page/Annotat
+ionLayer.css'[39m[33m;[3
+9m
+[31m[1m>[22m[39m[90m 
+6 |[39m [36mimport[39m 
+[32m'react-pdf/dist/esm/Pag
+e/TextLayer.css'[39m[33m;
+[39m
+ [90m   |[39m [31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m
+^[22m[39m
+ [90m 7 |[39m 
+[36mimport[39m { 
+[33mAlertCircle[39m } 
+[36mfrom[39m [32m'lucide
+-react'[39m[33m;[39m
+ [90m 8 |[39m
+ [90m 9 |[39m pdfjs[33m.
+[39m[33mGlobalWorkerOptio
+ns[39m[33m.[39mworkerSrc
+ [33m=[39m [32m`//unpkg.
+com/pdfjs-dist@${pdfjs.vers
+ion}/build/pdf.worker.min.m
+js`[39m[33m;[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./src/components/LivePD
+FPreview.tsx [Client 
+Component Browser]
+    
+./src/app/admin/page.tsx 
+[Client Component Browser]
+    
+./src/app/admin/page.tsx 
+[Server Component]
+
+  Client Component SSR:
+    ./src/components/LivePD
+FPreview.tsx [Client 
+Component SSR]
+    
+./src/app/admin/page.tsx 
+[Client Component SSR]
+    
+./src/app/admin/page.tsx 
+[Server Component]
+
+https://nextjs.org/docs/mes
+sages/module-not-found
+
+
+    at <unknown> (./src/com
+ponents/LivePDFPreview.tsx:
+5:1)
+    at <unknown> (https://n
+extjs.org/docs/messages/mod
+ule-not-found)
+    at <unknown> (./src/com
+ponents/LivePDFPreview.tsx:
+6:1)
+    at <unknown> (https://n
+extjs.org/docs/messages/mod
+ule-not-found)
+error: script "build" 
+exited with code 1

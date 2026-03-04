@@ -79,6 +79,10 @@ export async function POST(request: NextRequest) {
     // Calculate base estimated time
     let estimated_time = body.copies * (body.pages ?? 1) * (body.color_mode === 'color' ? 3 : 2)
 
+    if (body.color_mode === 'color' || (body.layout && body.layout !== '1-up')) {
+      estimated_time += 1
+    }
+
     // Return demo order if Supabase not configured
     if (!isSupabaseConfigured()) {
       const demoOrder = {
@@ -96,6 +100,10 @@ export async function POST(request: NextRequest) {
         copies: body.copies,
         pages: body.pages || 1,
         paper_size: body.paper_size,
+        layout: body.layout || '1-up',
+        scale_mode: body.scale_mode || 'fit',
+        orientation: body.orientation || 'portrait',
+        user_note: body.user_note || null,
         status: 'pending' as const,
         estimated_time,
         notes: body.notes || null,
@@ -123,7 +131,7 @@ export async function POST(request: NextRequest) {
     estimated_time += globalWaitTime;
 
     // Build insert payload dynamically
-    const insertPayload: { customer_name: string; contact: string; file_name: string; file_url?: string | null; file_path?: string | null; color_mode: string; copies: number; pages?: number; actual_pages?: number | null; paper_size: string; status: string; estimated_time: number; notes?: string | null; payment_proof_url?: string | null; payment_proof_path?: string | null; payment_proof_deleted?: boolean } = {
+    const insertPayload: any = {
       customer_name: body.customer_name,
       contact: body.contact,
       file_name: body.file_name,
@@ -134,6 +142,10 @@ export async function POST(request: NextRequest) {
       pages: body.pages ?? 1,
       actual_pages: body.actual_pages ?? null,
       paper_size: body.paper_size,
+      layout: body.layout || '1-up',
+      scale_mode: body.scale_mode || 'fit',
+      orientation: body.orientation || 'portrait',
+      user_note: body.user_note || null,
       status: 'pending',
       estimated_time,
       notes: body.notes || null,

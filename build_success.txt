@@ -1,0 +1,89 @@
+﻿bun : $ next build
+At line:1 char:1
++ bun run build 2>&1 | 
+Out-File -Encoding utf8 
+build_success.txt
++ ~~~~~~~~~~~~~~~~~~
+    + CategoryInfo         
+     : NotSpecified: ($ n  
+  ext build:String) [],    
+ RemoteException
+    + FullyQualifiedErrorI 
+   d : NativeCommandError
+ 
+[baseline-browser-mapping] 
+The data in this module is 
+over two months old.  To 
+ensure accurate Baseline 
+data, please update: `npm 
+i baseline-browser-mapping@
+latest -D`
+Ôû▓ Next.js 16.1.1 (Turbopack)
+- Environments: .env.local
+
+ÔÜá The "middleware" file 
+convention is deprecated. 
+Please use "proxy" 
+instead. Learn more: https:
+//nextjs.org/docs/messages/
+middleware-to-proxy
+  Creating an optimized production build ...
+[baseline-browser-mapping] 
+The data in this module is 
+over two months old.  To 
+ensure accurate Baseline 
+data, please update: `npm 
+i baseline-browser-mapping@
+latest -D`
+[baseline-browser-mapping] 
+The data in this module is 
+over two months old.  To 
+ensure accurate Baseline 
+data, please update: `npm 
+i baseline-browser-mapping@
+latest -D`
+Ô£ô Compiled successfully in 4.2s
+  Running TypeScript ...
+Failed to compile.
+
+./src/components/OrderSucce
+ssClient.tsx:222:9
+Type error: Unused 
+'@ts-expect-error' 
+directive.
+
+[0m [90m 220 |[39m      
+ [36mlet[39m 
+jsPDF[33m:[39m unknown 
+[33m=[39m 
+[36mnull[39m[33m;[39m
+ [90m 221 |[39m       
+[36mtry[39m {
+[31m[1m>[22m[39m[90m 
+222 |[39m         [90m// 
+@ts-expect-error - 
+optional dependency, may 
+not exist in dev 
+environment[39m
+ [90m     |[39m         
+[31m[1m^[22m[39m
+ [90m 223 |[39m         
+[36mconst[39m 
+html2canvasImp [33m=[39m 
+[36mawait[39m [36mimport
+[39m([32m'html2canvas'[3
+9m)[33m;[39m
+ [90m 224 |[39m         
+html2canvas [33m=[39m htm
+l2canvasImp[33m.[39m[36m
+default[39m [33m||[39m 
+html2canvasImp[33m;[39m
+ [90m 225 |[39m         
+[90m// @ts-expect-error - 
+optional 
+dependency[39m[0m
+Next.js build worker 
+exited with code: 1 and 
+signal: null
+error: script "build" 
+exited with code 1

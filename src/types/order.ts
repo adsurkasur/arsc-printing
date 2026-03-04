@@ -18,11 +18,15 @@ export interface Order {
   copies: number;
   pages: number;
   actual_pages?: number | null;
-  paper_size: "A4";
+  paper_size: "A4" | "F4";
+  layout?: "1-up" | "2-up" | "4-up";
+  scale_mode?: "fit" | "fill" | "100";
+  orientation?: "portrait" | "landscape";
   status: OrderStatus;
   created_at: string;
   estimated_time: number; // in minutes
   notes?: string;
+  user_note?: string;
 }
 
 // For creating a new order (without auto-generated fields)
@@ -38,8 +42,12 @@ export interface CreateOrderInput {
   copies: number;
   pages?: number;
   actual_pages?: number | null;
-  paper_size: "A4";
+  paper_size: "A4" | "F4";
+  layout?: "1-up" | "2-up" | "4-up";
+  scale_mode?: "fit" | "fill" | "100";
+  orientation?: "portrait" | "landscape";
   notes?: string;
+  user_note?: string;
 }
 
 // Database type for Supabase
@@ -52,12 +60,20 @@ export type Database = {
           status?: OrderStatus;
           file_path?: string | null;
           actual_pages?: number | null;
+          layout?: "1-up" | "2-up" | "4-up";
+          scale_mode?: "fit" | "fill" | "100";
+          orientation?: "portrait" | "landscape";
+          user_note?: string;
         };
         Update: Partial<Omit<Order, "id" | "created_at">> & {
           file_expires_at?: string | null;
           file_deleted?: boolean;
           file_path?: string | null;
           actual_pages?: number | null;
+          layout?: "1-up" | "2-up" | "4-up";
+          scale_mode?: "fit" | "fill" | "100";
+          orientation?: "portrait" | "landscape";
+          user_note?: string;
         };
       };
     };

@@ -22,7 +22,7 @@ type Props = {
 function ConfettiParticle({ delay, x }: { delay: number; x: number }) {
   const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b'];
   const color = colors[Math.floor(Math.random() * colors.length)];
-  
+
   return (
     <motion.div
       initial={{ y: -20, x, opacity: 1, rotate: 0 }}
@@ -219,10 +219,8 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
       let html2canvas: unknown = null;
       let jsPDF: unknown = null;
       try {
-        // @ts-expect-error - optional dependency, may not exist in dev environment
         const html2canvasImp = await import('html2canvas');
         html2canvas = html2canvasImp.default || html2canvasImp;
-        // @ts-expect-error - optional dependency
         const jsPDFImp = await import('jspdf');
         jsPDF = jsPDFImp.jsPDF || jsPDFImp.default || jsPDFImp;
       } catch (e) {
@@ -257,7 +255,7 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
       const canvas = await html2canvasFn(wrapper, options);
 
       // Generate PDF (A4 size, 210 x 297 mm, with 10mm margin)
-      const JsPDFCtor = jsPDF as unknown as { new (opts?: Record<string, unknown>): { addImage: (img: string, format: string, x: number, y: number, w: number, h: number) => void; save: (filename?: string) => void } };
+      const JsPDFCtor = jsPDF as unknown as { new(opts?: Record<string, unknown>): { addImage: (img: string, format: string, x: number, y: number, w: number, h: number) => void; save: (filename?: string) => void } };
       const pdf = new JsPDFCtor({ unit: 'mm', format: 'a4' });
       const pageWidth = 210;
       const pageHeight = 297;
@@ -394,7 +392,7 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
                   >
                     Pesanan Berhasil! 🎉
                   </motion.h1>
-                  
+
                   {/* Original message (disabled for now):
                   <motion.p
                     initial={{ opacity: 0 }}
