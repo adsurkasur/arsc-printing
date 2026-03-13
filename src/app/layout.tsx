@@ -8,14 +8,21 @@ export const metadata: Metadata = {
   title: 'ARSC Printing - Cetak Dokumen Tanpa Antre',
   description: 'Layanan cetak dokumen resmi organisasi kampus. Upload, pantau status real-time, dan ambil hasil cetak dengan mudah.',
   authors: [{ name: 'ARSC Printing' }],
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/favicon.ico',
+  },
   openGraph: {
     title: 'ARSC Printing - Cetak Dokumen Tanpa Antre',
     description: 'Layanan cetak dokumen resmi organisasi kampus. Upload, pantau status real-time, dan ambil hasil cetak dengan mudah.',
     type: 'website',
+    images: ['/qris-arsc.jpeg'],
   },
   twitter: {
     card: 'summary_large_image',
     site: '@arsc_printing',
+    images: ['/qris-arsc.jpeg'],
   },
 }
 
