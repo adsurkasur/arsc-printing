@@ -1,8 +1,8 @@
 # ARSC Printing Service
 
-A modern web application for campus printing services built with Next.js 16, React 19, TypeScript, Tailwind CSS, and Supabase.
+> Before any production use, read [`docs/MAINTAINER_GUIDE.md`](docs/MAINTAINER_GUIDE.md). Uploaded documents and payment evidence must be treated as restricted; the current package has no automated test script and requires a production security/retention audit.
 
-# ARSC Printing Service
+A modern web application for campus printing services built with Next.js 16, React 19, TypeScript, Tailwind CSS, and Supabase.
 
 ARSC Printing is a campus-focused document printing platform built with Next.js (App Router), React, TypeScript, Tailwind CSS, and Supabase. It provides a lightweight web experience for submitting print jobs, tracking order status, and managing orders from an admin dashboard.
 
