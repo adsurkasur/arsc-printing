@@ -13,6 +13,7 @@ import { id } from 'date-fns/locale'
 import { motion, PageTransition, FadeInUp } from '@/components/animations'
 import { AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
+import { withBase } from '@/lib/base-path'
 
 // Page temporarily disabled: default stub exported here so the route is inactive while keeping the implementation in this file.
 export default function TrackDisabled() {
@@ -75,7 +76,7 @@ function TrackOrderDisabled() {
     setDemoMode(false)
 
     try {
-      const response = await fetch('/api/orders?trackingId=' + encodeURIComponent(trackingId.trim()))
+      const response = await fetch(withBase('/api/orders?trackingId=') + encodeURIComponent(trackingId.trim()))
       
       if (!response.ok) {
         setNotFound(true)

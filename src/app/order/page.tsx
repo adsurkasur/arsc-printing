@@ -15,6 +15,7 @@ import { motion, PageTransition, FadeInUp } from "@/components/animations";
 import { AnimatePresence } from "framer-motion";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import dynamic from "next/dynamic";
+import { withBase } from '@/lib/base-path'
 
 const LivePDFPreview = dynamic(() => import("@/components/LivePDFPreview"), { ssr: false });
 
@@ -104,7 +105,7 @@ export default function Order() {
       const formDataObj = new FormData();
       formDataObj.append('file', selectedFile);
 
-      const response = await fetch('/api/upload', {
+      const response = await fetch(withBase('/api/upload'), {
         method: 'POST',
         body: formDataObj,
       });
@@ -179,7 +180,7 @@ export default function Order() {
       const formDataObj = new FormData();
       formDataObj.append('file', selectedFile);
 
-      const response = await fetch('/api/upload', {
+      const response = await fetch(withBase('/api/upload'), {
         method: 'POST',
         body: formDataObj,
       });
@@ -214,7 +215,7 @@ export default function Order() {
 
   // Download QRIS helper: try programmatic fetch/download, fallback to opening in new tab
   const downloadQris = async () => {
-    const url = process.env.NEXT_PUBLIC_QRIS_URL || '/qris-placeholder.svg';
+    const url = withBase(process.env.NEXT_PUBLIC_QRIS_URL || '/qris-placeholder.svg');
 
     try {
       const res = await fetch(url);
@@ -880,7 +881,7 @@ export default function Order() {
                     <div className="space-y-4 sm:space-y-6">
                       <div>
                         <div className="w-full rounded-xl overflow-hidden border border-border bg-muted/30 flex items-center justify-center" style={{ aspectRatio: '1135 / 1600' }}>
-                          <img src={process.env.NEXT_PUBLIC_QRIS_URL || '/qris-placeholder.svg'} alt="QRIS" className="w-full h-full object-contain" />
+                          <img src={withBase(process.env.NEXT_PUBLIC_QRIS_URL || '/qris-placeholder.svg')} alt="QRIS" className="w-full h-full object-contain" />
                         </div>
 
                         <div className="flex justify-center mt-3">

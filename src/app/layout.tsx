@@ -2,6 +2,7 @@
 import { Analytics } from '@vercel/analytics/next'
 import { Providers } from './providers'
 import { Navbar } from '@/components/Navbar'
+import { withBase } from '@/lib/base-path'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -9,20 +10,20 @@ export const metadata: Metadata = {
   description: 'Layanan cetak dokumen resmi organisasi kampus. Upload, pantau status real-time, dan ambil hasil cetak dengan mudah.',
   authors: [{ name: 'ARSC Printing' }],
   icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon.ico',
-    apple: '/favicon.ico',
+    icon: withBase('/favicon.ico'),
+    shortcut: withBase('/favicon.ico'),
+    apple: withBase('/favicon.ico'),
   },
   openGraph: {
     title: 'ARSC Printing - Cetak Dokumen Tanpa Antre',
     description: 'Layanan cetak dokumen resmi organisasi kampus. Upload, pantau status real-time, dan ambil hasil cetak dengan mudah.',
     type: 'website',
-    images: ['/qris-arsc.jpeg'],
+    images: [withBase('/qris-arsc.jpeg')],
   },
   twitter: {
     card: 'summary_large_image',
     site: '@arsc_printing',
-    images: ['/qris-arsc.jpeg'],
+    images: [withBase('/qris-arsc.jpeg')],
   },
 }
 
