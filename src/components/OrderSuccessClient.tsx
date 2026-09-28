@@ -44,6 +44,7 @@ function ConfettiParticle({ delay, x }: { delay: number; x: number }) {
 }
 
 import NoOrderFound from "@/components/NoOrderFound";
+import { withBase } from '@/lib/base-path'
 
 export default function OrderSuccessClient({ initialOrderId }: Props) {
   const router = useRouter();
@@ -133,7 +134,7 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
       // Ensure we have the order data
       let data = orderData;
       if (!data) {
-        const res = await fetch(`/api/orders?id=${orderId}`);
+        const res = await fetch(withBase(`/api/orders?id=${orderId}`));
         if (!res.ok) throw new Error('Gagal mengambil data pesanan');
         data = await res.json();
       }
@@ -295,7 +296,7 @@ export default function OrderSuccessClient({ initialOrderId }: Props) {
       setLoadingOrder(true);
       setLookupError(null);
       try {
-        const res = await fetch(`/api/orders?id=${orderId}`);
+        const res = await fetch(withBase(`/api/orders?id=${orderId}`));
         if (!res.ok) throw new Error('Order not found');
         const data = await res.json();
         setOrderData(data);

@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { motion } from "@/components/animations";
+import { BASE_PATH } from "@/lib/base-path";
 
 const navLinks = [
   { href: "/", label: "Beranda" },
@@ -38,6 +39,12 @@ export function Navbar() {
     >
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
+          {/* Back to the ARSC site (cross-zone: plain <a>, only when served under the shared domain) */}
+          {BASE_PATH && (
+            <a href="/" className="mr-3 hidden text-sm font-semibold text-muted-foreground hover:text-foreground sm:inline">
+              ← ARSC
+            </a>
+          )}
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group">
             <motion.div 

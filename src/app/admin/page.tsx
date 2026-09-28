@@ -200,6 +200,7 @@ import { useToast } from "@/hooks/use-toast";
 import { motion, PageTransition, FadeInUp, StaggerContainer, StaggerItem } from "@/components/animations";
 import { ToastAction } from "@/components/ui/toast";
 import type { OrderStatus, Order } from "@/types/order";
+import { withBase } from '@/lib/base-path'
 
 // Check if Supabase is properly configured
 function isSupabaseConfigured() {
@@ -333,7 +334,7 @@ export default function Admin() {
     if (!proofOrderId) return setProofModalOpen(false);
     setProofDeleting(true);
     try {
-      const res = await fetch('/api/delete-file', {
+      const res = await fetch(withBase('/api/delete-file'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: proofOrderId, type: 'payment_proof' }),
@@ -365,7 +366,7 @@ export default function Admin() {
     if (!deleteTargetId) return setDeleteModalOpen(false);
     setDeleting(true);
     try {
-      const res = await fetch('/api/delete-file', {
+      const res = await fetch(withBase('/api/delete-file'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: deleteTargetId }),

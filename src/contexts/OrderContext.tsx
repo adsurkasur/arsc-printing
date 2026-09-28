@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, ReactNode, useCallback,
 import { Order, CreateOrderInput } from "@/types/order";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { withBase } from '@/lib/base-path'
 
 interface OrderContextType {
   orders: Order[];
@@ -78,7 +79,7 @@ const fetchOrders = useCallback(async () => {
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
-      const response = await fetch('/api/orders', { signal: controller.signal });
+      const response = await fetch(withBase('/api/orders'), { signal: controller.signal });
       let data;
 
       // Try parsing JSON safely
@@ -214,7 +215,7 @@ const fetchOrders = useCallback(async () => {
     }
 
     try {
-      const response = await fetch('/api/orders', {
+      const response = await fetch(withBase('/api/orders'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -295,7 +296,7 @@ const fetchOrders = useCallback(async () => {
         updatePayload.payment_proof_expires_at = null;
       }
 
-      const res = await fetch('/api/orders', {
+      const res = await fetch(withBase('/api/orders'), {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

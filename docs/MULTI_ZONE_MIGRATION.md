@@ -1,5 +1,5 @@
 ---
-status: approved-not-started
+status: implemented-behind-env (feat/multi-zone-basepath), not activated
 last_verified: 2026-09-28
 audience: maintainers-and-ai
 sensitivity: internal
@@ -62,3 +62,11 @@ This repo has no automated tests yet (PRT-02). On a preview, run these manually 
 ## Rollback
 
 Unset `ZONE_PRINTING_URL` in arsc-home and remove the 308. For a full rollback, revert the basePath PR.
+
+## Implementation notes (2026-09-28, branch `feat/multi-zone-basepath`)
+
+- **Activation is an env var, not a code change.** `NEXT_PUBLIC_BASE_PATH` is empty by default, so merging keeps today's behavior. Set it to `/app/printing` only when arsc-home's `ZONE_PRINTING_URL` points at this deployment.
+- `src/lib/base-path.ts` is the single source of truth (`BASE_PATH`, `withBase`), with a unit test in `src/lib/base-path.test.ts` (`bun run test:unit`).
+- Verified locally end to end: a zone build served through an arsc-home build with the rewrite enabled. Pages, `_next` assets, API, QRIS, favicon, and the back link all work, with no failed requests.
+- **Vercel Analytics**: `@vercel/analytics` requests `/_vercel/insights/*` at the domain root. Under the shared domain, page views are recorded by the **arsc-home** project, so enable Web Analytics there. The Printing project only sees traffic that reaches its own alias directly.
+- **Windows / Git Bash**: prefix commands with `MSYS_NO_PATHCONV=1`, or Git Bash turns `/app/printing` into `C:/Program Files/Git/app/printing`. The validator rejects that value.
