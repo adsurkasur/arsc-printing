@@ -61,3 +61,11 @@ Do not release if the bucket is public, admin enforcement is only client-side, t
 ## Local verification note (2026-08-15)
 
 Frozen Bun installation, lint, and production build passed. Build warnings flagged the deprecated Next middleware convention, stale browser compatibility data, and missing `metadataBase`. No test script exists, and no upload, authentication, storage-policy, or cleanup behavior was exercised.
+
+## Planned deployment change: one ARSC domain (2026-09-28)
+
+The owner approved serving Printing at `https://<domain>/app/printing` through Next.js Multi-Zones. The main zone is the new `adsurkasur/arsc-home` repo. **Not implemented yet.** Read `docs/MULTI_ZONE_MIGRATION.md` before changing `next.config.ts`, API fetch paths, or asset URLs.
+
+- Printing is planned as the first app to migrate, since it has no shared-identity coupling.
+- The move does **not** satisfy any row of the mandatory production review above. The release stop conditions still apply.
+- Cross-system map: arsc-home `docs/ECOSYSTEM.md` and `docs/MULTI_ZONES_RUNBOOK.md`. Umbrella context: `ARSC_SYSTEM_HANDOFF_ADDENDUM_2026-09-28.md` in the managed ARSC workspace.
