@@ -1,6 +1,6 @@
 # ARSC Printing — Material 3 Expressive implementation specification
 
-Version 1.0 · 18 November 2026 · Stage 0 · Author: Atlas · Review gate: Soren.
+Version 1.1 · 18 November 2026 · Stage 0 · Author: Atlas · Review gate: Soren.
 Status: specification ready for review; no redesigned UI has been implemented or visually accepted.
 Hallmark pre-emit self-review (document, not rendered UI): Philosophy 4 / Hierarchy 4 / Execution 4 / Specificity 5 / Restraint 4 / Variety 4.
 
@@ -14,7 +14,7 @@ Confirmed brand expansion: **Fakultas Teknologi Agroindustri dan Biosistem (FTAB
 
 Scope now: this document and mandatory activity/decision logs only. Later UI implementation may edit page/layout/components/styles/assets and add `src/lib/copy.ts` (presentation strings only). Keep Next 16, React 19, Tailwind 3, shadcn/Radix and sonner. Do not migrate Tailwind. Use installed `framer-motion` 12 only; no GSAP, scroll-smoothing library, or new runtime color dependency. API, DB, worker and frozen contracts in `PRINT_JOB_CONTRACT.md` and `ADMIN_API.md` remain untouched.
 
-Direction: **a friendly campus service desk, with an expressive green invitation and a precise work surface**. Home is Persuade; order/status/queue/login/admin are Operate. Signature: the high-contrast pickup-code panel changes from a rounded rectangle to a compact receipt-like panel when the order is accepted, without drawing fake browser chrome. The only asymmetric expressive container is the home tariff panel. Every other component has predictable geometry.
+Direction: **a friendly campus service desk, with an expressive academic-blue invitation and a precise work surface**. Home is Persuade; order/status/queue/login/admin are Operate. Signature: the high-contrast pickup-code panel changes from a rounded rectangle to a compact receipt-like panel when the order is accepted, without drawing fake browser chrome. The only asymmetric expressive container is the home tariff panel. Every other component has predictable geometry.
 
 The supplied brief already settles audience, task, fonts, icon family and visual language; it substitutes for reopening the skill interviews. Impeccable context was run: no PRODUCT.md exists, incumbent code is evidence. Product facts are captured here for Stage 0 rather than expanding this assignment into another interview or a second visual authority. Its update notice is informational; no skill update was run. Taste-skill's random direction draw, image quota, minimum animation count, two-font cap, monospace ban and border ban do not override this explicit M3 brief. We use its composition, truthful content and screenshot-review principles only. No render score is claimed at Stage 0.
 
@@ -28,61 +28,61 @@ The supplied brief already settles audience, task, fonts, icon family and visual
 - [M3 shape principles](https://m3.material.io/styles/shape/overview-principles): interaction-driven shape morph, sparse abstract shapes; Expressive adds radii 20, 32 and 48.
 - [M3 type scale](https://m3.material.io/styles/typography/type-scale-tokens): baseline + emphasized roles, brand face for large type/plain face for labels; this spec customizes weights for the requested families.
 - [M3 motion physics](https://m3.material.io/styles/motion/overview/how-it-works) and [web conversion specs](https://m3.material.io/styles/motion/overview/specs): spatial springs may overshoot; effects must not; fast/default/slow assignments. Read rendered official pages, including the six expressive web fallback timings. Numerical Framer springs below are ARSC web tuning, not a claim to be Google's platform-native constants.
-- [Official Material Color Utilities](https://github.com/material-foundation/material-color-utilities), npm `@material/material-color-utilities@0.4.0`: executed once outside the app to generate §2 with `SchemeTonalSpot(Hct.fromInt(argbFromHex('#1B5E3C')), dark, 0, '2025', 'phone')`. Actual returned specVersion was `2025`. TonalSpot deliberately retains the green seed relationship; the **Expressive design/motion language is independent of choosing SchemeExpressive**, whose hue rotations would change brand emphasis. No runtime generation.
+- [Official Material Color Utilities](https://github.com/material-foundation/material-color-utilities), npm `@material/material-color-utilities@0.4.0`: executed once outside the app to generate §2 with `SchemeTonalSpot(Hct.fromInt(argbFromHex('#1E5AA8')), dark, 0, '2025', 'phone')`. Actual returned specVersion was `2025`. TonalSpot deliberately retains the academic-blue seed relationship; the **Expressive design/motion language is independent of choosing SchemeExpressive**, whose hue rotations would change brand emphasis. No runtime generation.
 
 Official guidance is adapted for web, not a claim that shadcn becomes a certified Material component library. All measurements below are CSS px (use rem for type, dividing by 16). Colors are frozen sRGB hex.
 
 ## 2. Frozen color system
 
-Seed `#1B5E3C`. Light is default unless OS or saved theme says dark. Theme toggle cycles light/dark/system in its menu; no animated full-page color flash. Persist existing next-themes behavior. Regions keep the same role names at every width. No hand-picked page-specific hex.
+Seed `#1E5AA8`. Light is default unless OS or saved theme says dark. Theme toggle cycles light/dark/system in its menu; no animated full-page color flash. Persist existing next-themes behavior. Regions keep the same role names at every width. No hand-picked page-specific hex.
 
 | Role | Light | Dark |
 |---|---|---|
-| background | `#F7FAF4` | `#0B0F0C` |
-| onBackground | `#2C342E` | `#DEE8DE` |
-| surface | `#F7FAF4` | `#0B0F0C` |
-| surfaceDim | `#D3DDD3` | `#0B0F0C` |
-| surfaceBright | `#F7FAF4` | `#262E28` |
+| background | `#F9F9FE` | `#0D0E12` |
+| onBackground | `#2F323A` | `#E3E5EF` |
+| surface | `#F9F9FE` | `#0D0E12` |
+| surfaceDim | `#D7DAE4` | `#0D0E12` |
+| surfaceBright | `#F9F9FE` | `#292C34` |
 | surfaceContainerLowest | `#FFFFFF` | `#000000` |
-| surfaceContainerLow | `#F0F5EE` | `#0F1511` |
-| surfaceContainer | `#E9F0E8` | `#151B16` |
-| surfaceContainerHigh | `#E3EAE2` | `#1A211C` |
-| surfaceContainerHighest | `#DCE5DB` | `#1F2822` |
-| onSurface | `#2C342E` | `#DEE8DE` |
-| surfaceVariant | `#DCE5DB` | `#1F2822` |
-| onSurfaceVariant | `#58615A` | `#A4ADA5` |
-| outline | `#747D75` | `#6E7870` |
-| outlineVariant | `#ABB4AB` | `#414A43` |
-| inverseSurface | `#0B0F0C` | `#F7FAF4` |
-| inverseOnSurface | `#9A9E99` | `#525652` |
+| surfaceContainerLow | `#F3F3FA` | `#111318` |
+| surfaceContainer | `#ECEDF6` | `#171A1F` |
+| surfaceContainerHigh | `#E6E8F1` | `#1D2026` |
+| surfaceContainerHighest | `#E0E2EC` | `#22262D` |
+| onSurface | `#2F323A` | `#E3E5EF` |
+| surfaceVariant | `#E0E2EC` | `#22262D` |
+| onSurfaceVariant | `#5C5F68` | `#A8ABB5` |
+| outline | `#777A84` | `#72757E` |
+| outlineVariant | `#AFB2BC` | `#444850` |
+| inverseSurface | `#0D0E12` | `#F9F9FE` |
+| inverseOnSurface | `#9C9CA2` | `#545559` |
 | shadow | `#000000` | `#000000` |
 | scrim | `#000000` | `#000000` |
-| surfaceTint | `#34694B` | `#A5D1B2` |
-| primary | `#34694B` | `#A5D1B2` |
-| onPrimary | `#E7FFEB` | `#204831` |
-| primaryContainer | `#B6F0C8` | `#335A43` |
-| onPrimaryContainer | `#265C3E` | `#C1EECE` |
-| inversePrimary | `#BBF6CE` | `#40674F` |
-| primaryFixed | `#B6F0C8` | `#C1EDCD` |
-| primaryFixedDim | `#A8E1BB` | `#B3DFC0` |
-| onPrimaryFixed | `#10492D` | `#204730` |
-| onPrimaryFixedVariant | `#306647` | `#3C644B` |
-| secondary | `#4F6455` | `#B5CCBA` |
-| onSecondary | `#E7FFEC` | `#314537` |
-| secondaryContainer | `#D1E8D6` | `#2C4033` |
-| onSecondaryContainer | `#425648` | `#AEC5B3` |
-| secondaryFixed | `#D1E8D6` | `#D1E8D6` |
-| secondaryFixedDim | `#C3DAC8` | `#C3DAC8` |
-| onSecondaryFixed | `#304436` | `#304436` |
-| onSecondaryFixedVariant | `#4B6052` | `#4B6052` |
-| tertiary | `#556536` | `#F2FFD1` |
-| onTertiary | `#F0FFCE` | `#556536` |
-| tertiaryContainer | `#EBFEC1` | `#E0F2B7` |
-| onTertiaryContainer | `#536334` | `#4D5C2E` |
-| tertiaryFixed | `#EBFEC1` | `#EBFEC1` |
-| tertiaryFixedDim | `#DDF0B4` | `#DDF0B4` |
-| onTertiaryFixed | `#415024` | `#415024` |
-| onTertiaryFixedVariant | `#5D6E3E` | `#5D6E3E` |
+| surfaceTint | `#475F8A` | `#B4C7ED` |
+| primary | `#475F8A` | `#B4C7ED` |
+| onPrimary | `#F8F8FF` | `#2E4060` |
+| primaryContainer | `#ABC4F5` | `#415373` |
+| onPrimaryContainer | `#243E67` | `#D7E3FF` |
+| inversePrimary | `#ABC4F5` | `#4D5F81` |
+| primaryFixed | `#ABC4F5` | `#C5D8FF` |
+| primaryFixedDim | `#9EB7E7` | `#B7CAF0` |
+| onPrimaryFixed | `#0C2A52` | `#263857` |
+| onPrimaryFixedVariant | `#2E4771` | `#435575` |
+| secondary | `#565F72` | `#BEC6DC` |
+| onSecondary | `#F8F8FF` | `#384052` |
+| secondaryContainer | `#DAE2F9` | `#333C4D` |
+| onSecondaryContainer | `#495264` | `#B6BFD5` |
+| secondaryFixed | `#DAE2F9` | `#DAE2F9` |
+| secondaryFixedDim | `#CCD4EA` | `#CCD4EA` |
+| onSecondaryFixed | `#373F51` | `#373F51` |
+| onSecondaryFixedVariant | `#535C6E` | `#535C6E` |
+| tertiary | `#675882` | `#EBDCFF` |
+| onTertiary | `#FEF7FF` | `#594B73` |
+| tertiaryContainer | `#DFCCFD` | `#DFCCFD` |
+| onTertiaryContainer | `#50426A` | `#50426A` |
+| tertiaryFixed | `#DFCCFD` | `#DFCCFD` |
+| tertiaryFixedDim | `#D1BEEE` | `#D1BEEE` |
+| onTertiaryFixed | `#3D2F56` | `#3D2F56` |
+| onTertiaryFixedVariant | `#5A4B74` | `#5A4B74` |
 | error | `#A83836` | `#FA746F` |
 | onError | `#FFF7F6` | `#490006` |
 | errorContainer | `#FA746F` | `#871F21` |
@@ -90,12 +90,25 @@ Seed `#1B5E3C`. Light is default unless OS or saved theme says dark. Theme toggl
 
 ### 2.1 Semantic mapping and state layers
 
-All custom semantic aliases reuse the generated colors, not new palettes:
+Brand roles use the generated blue palette. Status colors are explicit, theme-specific product tokens independent of brand and tertiary; success stays green, warning amber/yellow and error the generated red. These eight additional roles are hand-selected semantic tokens, NOT claimed as MCU output. Do not regenerate them from the blue seed.
+
+| Semantic role | Light | Dark |
+|---|---|---|
+| success | `#166534` | `#86EFAC` |
+| onSuccess | `#FFFFFF` | `#052E16` |
+| successContainer | `#DCFCE7` | `#14532D` |
+| onSuccessContainer | `#14532D` | `#DCFCE7` |
+| warning | `#854D0E` | `#FDE047` |
+| onWarning | `#FFFFFF` | `#422006` |
+| warningContainer | `#FEF3C7` | `#713F12` |
+| onWarningContainer | `#713F12` | `#FEF3C7` |
+
+Map aliases as follows:
 
 | Alias | Background | Foreground | Usage |
 |---|---|---|---|
-| success | primaryContainer | onPrimaryContainer | delivered, accepted upload; check icon + text |
-| attention | tertiaryContainer | onTertiaryContainer | pending verification, needs operator check; warning icon + text |
+| success status | successContainer | onSuccessContainer | delivered, accepted upload; check icon + text |
+| attention | warningContainer | onWarningContainer | pending verification, needs operator check; warning icon + text |
 | danger | errorContainer | onErrorContainer | failed/rejected, destructive confirmation |
 | information | secondaryContainer | onSecondaryContainer | queue, approved, service information |
 | neutral | surfaceContainerHighest | onSurfaceVariant | cancelled, unavailable historical values |
@@ -104,7 +117,9 @@ All custom semantic aliases reuse the generated colors, not new palettes:
 
 Shadcn aliases: background=surface, foreground=onSurface, card=surfaceContainerLow, card-foreground=onSurface, popover=surfaceContainerHigh, popover-foreground=onSurface, primary/onPrimary, secondary=secondaryContainer/onSecondaryContainer, muted=surfaceContainerHighest/onSurfaceVariant, accent=secondaryContainer/onSecondaryContainer, destructive=error/onError, border=outlineVariant, input=outline, ring=primary. Convert to existing HSL variable format at implementation; never pass hex into `hsl(var(...))`.
 
-State overlay is a pseudo-element inside the component shape, foreground color at hover 8%, focus 10%, pressed 10%, dragged 16%; these are **ARSC fixed web values**, not asserted as every M3 component's native default. Focus additionally gets the outer ring. Do not reduce text opacity for secondary text: use onSurfaceVariant. Disabled foreground onSurface at 38%, disabled fill onSurface at 12%, no hover/press, native disabled semantics. Disabled contrast is exempt from WCAG text contrast; explanatory helper text remains full contrast. Error beats hover tint; focus ring remains visible. No color-only state.
+State overlay is a pseudo-element inside the component shape, foreground color at hover 8%, focus 10%, pressed 10%, dragged 16%; these are **ARSC fixed web values**, not asserted as every M3 component's native default. Focus additionally gets the outer ring. Do not reduce text opacity for secondary text: use onSurfaceVariant. Disabled foreground onSurface at 38%, disabled fill onSurface at 12%, no hover/press, native disabled semantics. Disabled contrast is exempt from WCAG text contrast; explanatory helper text remains full contrast. Error beats hover tint; focus ring remains visible. The per-pair state alpha overrides in §2.2 take precedence over the generic percentages: a 0% override preserves the base background and uses the outline/focus/press geometry for feedback. No color-only state.
+
+Never stack a state layer and ripple: the listed alpha is the TOTAL foreground overlay budget. The ripple replaces the state overlay within its region, including all0% overrides. Loading retains enabled foreground/background.
 
 Pressed ripple: one clipped radial foreground layer 10% opacity, scale 0→1 from pointer position, 200ms effect; exit opacity 120ms. Keyboard press originates center. Do not run ripple on navigation links moving to another page if it delays navigation. Reduced motion: static pressed layer only. Neither ripple nor icon animation intercepts pointer events.
 
@@ -114,17 +129,61 @@ Computed from generated sRGB values using WCAG relative luminance. These are tok
 
 | Pair | Light ratio | Dark ratio |
 |---|---:|---:|
-| onSurface/surface | 12.17:1 | 15.35:1 |
-| onSurfaceVariant/surfaceContainerHighest | 4.97:1 | 6.57:1 |
-| onPrimary/primary | 6.09:1 | 6.08:1 |
-| onPrimaryContainer/primaryContainer | 6.07:1 | 6.11:1 |
-| onSecondaryContainer/secondaryContainer | 6.11:1 | 6.06:1 |
-| onTertiaryContainer/tertiaryContainer | 6.08:1 | 6.08:1 |
+| onSurface/surface | 12.21:1 | 15.36:1 |
+| onSurfaceVariant/surfaceContainerHighest | 4.94:1 | 6.62:1 |
+| onPrimary/primary | 6.07:1 | 6.11:1 |
+| onPrimaryContainer/primaryContainer | 6.1:1 | 6.02:1 |
+| onSecondaryContainer/secondaryContainer | 6.07:1 | 6.02:1 |
+| onTertiaryContainer/tertiaryContainer | 6.1:1 | 6.1:1 |
 | onError/error | 6.06:1 | 6.06:1 |
 | onErrorContainer/errorContainer | 4.54:1 | 4.55:1 |
-| inverseOnSurface/inverseSurface | 7.1:1 | 7.09:1 |
-| outline/surface | 4.04:1 | 4.21:1 |
-| primary/surface | 6.1:1 | 11.36:1 |
+| inverseOnSurface/inverseSurface | 7.06:1 | 7.09:1 |
+| outline/surface | 4.08:1 | 4.19:1 |
+| primary/surface | 6.12:1 | 11.33:1 |
+
+#### Interaction-state measurements and mandatory overrides
+
+The following measures all 22 base pairs again in enabled, hover, focus, pressed and dragged states. A state layer is the row's foreground composited over its background in sRGB; text/icon color stays unchanged. Ratios are rounded only for display. Last column gives exact hover/focus/pressed/dragged alpha overrides. Where 0% is specified, do not apply a background tint: retain underline/border/focus ring/press shape feedback instead. These overrides prevent otherwise failing text contrast (especially light onErrorContainer and light muted labels). Never implement a runtime contrast search. Disabled colors are exempt, per §2.1, and do not use these ratios. Loading uses enabled colors. Error uses its own measured error pair. Noninteractive status surfaces retain enabled colors; their interactive children follow the applicable control row.
+
+| Theme / pair | Enabled | Hover | Focus | Pressed | Dragged | Layer alpha H/F/P/D |
+|---|---:|---:|---:|---:|---:|---|
+| light onSurface/surface | 12.21 | 10.59 | 10.21 | 10.21 | 9.12 | 8%/10%/10%/16% |
+| light onSurfaceVariant/surfaceContainerHighest | 4.94 | 4.94 | 4.94 | 4.94 | 4.94 | 0%/0%/0%/0% |
+| light onPrimary/primary | 6.07 | 5.08 | 4.85 | 4.85 | 6.07 | 8%/10%/10%/0% |
+| light onPrimaryContainer/primaryContainer | 6.10 | 5.42 | 5.30 | 5.30 | 4.83 | 8%/10%/10%/16% |
+| light onSecondaryContainer/secondaryContainer | 6.07 | 5.41 | 5.30 | 5.30 | 4.84 | 8%/10%/10%/16% |
+| light onTertiaryContainer/tertiaryContainer | 6.10 | 5.45 | 5.29 | 5.29 | 4.84 | 8%/10%/10%/16% |
+| light onError/error | 6.06 | 5.22 | 5.01 | 5.01 | 6.06 | 8%/10%/10%/0% |
+| light onErrorContainer/errorContainer | 4.54 | 4.54 | 4.54 | 4.54 | 4.54 | 0%/0%/0%/0% |
+| light inverseOnSurface/inverseSurface | 7.06 | 6.43 | 6.23 | 6.23 | 5.61 | 8%/10%/10%/16% |
+| light outline/surface | 4.08 | 3.74 | 3.64 | 3.64 | 3.41 | 8%/10%/10%/16% |
+| light primary/surface | 6.12 | 5.49 | 5.33 | 5.33 | 4.87 | 8%/10%/10%/16% |
+| dark onSurface/surface | 15.36 | 13.10 | 12.38 | 12.38 | 10.48 | 8%/10%/10%/16% |
+| dark onSurfaceVariant/surfaceContainerHighest | 6.62 | 5.69 | 5.52 | 5.52 | 4.90 | 8%/10%/10%/16% |
+| dark onPrimary/primary | 6.11 | 5.44 | 5.32 | 5.32 | 4.82 | 8%/10%/10%/16% |
+| dark onPrimaryContainer/primaryContainer | 6.02 | 5.02 | 4.85 | 4.85 | 6.02 | 8%/10%/10%/0% |
+| dark onSecondaryContainer/secondaryContainer | 6.02 | 5.15 | 4.91 | 4.91 | 6.02 | 8%/10%/10%/0% |
+| dark onTertiaryContainer/tertiaryContainer | 6.10 | 5.45 | 5.29 | 5.29 | 4.84 | 8%/10%/10%/16% |
+| dark onError/error | 6.06 | 5.34 | 5.13 | 5.13 | 4.65 | 8%/10%/10%/16% |
+| dark onErrorContainer/errorContainer | 4.55 | 4.55 | 4.55 | 4.55 | 4.55 | 0%/0%/0%/0% |
+| dark inverseOnSurface/inverseSurface | 7.09 | 6.32 | 6.14 | 6.14 | 5.61 | 8%/10%/10%/16% |
+| dark outline/surface | 4.19 | 3.92 | 3.85 | 3.85 | 3.61 | 8%/10%/10%/16% |
+| dark primary/surface | 11.33 | 9.90 | 9.54 | 9.54 | 8.21 | 8%/10%/10%/16% |
+
+Explicit status-role measurements (same compositing model; layers8/10/10/16% all pass):
+
+| Theme / semantic pair | Enabled | Hover | Focus | Pressed | Dragged |
+|---|---:|---:|---:|---:|---:|
+| light onSuccess/success | 7.13 | 5.93 | 5.67 | 5.67 | 4.89 |
+| light onSuccessContainer/successContainer | 8.30 | 7.28 | 7.07 | 7.07 | 6.40 |
+| light onWarning/warning | 6.85 | 5.70 | 5.43 | 5.43 | 4.74 |
+| light onWarningContainer/warningContainer | 7.79 | 6.90 | 6.67 | 6.67 | 6.03 |
+| dark onSuccess/success | 10.62 | 9.25 | 8.90 | 8.90 | 7.92 |
+| dark onSuccessContainer/successContainer | 8.30 | 6.71 | 6.40 | 6.40 | 5.50 |
+| dark onWarning/warning | 11.06 | 9.60 | 9.23 | 9.23 | 8.21 |
+| dark onWarningContainer/warningContainer | 7.79 | 6.42 | 6.07 | 6.07 | 5.21 |
+
+Across these110 brand-pair state measurements plus40 semantic-state measurements, the minimum is **3.41:1** (outline/control boundary; threshold3:1). Minimum text contrast is **4.54:1**, threshold4.5:1. The focus ring primary/surface pair uses the required surface-colored3px gap in §2.1; no extra tint is applied to its external backing. Ratios verify specified colors/composites, not actual DOM rendering; Stage1 must still inspect computed CSS and screenshots.
 
 Minimum: normal text 4.5:1, large text and meaningful controls 3:1, focus ring 3:1 against adjacent colors. `outlineVariant` is decorative only; fields use `outline`. Never place onSurfaceVariant on errorContainer. No low-opacity text over photos. The fixed palette roles are supplied for completeness but unused in Stage 1–4.
 
@@ -171,7 +230,7 @@ Use tone first, not stacked shadows. Hovering an elevated card changes shadow to
 
 ### 3.1 Exact icon manifest
 
-Retrieve these through Better Icons' Iconify `ph` family as **static duotone SVG**, not a runtime remote icon request. Preserve Phosphor MIT attribution in the asset notice. ViewBox0 0 256 256, no custom path edits; secondary fill currentColor opacity0.2. Default24, control20, status20; do not animate individual duotone layers. Decorative icons aria-hidden, icon-only buttons have the listed human action label. Keep actual ARSC logo asset; don't replace it with an invented monogram.
+Retrieve these through Better Icons' Iconify `ph` family as **static duotone SVG**, not a runtime remote icon request. Preserve Phosphor MIT attribution in the asset notice. ViewBox0 0 256 256, no custom path edits; secondary fill currentColor opacity0.2. Default24, control20, status20; do not animate individual duotone layers. Decorative icons aria-hidden, icon-only buttons have the listed human action label. Keep the actual ARSC logo asset unchanged; do not recolor licensed/logo artwork without separate approval. The application mark tile and OpenGraph backing use the NEW blue primaryContainer/onPrimaryContainer pair. Do not replace the logo with an invented monogram.
 
 | Purpose | Iconify ID |
 |---|---|
@@ -222,6 +281,8 @@ Reduced motion from `useReducedMotion` AND CSS media: no spring overshoot, layou
 
 ## 5. Component anatomy and exhaustive state contract
 
+The per-pair color overrides in §2.2 supersede the generic state layers in G.
+
 **Global state contract G** applies to every interactive child in all components below: enabled=base role and correct HTML control; hover=8% state layer on pointer:fine only; focus=10% layer +3px ring/3px gap, `:focus-visible`; pressed=10% layer +press token where specified; disabled=native disabled +38% foreground/12% fill, no action; loading=stable width, spinner16 before label, aria-busy and disabled duplicate submission, preserve label replaced with action-progress copy; error=error icon+helper, aria-describedby/invalid where input, no raw error code; success=check+text from copy registry, no fireworks. Touch targets at least48×48 (visual chip32 inside48 hit area). Input and button text minimum14, editable text16 to avoid mobile zoom. Each row states how G maps; **N/A means no simulated interaction state may be invented**. Noninteractive regions have no hover/focus/press/disabled styling; only children do. Loading/error status never disables navigation away unless a destructive confirm is in flight.
 
 | Component | Exact anatomy / geometry / roles | Enabled / hover / focus / pressed | Disabled / loading / error / success |
@@ -233,16 +294,16 @@ Reduced motion from `useReducedMotion` AND CSS media: no spring overshoot, layou
 | Segmented button | h48 outer full border1 outline;2–3 equal items,min-width0, labelLarge; selected secondaryContainer/onSecondaryContainer+check20. Body title outside. | G radio group, arrow keys, exactly one selected. Indicator spatialFast; selected check doesn't shift text. Press does not scale whole group. | Group disabled while locked draft; loading no choice changes; error helper below. Success selected state only. Mobile layout option3 labels fit; no horizontal scrolling. |
 | Filter chip | Visual h32, hit48, s8 radius; border1 outlineVariant, text onSurfaceVariant; selected secondaryContainer+check18. | G checkbox/toggle aria-pressed. Wrap rows with8gap, no hidden horizontal overflow. | Disabled specific unsupported filter only with explanation; loading keeps selected; error toast retains previous selection; success results-count live region. |
 | Stepper | `ol`3 equal columns:32 circle +label12 below,24 connecting line, total min-height72; “Berkas”, “Pembayaran”, “Kirim”; current primary/onPrimary, done secondaryContainer+check, future neutral. | Current aria-current step; completed steps are buttons G; future steps noninteractive until prior valid. Focus heading on change. Connector never relies on color alone. | Locked during submission; loading current circle progress; error current icon warning+field summary link; success final check. No fake “Ambil” step before order sent. |
-| Filled card | surfaceContainerHighest/onSurface,lPlus20,p20 mobile/24 desktop, no border/shadow. Use tariff, price, pickup. | Static by default, no pointer cursor. Interactive child G; selectable entire card only with native radio semantics and explicit label. | Loading skeleton heights preserve content; error helper row; disabled only selectable variant per G; success status row, not whole-card green wash. |
+| Filled card | surfaceContainerHighest/onSurface,lPlus20,p20 mobile/24 desktop, no border/shadow. Use tariff, price, pickup. | Static by default, no pointer cursor. Interactive child G; selectable entire card only with native radio semantics and explicit label. | Loading skeleton heights preserve content; error helper row; disabled only selectable variant per G; success status row, not whole-card status-color wash. |
 | Elevated card | surfaceContainerLow/onSurface,lPlus20,p20/24,elevation1. Use active order and primary form section. | Static card no hover. If linked whole-card, G ring outside, hover elevation2, no lift; never nested links inside whole-card link. | Same card skeleton/error logic. Loading action local; never dim readable customer details. |
 | Outlined card | surface/onSurface,l16,border1 outlineVariant,p20/24. Use history/secondary info. | Static no hover; linked variant follows elevated-card interaction without shadow. | Same skeleton/error as above; selected variant border2 primary and selected label. Disabled selectable only. |
 | Text field | Persistent label14 above (not placeholder-only),56min high, px16, filled surfaceContainerHighest, top xs4, bottom border1 outline; body16; optional trailing48 icon; helper14 below. | G; hover border onSurface; focus border2 primary, preserve layout via inset border. Keyboard native type/autocomplete. | Disabled as G; loading trailing16 spinner, text retained; error border2 error+message+icon, aria-invalid; success optional check only for validated upload/contact, never implied payment verification. |
-| File dropzone | Button/input label, min-height144 mobile/160 desktop, border2 dashed outline,radius20,surfaceContainerLow; upload24, titleMedium, helper14. Separate document/proof. Real file input keyboard usable. | G and drag-over primaryContainer/borderprimary+“Lepaskan berkas di sini”; pressed no scale container; all regions can browse. | Disabled during locked upload; progress row filename ellipsis+size+cancel only if abort truly supported (otherwise no cancel); error inline human message; success solid outline primary+file row+“Ganti berkas”. No fake completed before server ACK. |
+| File dropzone | Button/input label, min-height144 mobile/160 desktop, border2 dashed outline,radius20,surfaceContainerLow; upload24, titleMedium, helper14. Separate document/proof. Real file input keyboard usable. | G and drag-over primaryContainer/borderprimary+“Lepaskan berkas di sini”; pressed no scale container; all regions can browse. | Disabled during locked upload; progress row filename ellipsis+size+cancel only if abort truly supported (otherwise no cancel); error inline human message; success solid outline success+file row+“Ganti berkas”. No fake completed before server ACK. |
 | Toast / snackbar | Sonner portal, inverseSurface/inverseOnSurface,radius12,minh56,p16, icon20, body14, close48; maxwidth400 desktop, calc(100vw-32) mobile. Desktop top-right24 below appbar; mobile top80+safe, not over bottom actions. | G close/action. role status polite for success/info; role alert for failures, no auto focus theft. | Success4s/info6s; error stays until dismiss; pause timer hover/focus. Loading toast only for long explicit action, replace same ID on result. No stack >3. Retry button only safe idempotent retries. Inline errors still persist. |
 | Dialog | Radix portal, scrim32%,surfaceContainerHigh,radius28,widthmin(560,100vw-32),maxhcalc(100dvh-48),overflow-yauto,p24. TitleheadlineSmall,body16,actions right gap8. | G actions, focus initial cancel for destructive, trap/return focus, Escape closes before request. Enter only acts focused button. | Pending prevents duplicate confirm and accidental outside close; error inline+toast, dialog remains; success closes then toast and updates source. Never hand-built div modal. |
 | Bottom sheet | Mobile <600 for receipt/details/filter panel, same portal,surfaceContainerHigh,topradius28,handle32×4 outlineVariant centered,headerp24,bodyp20,maxh85dvh,internal scroll; footer actions sticky. Desktop uses dialog. | G children; focus trap, Escape; explicit “Tutup”48. Drag-to-close optional only vaul already available; disable drag while forms dirty. | No whole-sheet disabled; pending local. Error section +retry. Success updates content. No nested sheets. Touch scrolling must not close accidentally. |
 | Progress | Determinate linear h4,tracksecondaryContainer,activeprimary,roundedfull; indeterminate h4 with one wavy active segment (amplitude2,period16,length48) only while actual request, loop1200mslinear. Inline circle20 for buttons. | Noninteractive N/A hover/focus/pressed/disabled. role progressbar with value only real byte percent. Text label outside. | Parse unknown duration uses indeterminate label “Memeriksa PDF…”; reduced motion static bar +label; error stops and retains error helper; success100% then replacedcheck. Don't animate fake percentages. |
-| Status timeline | Vertical ordered list,20 status icon,2px connector outlineVariant,content gap12,rowsmin56. Done check primary;current ringprimary;future outline. TexttitleSmall+bodyMedium, timestamp if available. | Noninteractive N/A states; retry/open detail children G. Current aria-current step. | Loading skeleton4rows; error accessible retry card; cancelled branch neutral terminal, failed/reconcile attention/error branch; no animating into future physical completion. Status change recipeF only. |
+| Status timeline | Vertical ordered list,20 status icon,2px connector outlineVariant,content gap12,rowsmin56. Done check success;current ringprimary;future outline. TexttitleSmall+bodyMedium, timestamp if available. | Noninteractive N/A states; retry/open detail children G. Current aria-current step. | Loading skeleton4rows; error accessible retry card; cancelled branch neutral terminal, failed/reconcile attention/error branch; no animating into future physical completion. Status change recipeF only. |
 | Pickup-code display | PrimaryContainer/onPrimaryContainer,radius20,p20, label14 “Kode ambil”, code28/36 centered or left on desktop, copy48 to right; body14 browser-access explanation below. | Code selectable text, copy G. No clickable code lookup. Long content wraps, ARSC-0000 fits343. | Loading skeletonwidth180; missingcode “Kode ambil belum tersedia”; copydisabled ifmissing; clipboard error toast with manual-select advice; success toast. No pulsing, no fake QR encoding secrets. |
 
 Primary button: h48 px24 full, primary/onPrimary,labelLarge emphasized; secondary tonal secondaryContainer/onSecondaryContainer; text button primary on surface; destructive error/onError only in confirmation. Preserve min-height at text zoom. Button layout icon20 gap8, no trailing arrows on every action. Loading labels in §7. Tooltip appears after500ms hover/focus, bodySmall, inverse roles, never the only accessible label. Menus portal and use48high items. Native checkbox24 inside48hit, selectedprimary/onPrimary. No custom cursor or scrollbar.
@@ -278,7 +339,7 @@ Motion: recipe E only on user step change. Keep previous DOM state/Files; do not
 
 ### 6.3 Order success `/order-success?orderId=…`
 
-375: bar 64 → main width343, x16, top24 → check32 beside H1 “Pesanan terkirim” → body “Pembayaran dan berkasmu akan diperiksa petugas.” → pickup panel after24 → final amount → timeline after24 → primary “Lacak pesanan” full width48 → text “Buat pesanan lain” → footer/nav. At1280: main720, x280, top48; pickup/amount columns440/256 with gap24; timeline below, actions left. No giant celebration.
+375: bar 64 → main width343, x16, top24 → check32 success beside H1 “Pesanan terkirim” → body “Pembayaran dan berkasmu akan diperiksa petugas.” → pickup panel after24 → final amount → timeline after24 → primary “Lacak pesanan” full width48 → text “Buat pesanan lain” → footer/nav. At1280: main720, x280, top48; pickup/amount columns440/256 with gap24; timeline below, actions left. No giant celebration.
 
 Below code: “Simpan kode ini untuk mengambil pesanan. Untuk melacak, gunakan browser yang dipakai saat memesan.” Privacy helper: “Jangan bagikan tautan pesanan kepada orang lain.” Do not promise cross-device access. “Salin kode ambil” copies only the code; optional “Salin ID pesanan” in the more menu copies the UUID without displaying it as a heading. Missing capability: H1 “Pesanan belum bisa dibuka”; body “Buka halaman ini dari browser yang dipakai saat memesan. Kode ambil saja tidak dapat membuka pesanan.” Link “Kembali ke beranda”. Missing orderId: “Pilih pesanan yang ingin dibuka.”
 
@@ -395,7 +456,7 @@ Recheck exact backend bounds while wiring: preserve existing 1–500 pages and t
 
 ## 8. Anti-slop and non-negotiable acceptance gates
 
-No gradients, glass/blur blobs, generic three-icon card grids, decorative browser frames, floating-pill desktop nav, fake charts/testimonials, endlessly bouncing cards, confetti, paragraph-sized headlines, uppercase eyebrows, huge empty gaps between work controls, mixed icons, lucide leftovers, fabricated ETA, random radii, technical success banners, blind prepayment, or destructive actions without confirmation. Expressive does not mean every element is asymmetric. No screenshot-only auth bypass, fake cookies, fake administrator data or queue counts. Overflow clipping is a safety net, not a repair for oversized children.
+No hard-coded legacy green brand fills (green is reserved for semantic success), gradients, glass/blur blobs, generic three-icon card grids, decorative browser frames, floating-pill desktop nav, fake charts/testimonials, endlessly bouncing cards, confetti, paragraph-sized headlines, uppercase eyebrows, huge empty gaps between work controls, mixed icons, lucide leftovers, fabricated ETA, random radii, technical success banners, blind prepayment, or destructive actions without confirmation. Expressive does not mean every element is asymmetric. No screenshot-only auth bypass, fake cookies, fake administrator data or queue counts. Overflow clipping is a safety net, not a repair for oversized children.
 
 Stage1: development-only `/dev/tokens` (not publicly linked; unavailable in production) shows both themes, used type/shape/elevation tokens and each component's enabled/hover/focus/pressed/disabled/loading/error/success states. Clearly label fixtures as test data. Stage2: shell screenshots375/1280 and keyboard navigation. Stage3: customer normal/loading/empty/error/cancel states. Stage4: authenticated real admin search, summary, worker, receipt, verify, approve, reconcile and deliver. Stage5: real backend and real worker with fake printer, persistent simulation disclosure, then recording. Open and describe every screenshot; filenames do not prove a pass.
 
@@ -423,12 +484,12 @@ These are functional truth constraints, not permission to improvise layouts. Rep
 
 ## 10. Token provenance and reproducible verification
 
-Generation was a single Bun execution of a locally authored script importing the downloaded official npm tarball, outside this app. No lifecycle scripts, npm install, application package change or runtime generator. Temporary package/script/output are under `E:\OpenBot\tmp\arsc-m3-tokens`.
+Blue revision generation was a single Bun execution of a locally authored script importing the downloaded official npm tarball, outside this app. No lifecycle scripts, npm install, application package change or runtime generator. Temporary package/script/output are under `E:\OpenBot\tmp\arsc-m3-tokens`.
 
 - Package tarball: `https://registry.npmjs.org/@material/material-color-utilities/-/material-color-utilities-0.4.0.tgz`
 - Tarball SHA256: `2F0B759749846357DD2D9CE0E1D5E8071E5B51BDA24178B3D24BA75AFA7F723D`
-- Generated JSON SHA256: `BA765829EC3592437AB7921DCF931A97D441EAB1D8B3587586C97F2A0553733A`
-- Requested and actual color spec:2025; scheme:TonalSpot; contrastLevel:0; platform:phone; seed:#1B5E3C. There are49 frozen roles per theme in §2. The package's2025 primary fixed values may differ between themes: preserve generated output, do not manually normalize it to legacy fixed-role assumptions.
+- Generated JSON SHA256: `5CB5995281C7C0EE7E13921C14E711D8702F8CADCE3199DEC08716DC2E7217A7`
+- Requested and actual color spec:2025; scheme:TonalSpot; contrastLevel:0; platform:phone; seed:#1E5AA8. There are49 frozen roles per theme in §2. The package's2025 primary fixed values may differ between themes: preserve generated output, do not manually normalize it to legacy fixed-role assumptions.
 
 Minimal recipe (for provenance; do not rerun during application startup):
 
@@ -438,10 +499,12 @@ import { Hct, argbFromHex, hexFromArgb, SchemeTonalSpot,
 const dynamic = new MaterialDynamicColors();
 for (const dark of [false, true]) {
   const scheme = new SchemeTonalSpot(
-    Hct.fromInt(argbFromHex('#1B5E3C')), dark, 0, '2025', 'phone');
+    Hct.fromInt(argbFromHex('#1E5AA8')), dark, 0, '2025', 'phone');
   // Use the exact role names from §2, excluding only semantic aliases.
   // Each output value is hexFromArgb(dynamic[role]().getArgb(scheme)).
 }
 ```
 
-Contrast formula: convert each sRGB channel c to linear (`c/12.92` if c≤0.04045, otherwise `((c+0.055)/1.055)^2.4`); luminance=0.2126R+0.7152G+0.0722B; ratio=(lighter+0.05)/(darker+0.05). §2.2 uses this calculation, rounded to2 decimal places. No color values were manually retouched.
+Contrast formula: convert each sRGB channel c to linear (`c/12.92` if c≤0.04045, otherwise `((c+0.055)/1.055)^2.4`); luminance=0.2126R+0.7152G+0.0722B; ratio=(lighter+0.05)/(darker+0.05). §2.2 uses this calculation, rounded to2 decimal places. No generated brand-role values were manually retouched. Explicit semantic success/warning tokens in §2.1 are separate product choices. State measurements were computed after generation without rerunning MCU.
+
+Blue revision verification: all49 generated roles in each theme match the generator JSON; all22 base pairs and150 total state/pair measurements pass their applicable thresholds. Success/warning/error remain distinct from the blue brand. No UI files were edited for this revision.

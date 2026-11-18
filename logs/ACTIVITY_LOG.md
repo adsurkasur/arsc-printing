@@ -1,5 +1,13 @@
 # Activity Log
 
+### [2026-11-18 18:01] [Atlas / M3 blue palette revision]
+- **Goal**: Replace the brand green with user-selected academic blue #1E5AA8 without UI edits.
+- **Actions**: Ran the existing MCU0.4.0 TonalSpot spec2025 generator once on E:, updated all49 roles per theme, added explicit green success and amber warning tokens independent of brand, retained generated red error, corrected brand/app-mark/OpenGraph references and provenance.
+- **Verification**: 22 base pairs remeasured across five states (110 measurements), plus40 explicit semantic-state measurements. Text minimum4.54:1; boundary minimum3.41:1. Explicit per-state alpha overrides prevent failing tint combinations; ripple and state layers may not stack. Generator, document checker and whitespace check exit0. No rendered UI or app test/build claim.
+- **Files**: docs/M3_SPEC.md and mandatory logs only. No UI/API/DB/worker/package changes.
+- **Handoff**: Kiro can apply the new values and §2.2 overrides together; screenshot/DOM verification remains Stage1 work.
+
+
 ### [2026-11-18 17:55] [Atlas / Redesign Stage 0 — specification]
 - **Goal**: Freeze a fully specified Material 3 Expressive UI before implementation.
 - **Actions**: Read impeccable, hallmark, taste-skill and better-icons; inspect incumbent UI and frozen API contracts; read rendered official M3 color, shape, typography and motion guidance. Created feat/redesign-v2 from feat/print-pipeline. Generated light/dark tokens once with official Material Color Utilities 0.4.0 outside the app on E:.

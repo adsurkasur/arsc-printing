@@ -112,3 +112,10 @@
 - **Decision**: docs/M3_SPEC.md freezes generated light/dark role colors, typography, shape/elevation, web-tuned springs, complete states, responsive page layouts and Indonesian copy. Use TonalSpot spec2025 to retain the ARSC green seed, independently of Expressive component/motion language. No runtime color utility. Framer Motion only, Phosphor duotone, sonner, existing Tailwind3/Radix.
 - **Rationale**: Explicit values prevent creative drift. Operational UI prioritizes tasks; expressive moments are scoped. Customer progress never invents job data absent from the API, and fake-printer simulation must be labeled.
 - **Affected**: Future UI/components/layout/copy registry only; API/database/worker contracts remain unchanged. Alternative generic theme rotation and a full framework migration were rejected.
+
+### [DEC-017] Academic-blue brand with independent semantic status colors
+- **Date**: 2026-11-18
+- **Status**: Accepted user color choice; implementation pending Stage1.
+- **Decision**: Replace seed #1B5E3C with #1E5AA8, keeping MCU0.4.0 TonalSpot2025 generation. Success uses explicit green roles, warning amber/yellow and error generated red. App mark tile uses new primaryContainer; existing logo artwork is not recolored.
+- **Rationale**: Brand blue must not erase recognizable status meaning. Measured interaction composites require fixed per-pair alpha overrides and no stacked ripple/state layers to preserve contrast.
+- **Affected**: M3_SPEC §0/1/2/2.1/2.2/3.1/5/6.3/8/10. No runtime code changed.
