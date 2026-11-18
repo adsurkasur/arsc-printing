@@ -1,5 +1,12 @@
 # Activity Log
 
+### [2026-11-18 18:04] [Atlas / Fidelity palette selection]
+- **Goal**: Compare TonalSpot, Fidelity and Content once and freeze a more faithful blue brand.
+- **Actions**: One MCU0.4.0 comparison run with seed #1E5AA8, requested spec2025, contrast0, phone. Fidelity/Content actually fall back to2021 in the official package; documented rather than claiming2025 output. Chose Fidelity: primaryContainer matches seed in both themes; primary retains saturated blue with accessible tone.
+- **Verification**: 49 roles per theme,110 generated-pair states +40 semantic states for each of three schemes (450 measurements). All pass with fixed alpha overrides. Fidelity text minimum4.54:1, control minimum3.54:1. CAM16.distance records both primary and container distances. Document checker and whitespace check exit0. No rendered UI acceptance claimed.
+- **Files**: M3_SPEC §1/2/2.1/2.2/new2.3/10 plus mandatory logs. No UI/API/DB/worker edits; green/amber semantic roles unchanged. Temp comparison source/output under E:/OpenBot/tmp/arsc-m3-tokens.
+
+
 ### [2026-11-18 18:01] [Atlas / M3 blue palette revision]
 - **Goal**: Replace the brand green with user-selected academic blue #1E5AA8 without UI edits.
 - **Actions**: Ran the existing MCU0.4.0 TonalSpot spec2025 generator once on E:, updated all49 roles per theme, added explicit green success and amber warning tokens independent of brand, retained generated red error, corrected brand/app-mark/OpenGraph references and provenance.

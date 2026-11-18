@@ -119,3 +119,10 @@
 - **Decision**: Replace seed #1B5E3C with #1E5AA8, keeping MCU0.4.0 TonalSpot2025 generation. Success uses explicit green roles, warning amber/yellow and error generated red. App mark tile uses new primaryContainer; existing logo artwork is not recolored.
 - **Rationale**: Brand blue must not erase recognizable status meaning. Measured interaction composites require fixed per-pair alpha overrides and no stacked ripple/state layers to preserve contrast.
 - **Affected**: M3_SPEC §0/1/2/2.1/2.2/3.1/5/6.3/8/10. No runtime code changed.
+
+### [DEC-018] Fidelity supersedes TonalSpot for academic-blue brand
+- **Date**: 2026-11-18
+- **Status**: Accepted palette-review direction; pending Stage1 visual implementation.
+- **Decision**: Use MCU0.4.0 SchemeFidelity with seed #1E5AA8. Request2025 but record official actual2021 fallback; Content also falls back. Retain independent success/warning tokens and fixed contrast-safe state overrides.
+- **Rationale**: Fidelity preserves the seed exactly in primaryContainer, unlike TonalSpot's pastel container. Primary is deliberately darker for contrast, so its scalar CAM16 distance is not lower than TonalSpot; no false proximity claim. Content has identical primary/container but purple tertiary; Fidelity warm complementary tertiary selected.
+- **Evidence**: Three-scheme comparison and450 state/pair measurements; Fidelity text4.54:1/control3.54:1 minimum. No runtime dependency or protocol changes.

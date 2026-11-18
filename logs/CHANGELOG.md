@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Changed
+- M3 specification v1.2 chooses Fidelity over TonalSpot: exact academic-blue seed in primaryContainer, measured state overrides and honest MCU2021 fallback provenance; no UI implementation change.
 - M3 specification v1.1 switches the brand to academic blue #1E5AA8, preserves distinct semantic status colors and freezes measured interaction-state contrast overrides. UI implementation remains pending.
 
 ### Added

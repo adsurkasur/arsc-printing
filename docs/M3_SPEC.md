@@ -1,6 +1,6 @@
 # ARSC Printing — Material 3 Expressive implementation specification
 
-Version 1.1 · 18 November 2026 · Stage 0 · Author: Atlas · Review gate: Soren.
+Version 1.2 · 18 November 2026 · Stage 0 · Author: Atlas · Review gate: Soren.
 Status: specification ready for review; no redesigned UI has been implemented or visually accepted.
 Hallmark pre-emit self-review (document, not rendered UI): Philosophy 4 / Hierarchy 4 / Execution 4 / Specificity 5 / Restraint 4 / Variety 4.
 
@@ -28,69 +28,69 @@ The supplied brief already settles audience, task, fonts, icon family and visual
 - [M3 shape principles](https://m3.material.io/styles/shape/overview-principles): interaction-driven shape morph, sparse abstract shapes; Expressive adds radii 20, 32 and 48.
 - [M3 type scale](https://m3.material.io/styles/typography/type-scale-tokens): baseline + emphasized roles, brand face for large type/plain face for labels; this spec customizes weights for the requested families.
 - [M3 motion physics](https://m3.material.io/styles/motion/overview/how-it-works) and [web conversion specs](https://m3.material.io/styles/motion/overview/specs): spatial springs may overshoot; effects must not; fast/default/slow assignments. Read rendered official pages, including the six expressive web fallback timings. Numerical Framer springs below are ARSC web tuning, not a claim to be Google's platform-native constants.
-- [Official Material Color Utilities](https://github.com/material-foundation/material-color-utilities), npm `@material/material-color-utilities@0.4.0`: executed once outside the app to generate §2 with `SchemeTonalSpot(Hct.fromInt(argbFromHex('#1E5AA8')), dark, 0, '2025', 'phone')`. Actual returned specVersion was `2025`. TonalSpot deliberately retains the academic-blue seed relationship; the **Expressive design/motion language is independent of choosing SchemeExpressive**, whose hue rotations would change brand emphasis. No runtime generation.
+- [Official Material Color Utilities](https://github.com/material-foundation/material-color-utilities), npm `@material/material-color-utilities@0.4.0`: executed once outside the app to generate §2 with `SchemeFidelity(Hct.fromInt(argbFromHex('#1E5AA8')), dark, 0, '2025', 'phone')`. MCU0.4.0 returns actual specVersion `2021` for Fidelity/Content even when `2025` is requested; this is its built-in fallback, not a manual algorithm change. Fidelity preserves the exact academic-blue seed in primaryContainer in both themes; the **Expressive design/motion language is independent of choosing SchemeExpressive**, whose hue rotations would change brand emphasis. No runtime generation.
 
 Official guidance is adapted for web, not a claim that shadcn becomes a certified Material component library. All measurements below are CSS px (use rem for type, dividing by 16). Colors are frozen sRGB hex.
 
 ## 2. Frozen color system
 
-Seed `#1E5AA8`. Light is default unless OS or saved theme says dark. Theme toggle cycles light/dark/system in its menu; no animated full-page color flash. Persist existing next-themes behavior. Regions keep the same role names at every width. No hand-picked page-specific hex.
+Seed `#1E5AA8`, **SchemeFidelity**, actual MCU color spec **2021** (2025 requested, unsupported for this variant in0.4.0). Light is default unless OS or saved theme says dark. Theme toggle cycles light/dark/system in its menu; no animated full-page color flash. Persist existing next-themes behavior. Regions keep the same role names at every width. No hand-picked page-specific hex.
 
 | Role | Light | Dark |
 |---|---|---|
-| background | `#F9F9FE` | `#0D0E12` |
-| onBackground | `#2F323A` | `#E3E5EF` |
-| surface | `#F9F9FE` | `#0D0E12` |
-| surfaceDim | `#D7DAE4` | `#0D0E12` |
-| surfaceBright | `#F9F9FE` | `#292C34` |
-| surfaceContainerLowest | `#FFFFFF` | `#000000` |
-| surfaceContainerLow | `#F3F3FA` | `#111318` |
-| surfaceContainer | `#ECEDF6` | `#171A1F` |
-| surfaceContainerHigh | `#E6E8F1` | `#1D2026` |
-| surfaceContainerHighest | `#E0E2EC` | `#22262D` |
-| onSurface | `#2F323A` | `#E3E5EF` |
-| surfaceVariant | `#E0E2EC` | `#22262D` |
-| onSurfaceVariant | `#5C5F68` | `#A8ABB5` |
-| outline | `#777A84` | `#72757E` |
-| outlineVariant | `#AFB2BC` | `#444850` |
-| inverseSurface | `#0D0E12` | `#F9F9FE` |
-| inverseOnSurface | `#9C9CA2` | `#545559` |
+| background | `#F9F9FF` | `#111318` |
+| onBackground | `#191C21` | `#E1E2E9` |
+| surface | `#F9F9FF` | `#111318` |
+| surfaceDim | `#D9D9E1` | `#111318` |
+| surfaceBright | `#F9F9FF` | `#37393F` |
+| surfaceContainerLowest | `#FFFFFF` | `#0C0E13` |
+| surfaceContainerLow | `#F3F3FA` | `#191C21` |
+| surfaceContainer | `#EDEDF5` | `#1D2025` |
+| surfaceContainerHigh | `#E7E8EF` | `#282A2F` |
+| surfaceContainerHighest | `#E1E2E9` | `#33353A` |
+| onSurface | `#191C21` | `#E1E2E9` |
+| surfaceVariant | `#DEE2EF` | `#424751` |
+| onSurfaceVariant | `#424751` | `#C2C6D3` |
+| outline | `#737782` | `#8C919C` |
+| outlineVariant | `#C2C6D3` | `#424751` |
+| inverseSurface | `#2E3036` | `#E1E2E9` |
+| inverseOnSurface | `#F0F0F7` | `#2E3036` |
 | shadow | `#000000` | `#000000` |
 | scrim | `#000000` | `#000000` |
-| surfaceTint | `#475F8A` | `#B4C7ED` |
-| primary | `#475F8A` | `#B4C7ED` |
-| onPrimary | `#F8F8FF` | `#2E4060` |
-| primaryContainer | `#ABC4F5` | `#415373` |
-| onPrimaryContainer | `#243E67` | `#D7E3FF` |
-| inversePrimary | `#ABC4F5` | `#4D5F81` |
-| primaryFixed | `#ABC4F5` | `#C5D8FF` |
-| primaryFixedDim | `#9EB7E7` | `#B7CAF0` |
-| onPrimaryFixed | `#0C2A52` | `#263857` |
-| onPrimaryFixedVariant | `#2E4771` | `#435575` |
-| secondary | `#565F72` | `#BEC6DC` |
-| onSecondary | `#F8F8FF` | `#384052` |
-| secondaryContainer | `#DAE2F9` | `#333C4D` |
-| onSecondaryContainer | `#495264` | `#B6BFD5` |
-| secondaryFixed | `#DAE2F9` | `#DAE2F9` |
-| secondaryFixedDim | `#CCD4EA` | `#CCD4EA` |
-| onSecondaryFixed | `#373F51` | `#373F51` |
-| onSecondaryFixedVariant | `#535C6E` | `#535C6E` |
-| tertiary | `#675882` | `#EBDCFF` |
-| onTertiary | `#FEF7FF` | `#594B73` |
-| tertiaryContainer | `#DFCCFD` | `#DFCCFD` |
-| onTertiaryContainer | `#50426A` | `#50426A` |
-| tertiaryFixed | `#DFCCFD` | `#DFCCFD` |
-| tertiaryFixedDim | `#D1BEEE` | `#D1BEEE` |
-| onTertiaryFixed | `#3D2F56` | `#3D2F56` |
-| onTertiaryFixedVariant | `#5A4B74` | `#5A4B74` |
-| error | `#A83836` | `#FA746F` |
-| onError | `#FFF7F6` | `#490006` |
-| errorContainer | `#FA746F` | `#871F21` |
-| onErrorContainer | `#6E0A12` | `#FF9993` |
+| surfaceTint | `#235EAC` | `#AAC7FF` |
+| primary | `#004287` | `#AAC7FF` |
+| onPrimary | `#FFFFFF` | `#002F64` |
+| primaryContainer | `#1E5AA8` | `#1E5AA8` |
+| onPrimaryContainer | `#BED4FF` | `#BED4FF` |
+| inversePrimary | `#AAC7FF` | `#235EAC` |
+| primaryFixed | `#D6E3FF` | `#D6E3FF` |
+| primaryFixedDim | `#AAC7FF` | `#AAC7FF` |
+| onPrimaryFixed | `#001B3E` | `#001B3E` |
+| onPrimaryFixedVariant | `#00458D` | `#00458D` |
+| secondary | `#4E5F7F` | `#B5C7EC` |
+| onSecondary | `#FFFFFF` | `#1F304E` |
+| secondaryContainer | `#C9DAFF` | `#364766` |
+| onSecondaryContainer | `#4E5F7F` | `#A4B6D9` |
+| secondaryFixed | `#D6E3FF` | `#D6E3FF` |
+| secondaryFixedDim | `#B5C7EC` | `#B5C7EC` |
+| onSecondaryFixed | `#071B38` | `#071B38` |
+| onSecondaryFixedVariant | `#364766` | `#364766` |
+| tertiary | `#6E3300` | `#FFB688` |
+| onTertiary | `#FFFFFF` | `#512400` |
+| tertiaryContainer | `#924600` | `#924600` |
+| onTertiaryContainer | `#FFC8A7` | `#FFC8A7` |
+| tertiaryFixed | `#FFDBC7` | `#FFDBC7` |
+| tertiaryFixedDim | `#FFB688` | `#FFB688` |
+| onTertiaryFixed | `#311300` | `#311300` |
+| onTertiaryFixedVariant | `#733600` | `#733600` |
+| error | `#BA1A1A` | `#FFB4AB` |
+| onError | `#FFFFFF` | `#690005` |
+| errorContainer | `#FFDAD6` | `#93000A` |
+| onErrorContainer | `#93000A` | `#FFDAD6` |
 
 ### 2.1 Semantic mapping and state layers
 
-Brand roles use the generated blue palette. Status colors are explicit, theme-specific product tokens independent of brand and tertiary; success stays green, warning amber/yellow and error the generated red. These eight additional roles are hand-selected semantic tokens, NOT claimed as MCU output. Do not regenerate them from the blue seed.
+Brand roles use the generated Fidelity blue palette; this supersedes TonalSpot. Semantic tokens and their40 measured state combinations remain unchanged. Status colors are explicit, theme-specific product tokens independent of brand and tertiary; success stays green, warning amber/yellow and error the generated red. These eight additional roles are hand-selected semantic tokens, NOT claimed as MCU output. Do not regenerate them from the blue seed.
 
 | Semantic role | Light | Dark |
 |---|---|---|
@@ -129,17 +129,17 @@ Computed from generated sRGB values using WCAG relative luminance. These are tok
 
 | Pair | Light ratio | Dark ratio |
 |---|---:|---:|
-| onSurface/surface | 12.21:1 | 15.36:1 |
-| onSurfaceVariant/surfaceContainerHighest | 4.94:1 | 6.62:1 |
-| onPrimary/primary | 6.07:1 | 6.11:1 |
-| onPrimaryContainer/primaryContainer | 6.1:1 | 6.02:1 |
-| onSecondaryContainer/secondaryContainer | 6.07:1 | 6.02:1 |
-| onTertiaryContainer/tertiaryContainer | 6.1:1 | 6.1:1 |
-| onError/error | 6.06:1 | 6.06:1 |
-| onErrorContainer/errorContainer | 4.54:1 | 4.55:1 |
-| inverseOnSurface/inverseSurface | 7.06:1 | 7.09:1 |
-| outline/surface | 4.08:1 | 4.19:1 |
-| primary/surface | 6.12:1 | 11.33:1 |
+| onSurface/surface | 16.29:1 | 14.38:1 |
+| onSurfaceVariant/surfaceContainerHighest | 7.22:1 | 7.2:1 |
+| onPrimary/primary | 9.86:1 | 7.75:1 |
+| onPrimaryContainer/primaryContainer | 4.56:1 | 4.56:1 |
+| onSecondaryContainer/secondaryContainer | 4.58:1 | 4.57:1 |
+| onTertiaryContainer/tertiaryContainer | 4.54:1 | 4.54:1 |
+| onError/error | 6.46:1 | 7.72:1 |
+| onErrorContainer/errorContainer | 7.24:1 | 7.24:1 |
+| inverseOnSurface/inverseSurface | 11.63:1 | 10.21:1 |
+| outline/surface | 4.27:1 | 5.88:1 |
+| primary/surface | 9.4:1 | 10.9:1 |
 
 #### Interaction-state measurements and mandatory overrides
 
@@ -147,28 +147,28 @@ The following measures all 22 base pairs again in enabled, hover, focus, pressed
 
 | Theme / pair | Enabled | Hover | Focus | Pressed | Dragged | Layer alpha H/F/P/D |
 |---|---:|---:|---:|---:|---:|---|
-| light onSurface/surface | 12.21 | 10.59 | 10.21 | 10.21 | 9.12 | 8%/10%/10%/16% |
-| light onSurfaceVariant/surfaceContainerHighest | 4.94 | 4.94 | 4.94 | 4.94 | 4.94 | 0%/0%/0%/0% |
-| light onPrimary/primary | 6.07 | 5.08 | 4.85 | 4.85 | 6.07 | 8%/10%/10%/0% |
-| light onPrimaryContainer/primaryContainer | 6.10 | 5.42 | 5.30 | 5.30 | 4.83 | 8%/10%/10%/16% |
-| light onSecondaryContainer/secondaryContainer | 6.07 | 5.41 | 5.30 | 5.30 | 4.84 | 8%/10%/10%/16% |
-| light onTertiaryContainer/tertiaryContainer | 6.10 | 5.45 | 5.29 | 5.29 | 4.84 | 8%/10%/10%/16% |
-| light onError/error | 6.06 | 5.22 | 5.01 | 5.01 | 6.06 | 8%/10%/10%/0% |
-| light onErrorContainer/errorContainer | 4.54 | 4.54 | 4.54 | 4.54 | 4.54 | 0%/0%/0%/0% |
-| light inverseOnSurface/inverseSurface | 7.06 | 6.43 | 6.23 | 6.23 | 5.61 | 8%/10%/10%/16% |
-| light outline/surface | 4.08 | 3.74 | 3.64 | 3.64 | 3.41 | 8%/10%/10%/16% |
-| light primary/surface | 6.12 | 5.49 | 5.33 | 5.33 | 4.87 | 8%/10%/10%/16% |
-| dark onSurface/surface | 15.36 | 13.10 | 12.38 | 12.38 | 10.48 | 8%/10%/10%/16% |
-| dark onSurfaceVariant/surfaceContainerHighest | 6.62 | 5.69 | 5.52 | 5.52 | 4.90 | 8%/10%/10%/16% |
-| dark onPrimary/primary | 6.11 | 5.44 | 5.32 | 5.32 | 4.82 | 8%/10%/10%/16% |
-| dark onPrimaryContainer/primaryContainer | 6.02 | 5.02 | 4.85 | 4.85 | 6.02 | 8%/10%/10%/0% |
-| dark onSecondaryContainer/secondaryContainer | 6.02 | 5.15 | 4.91 | 4.91 | 6.02 | 8%/10%/10%/0% |
-| dark onTertiaryContainer/tertiaryContainer | 6.10 | 5.45 | 5.29 | 5.29 | 4.84 | 8%/10%/10%/16% |
-| dark onError/error | 6.06 | 5.34 | 5.13 | 5.13 | 4.65 | 8%/10%/10%/16% |
-| dark onErrorContainer/errorContainer | 4.55 | 4.55 | 4.55 | 4.55 | 4.55 | 0%/0%/0%/0% |
-| dark inverseOnSurface/inverseSurface | 7.09 | 6.32 | 6.14 | 6.14 | 5.61 | 8%/10%/10%/16% |
-| dark outline/surface | 4.19 | 3.92 | 3.85 | 3.85 | 3.61 | 8%/10%/10%/16% |
-| dark primary/surface | 11.33 | 9.90 | 9.54 | 9.54 | 8.21 | 8%/10%/10%/16% |
+| light onSurface/surface | 16.29 | 13.87 | 13.36 | 13.36 | 11.77 | 8%/10%/10%/16% |
+| light onSurfaceVariant/surfaceContainerHighest | 7.22 | 6.42 | 6.19 | 6.19 | 5.65 | 8%/10%/10%/16% |
+| light onPrimary/primary | 9.86 | 8.03 | 7.60 | 7.60 | 6.49 | 8%/10%/10%/16% |
+| light onPrimaryContainer/primaryContainer | 4.56 | 4.56 | 4.56 | 4.56 | 4.56 | 0%/0%/0%/0% |
+| light onSecondaryContainer/secondaryContainer | 4.58 | 4.58 | 4.58 | 4.58 | 4.58 | 0%/0%/0%/0% |
+| light onTertiaryContainer/tertiaryContainer | 4.54 | 4.54 | 4.54 | 4.54 | 4.54 | 0%/0%/0%/0% |
+| light onError/error | 6.46 | 5.77 | 5.60 | 5.60 | 5.05 | 8%/10%/10%/16% |
+| light onErrorContainer/errorContainer | 7.24 | 6.28 | 6.02 | 6.02 | 5.38 | 8%/10%/10%/16% |
+| light inverseOnSurface/inverseSurface | 11.63 | 9.25 | 8.72 | 8.72 | 7.22 | 8%/10%/10%/16% |
+| light outline/surface | 4.27 | 3.90 | 3.81 | 3.81 | 3.54 | 8%/10%/10%/16% |
+| light primary/surface | 9.40 | 8.18 | 7.93 | 7.93 | 7.12 | 8%/10%/10%/16% |
+| dark onSurface/surface | 14.38 | 12.02 | 11.42 | 11.42 | 9.64 | 8%/10%/10%/16% |
+| dark onSurfaceVariant/surfaceContainerHighest | 7.20 | 6.01 | 5.73 | 5.73 | 5.03 | 8%/10%/10%/16% |
+| dark onPrimary/primary | 7.75 | 6.80 | 6.58 | 6.58 | 5.94 | 8%/10%/10%/16% |
+| dark onPrimaryContainer/primaryContainer | 4.56 | 4.56 | 4.56 | 4.56 | 4.56 | 0%/0%/0%/0% |
+| dark onSecondaryContainer/secondaryContainer | 4.57 | 4.57 | 4.57 | 4.57 | 4.57 | 0%/0%/0%/0% |
+| dark onTertiaryContainer/tertiaryContainer | 4.54 | 4.54 | 4.54 | 4.54 | 4.54 | 0%/0%/0%/0% |
+| dark onError/error | 7.72 | 6.71 | 6.45 | 6.45 | 5.76 | 8%/10%/10%/16% |
+| dark onErrorContainer/errorContainer | 7.24 | 6.48 | 6.28 | 6.28 | 5.69 | 8%/10%/10%/16% |
+| dark inverseOnSurface/inverseSurface | 10.21 | 8.92 | 8.58 | 8.58 | 7.72 | 8%/10%/10%/16% |
+| dark outline/surface | 5.88 | 5.33 | 5.17 | 5.17 | 4.72 | 8%/10%/10%/16% |
+| dark primary/surface | 10.90 | 9.46 | 9.01 | 9.01 | 7.78 | 8%/10%/10%/16% |
 
 Explicit status-role measurements (same compositing model; layers8/10/10/16% all pass):
 
@@ -183,9 +183,21 @@ Explicit status-role measurements (same compositing model; layers8/10/10/16% all
 | dark onWarning/warning | 11.06 | 9.60 | 9.23 | 9.23 | 8.21 |
 | dark onWarningContainer/warningContainer | 7.79 | 6.42 | 6.07 | 6.07 | 5.21 |
 
-Across these110 brand-pair state measurements plus40 semantic-state measurements, the minimum is **3.41:1** (outline/control boundary; threshold3:1). Minimum text contrast is **4.54:1**, threshold4.5:1. The focus ring primary/surface pair uses the required surface-colored3px gap in §2.1; no extra tint is applied to its external backing. Ratios verify specified colors/composites, not actual DOM rendering; Stage1 must still inspect computed CSS and screenshots.
+Across110 generated-pair state measurements plus40 semantic-state measurements, minimum text contrast is **4.54:1** (threshold4.5), and minimum control-boundary contrast is **3.54:1** (threshold3). External focus rings retain the3px surface-colored gap. Measurements cover specified composites, not rendered DOM; Stage1 must check computed CSS and screenshots.
 
 Minimum: normal text 4.5:1, large text and meaningful controls 3:1, focus ring 3:1 against adjacent colors. `outlineVariant` is decorative only; fields use `outline`. Never place onSurfaceVariant on errorContainer. No low-opacity text over photos. The fixed palette roles are supplied for completeness but unused in Stage 1–4.
+
+### 2.3 Scheme comparison and final choice
+
+Distance is MCU's `Cam16.distance` (CAM16-UCS-derived perceptual distance) from seed #1E5AA8, rounded to2 decimals; zero means the same sRGB color. It includes tone differences, so a lighter accessible dark-theme primary naturally has a larger distance. A smaller scalar distance is not itself a saturation score. Fidelity's light primary is darker (not closer by this metric), while its container matches the seed exactly. Dark primary is intentionally light enough for contrast.
+
+| Scheme (actual spec) | Light primary / container / tertiary | Dark primary / container / tertiary | Seed distance: primary L/D; container L/D | Min text / control after overrides |
+|---|---|---|---|---|
+| SchemeTonalSpot (2025) | #475F8A / #ABC4F5 / #675882 | #B4C7ED / #415373 / #EBDCFF | 5.45/15.06; 14.67/6.79 | 4.54:1 / 3.41:1 |
+| SchemeFidelity (2021) | #004287 / #1E5AA8 / #6E3300 | #AAC7FF / #1E5AA8 / #FFB688 | 6.15/14.82; 0/0 | 4.54:1 / 3.54:1 |
+| SchemeContent (2021) | #004287 / #1E5AA8 / #652977 | #AAC7FF / #1E5AA8 / #F0B0FF | 6.15/14.82; 0/0 | 4.54:1 / 3.54:1 |
+
+**Choose Fidelity.** It retains the selected blue exactly in the prominent primaryContainer/app-mark tile, with a saturated darker primary for actions. Content has the same primary/container but a different purple tertiary; Fidelity's complementary warm tertiary is the chosen accent. Tertiary is not a warning status: warning remains the explicit amber tokens. All three schemes pass after fixed alpha overrides; no API/UI/runtime color generation changes. The complete comparison was generated in one execution, not repeated aesthetic tuning. Fidelity and Content deliberately use MCU's reported2021 fallback; never label them actual2025 output. TonalSpot2025 is retained here only as comparison, superseded for implementation.
 
 ## 3. Type, spacing, shape, elevation and icon tokens
 
@@ -484,21 +496,23 @@ These are functional truth constraints, not permission to improvise layouts. Rep
 
 ## 10. Token provenance and reproducible verification
 
-Blue revision generation was a single Bun execution of a locally authored script importing the downloaded official npm tarball, outside this app. No lifecycle scripts, npm install, application package change or runtime generator. Temporary package/script/output are under `E:\OpenBot\tmp\arsc-m3-tokens`.
+Fidelity comparison generation was a single Bun execution of a locally authored script importing the downloaded official npm tarball, outside this app. No lifecycle scripts, npm install, application package change or runtime generator. Temporary package/script/output are under `E:\OpenBot\tmp\arsc-m3-tokens`.
 
 - Package tarball: `https://registry.npmjs.org/@material/material-color-utilities/-/material-color-utilities-0.4.0.tgz`
 - Tarball SHA256: `2F0B759749846357DD2D9CE0E1D5E8071E5B51BDA24178B3D24BA75AFA7F723D`
-- Generated JSON SHA256: `5CB5995281C7C0EE7E13921C14E711D8702F8CADCE3199DEC08716DC2E7217A7`
-- Requested and actual color spec:2025; scheme:TonalSpot; contrastLevel:0; platform:phone; seed:#1E5AA8. There are49 frozen roles per theme in §2. The package's2025 primary fixed values may differ between themes: preserve generated output, do not manually normalize it to legacy fixed-role assumptions.
+- Generated JSON SHA256: `8F06419782B0E2C066DC8A813F08C6AA0C8D9D2FFCEA5E5E8E52FBF7F608D600`
+- Requested spec:2025; **actual spec:2021** for SchemeFidelity (MCU0.4.0 fallback). SchemeContent also reports2021; comparison TonalSpot reports2025. contrastLevel:0; platform:phone; seed:#1E5AA8. There are49 frozen generated roles per theme in §2. Explicit semantic roles are additional product tokens, not generator output.
+- Generator/comparison: `E:\OpenBot\tmp\arsc-m3-tokens\compare.mjs`; output `comparison.json`, chosen `tokens.json`; `fidelity-review.py` measures all three schemes without rerunning MCU. Each scheme has110 generated-pair state plus40 semantic-state measurements (150 each,450 total). All actual spec versions and distances are recorded in the JSON.
+
 
 Minimal recipe (for provenance; do not rerun during application startup):
 
 ```js
-import { Hct, argbFromHex, hexFromArgb, SchemeTonalSpot,
+import { Hct, argbFromHex, hexFromArgb, SchemeFidelity,
   MaterialDynamicColors } from '@material/material-color-utilities';
 const dynamic = new MaterialDynamicColors();
 for (const dark of [false, true]) {
-  const scheme = new SchemeTonalSpot(
+  const scheme = new SchemeFidelity(
     Hct.fromInt(argbFromHex('#1E5AA8')), dark, 0, '2025', 'phone');
   // Use the exact role names from §2, excluding only semantic aliases.
   // Each output value is hexFromArgb(dynamic[role]().getArgb(scheme)).
@@ -507,4 +521,4 @@ for (const dark of [false, true]) {
 
 Contrast formula: convert each sRGB channel c to linear (`c/12.92` if c≤0.04045, otherwise `((c+0.055)/1.055)^2.4`); luminance=0.2126R+0.7152G+0.0722B; ratio=(lighter+0.05)/(darker+0.05). §2.2 uses this calculation, rounded to2 decimal places. No generated brand-role values were manually retouched. Explicit semantic success/warning tokens in §2.1 are separate product choices. State measurements were computed after generation without rerunning MCU.
 
-Blue revision verification: all49 generated roles in each theme match the generator JSON; all22 base pairs and150 total state/pair measurements pass their applicable thresholds. Success/warning/error remain distinct from the blue brand. No UI files were edited for this revision.
+Fidelity revision verification: all49 generated roles in each theme match the generator JSON; all22 base pairs and150 total state/pair measurements pass their applicable thresholds. Success/warning/error remain distinct from the blue brand. No UI files were edited for this revision.
