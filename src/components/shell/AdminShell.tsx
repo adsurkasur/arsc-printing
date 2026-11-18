@@ -67,7 +67,7 @@ export function AdminShell({ children, onLogout }: AdminShellProps) {
       </aside>
 
       {/* Mobile / Tablet < 1200px Drawer Trigger */}
-      <div className="xl:hidden flex items-center justify-between px-4 py-space2 bg-[var(--md-sys-color-surface-container-low)] border-b border-[var(--md-sys-color-outline-variant)]/40">
+      <div className="xl:hidden flex items-center justify-between page-padding py-space2 bg-[var(--md-sys-color-surface-container-low)] border-b border-[var(--md-sys-color-outline-variant)]/40">
         <DialogPrimitive.Root open={drawerOpen} onOpenChange={setDrawerOpen}>
           <DialogPrimitive.Trigger asChild>
             <M3Pressable

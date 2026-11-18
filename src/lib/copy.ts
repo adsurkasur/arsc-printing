@@ -384,7 +384,8 @@ export const COPY_PAGES = {
     "text068": "Belum ada catatan perangkat yang bisa dipakai. Hubungi pengelola layanan.",
     "text069": "Cetak ulang pesanan?",
     "text070": "Hasil sebelumnya mungkin sudah tercetak. Cetak ulang dapat menghasilkan dokumen ganda.",
-    "text071": "Saya memahami risiko dokumen ganda."
+    "text071": "Saya memahami risiko dokumen ganda.",
+    "text072": "Cari pesanan"
   }
 } as const;
 

@@ -65,7 +65,9 @@ async function run() {
   for (const [name, route] of [
     ['home', '/'],
     ['order-step1', '/order'],
+    ['order-success', '/order-success'],
     ['track', '/track'],
+    ['queue', '/queue'],
   ]) {
     for (const vp of viewports) {
       await page.setViewportSize({ width: vp.width, height: vp.height });

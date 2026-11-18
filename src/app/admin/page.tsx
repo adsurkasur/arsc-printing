@@ -380,7 +380,7 @@ export default function AdminDashboard() {
       {IS_SIMULATION && (
         <div
           role="status"
-          className="mt-6 md:mt-8 flex items-start gap-2.5 p-4 rounded-xl bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)] text-bodySmall max-w-[70ch]"
+          className="mt-6 md:mt-8 flex items-start gap-2.5 p-4 rounded-2xl bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)] text-bodySmall w-full"
         >
           <Info className="w-4 h-4 shrink-0 mt-0.5" />
           <span>{COPY_SIMULATION_DISCLOSURE}</span>
@@ -438,8 +438,15 @@ export default function AdminDashboard() {
 
       {/* Filter Card: 2-row grid with 16px gaps */}
       <section id="workers" className="mt-8 rounded-2xl bg-[var(--md-sys-color-surface-container-low)] border border-[var(--md-sys-color-outline-variant)] p-4 sm:p-6 space-y-4">
-        <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-end">
-          <div className="flex-1">
+        <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-start">
+          <div className="flex-1 space-y-1.5">
+            <label
+              htmlFor="admin-search-input"
+              className="text-labelMedium text-[var(--md-sys-color-on-surface-variant)] flex items-center gap-1.5"
+            >
+              <MagnifyingGlass className="w-4 h-4" />
+              {COPY_PAGES.admin.text072}
+            </label>
             <input
               id="admin-search-input"
               type="search"
