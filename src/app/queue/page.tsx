@@ -18,7 +18,7 @@ export default function Queue() {
               Status Antrean Cetak
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Ringkasan beban kerja printer di sekretariat ARSC FTP UB.
+              Ringkasan beban kerja printer di sekretariat ARSC FTAB UB.
             </p>
           </div>
           <Button

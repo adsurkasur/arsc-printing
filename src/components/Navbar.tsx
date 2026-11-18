@@ -42,7 +42,7 @@ export function Navbar() {
                 ARSC Printing
               </span>
               <span className="text-xs text-muted-foreground font-normal leading-tight mt-0.5">
-                FTP Universitas Brawijaya
+                FTAB Universitas Brawijaya
               </span>
             </div>
           </Link>

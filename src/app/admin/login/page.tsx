@@ -81,7 +81,7 @@ export default function AdminLogin() {
             Portal Masuk Admin
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground">
-            Akses khusus staf piket dan operator cetak ARSC FTP UB.
+            Akses khusus staf piket dan operator cetak ARSC FTAB UB.
           </p>
         </div>
 

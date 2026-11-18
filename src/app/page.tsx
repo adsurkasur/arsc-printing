@@ -13,7 +13,7 @@ export default function Home() {
         <div className="container mx-auto px-4 max-w-4xl text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-background text-xs text-muted-foreground mb-6 font-medium">
             <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
-            Layanan Resmi ARSC FTP Universitas Brawijaya
+            Layanan Resmi ARSC FTAB Universitas Brawijaya
           </div>
           
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground leading-[1.15] mb-6">
@@ -87,7 +87,7 @@ export default function Home() {
             </div>
             <h2 className="text-lg font-semibold text-foreground mb-2">Ambil di Sekretariat</h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Pantau status antrean berkala. Ambil fisik dokumen di sekretariat ARSC Gedung F FTP UB setelah selesai dicetak.
+              Pantau status antrean berkala. Ambil fisik dokumen di sekretariat ARSC Gedung F FTAB UB setelah selesai dicetak.
             </p>
           </div>
         </div>

@@ -226,7 +226,7 @@ export default function OrderSuccessClient({ initialOrderId }: { initialOrderId:
             <div className="p-3 rounded-md bg-secondary/50 text-xs text-foreground flex items-start gap-2 border border-border">
               <MapPin className="h-4 w-4 text-primary shrink-0 mt-0.5" />
               <span>
-                <strong>Sekretariat ARSC</strong> — Gedung F Lantai 1, Fakultas Teknologi Pertanian, Universitas Brawijaya. Tunjukkan Kode Pengambilan ({pickupCode || 'ARSC-XXXX'}) kepada operator.
+                <strong>Sekretariat ARSC</strong> — Gedung F Lantai 1, Fakultas Teknologi Agroindustri dan Biosistem (FTAB), Universitas Brawijaya. Tunjukkan Kode Pengambilan ({pickupCode || 'ARSC-XXXX'}) kepada operator.
               </span>
             </div>
           </div>

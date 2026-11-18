@@ -2,7 +2,7 @@
 import { Analytics } from '@vercel/analytics/next'
 import { Bricolage_Grotesque, Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google'
 import { Providers } from './providers'
-import { Navbar } from '@/components/Navbar'
+import { TopAppBar, PublicNavBar, CreateOrderFab, Footer } from '@/components/shell'
 import './globals.css'
 
 const fontDisplay = Bricolage_Grotesque({
@@ -24,8 +24,8 @@ const fontCode = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'ARSC Printing — Layanan Cetak Kampus FTP UB',
-  description: 'Layanan cetak dokumen resmi Agritech Research and Study Club (ARSC). Kirim berkas PDF, periksa estimasi biaya, dan pantau status pesanan mandiri.',
+  title: 'ARSC Printing — Layanan Cetak Kampus FTAB UB',
+  description: 'Layanan cetak dokumen resmi Agritech Research and Study Club (ARSC), Fakultas Teknologi Agroindustri dan Biosistem (FTAB), Universitas Brawijaya.',
   authors: [{ name: 'ARSC Printing' }],
   icons: {
     icon: '/favicon.ico',
@@ -33,8 +33,8 @@ export const metadata: Metadata = {
     apple: '/favicon.ico',
   },
   openGraph: {
-    title: 'ARSC Printing — Layanan Cetak Kampus FTP UB',
-    description: 'Layanan cetak dokumen terstruktur oleh ARSC FTP Universitas Brawijaya.',
+    title: 'ARSC Printing — Layanan Cetak Kampus FTAB UB',
+    description: 'Layanan cetak dokumen terstruktur oleh ARSC FTAB Universitas Brawijaya.',
     type: 'website',
     images: ['/qris-arsc.jpeg'],
   },
@@ -54,25 +54,19 @@ export default function RootLayout({
     <html lang="id" suppressHydrationWarning className={`${fontDisplay.variable} ${fontBody.variable} ${fontCode.variable}`}>
       <body className="min-h-screen flex flex-col font-body bg-background text-foreground antialiased selection:bg-primary/15 selection:text-primary">
         <Providers>
-          <Navbar />
-          <main className="flex-1">
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[90] focus:px-4 focus:py-3 focus:rounded-full focus:bg-[var(--md-sys-color-primary)] focus:text-[var(--md-sys-color-on-primary)]"
+          >
+            Lewati ke isi utama
+          </a>
+          <TopAppBar />
+          <main id="main-content" className="flex-1 pb-[calc(104px+env(safe-area-inset-bottom))] md:pb-0">
             {children}
           </main>
-          <footer className="py-8 border-t border-border bg-card/60 text-muted-foreground text-sm">
-            <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
-              <div>
-                <p className="font-medium text-foreground">ARSC Printing Service</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Agritech Research and Study Club · Fakultas Teknologi Pertanian, Universitas Brawijaya
-                </p>
-              </div>
-              <div className="text-xs text-muted-foreground flex flex-wrap items-center justify-center sm:justify-start gap-x-3 gap-y-1">
-                <span>Sekretariat ARSC Gedung F FTP UB</span>
-                <span className="hidden sm:inline">•</span>
-                <span>Tarif: Rp500 (B/W) / Rp750 (Warna)</span>
-              </div>
-            </div>
-          </footer>
+          <CreateOrderFab />
+          <PublicNavBar />
+          <Footer />
         </Providers>
         <Analytics />
       </body>

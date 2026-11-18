@@ -38,7 +38,7 @@ export const M3Pressable = React.forwardRef<HTMLButtonElement, M3PressableProps>
     },
     ref,
   ) => {
-    const prefersReduced = useReducedMotion() !== false;
+    const prefersReduced = useReducedMotion() === true;
     const transition = m3Transition('press', prefersReduced);
     const layerVars = getM3LayerVars(pair, disabledLayer);
     const fgColor = disabled ? undefined : (layerVars as Record<string, string>)['--m3-layer-foreground'];
@@ -47,6 +47,7 @@ export const M3Pressable = React.forwardRef<HTMLButtonElement, M3PressableProps>
       <motion.button
         ref={ref}
         disabled={disabled}
+        tabIndex={disabled ? undefined : (props.tabIndex ?? 0)}
         data-state={simulatedState}
         transition={transition}
         whileTap={
