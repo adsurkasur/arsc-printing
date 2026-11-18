@@ -61,8 +61,7 @@ export default function AdminLogin() {
       if (error) throw error
 
       if (data.user) {
-        router.push('/admin')
-        router.refresh()
+        window.location.href = '/admin'
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Gagal masuk ke portal admin.')
