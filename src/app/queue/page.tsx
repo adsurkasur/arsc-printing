@@ -1,83 +1,64 @@
-"use client";
+'use client';
 
 import { useOrders } from '@/contexts/OrderContext';
-import { Button } from '@/components/ui/button';
-import { Clock, RefreshCw, ShieldCheck, Printer, CheckCircle2 } from 'lucide-react';
+import { ArrowClockwiseDuotone, ClockDuotone, CheckCircleDuotone } from '@/components/icons';
+import { COPY_PAGES, COPY_LOADING } from '@/lib/copy';
+import { M3Pressable } from '@/components/m3';
 
-export default function Queue() {
+export default function QueuePage() {
   const { getQueueInfo, refreshOrders, loading, error } = useOrders();
   const queue = getQueueInfo();
 
   return (
-    <div className="container mx-auto px-4 py-8 sm:py-16 max-w-3xl">
-      <div className="rounded-lg border border-border bg-card p-6 sm:p-8 shadow-card space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">
-              Status Antrean Cetak
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Ringkasan beban kerja printer di sekretariat ARSC FTAB UB.
-            </p>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={loading}
-            onClick={() => void refreshOrders()}
-            className="border-border hover:bg-secondary shrink-0 h-9"
-          >
-            <RefreshCw className={`mr-2 h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
-            Segarkan
-          </Button>
+    <div className="max-w-[720px] mx-auto px-4 md:px-0 pt-6 md:pt-12 pb-12 space-y-space6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-space4">
+        <div>
+          <h1 className="text-headlineMedium-emphasized md:text-headlineLarge-emphasized font-display text-[var(--md-sys-color-on-surface)]">
+            {COPY_PAGES.queue.text001}
+          </h1>
+          <p className="text-bodyMedium text-[var(--md-sys-color-on-surface-variant)] mt-space1">
+            {COPY_PAGES.queue.text007}
+          </p>
         </div>
 
-        {/* Big Metric Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="p-6 rounded-lg border border-border bg-secondary/30 text-center space-y-1">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Pesanan dalam Antrean
-            </span>
-            <div className="text-4xl sm:text-5xl font-bold font-mono text-primary">
-              {queue.count}
-            </div>
-            <span className="text-xs text-muted-foreground">Pekerjaan disetujui & aktif</span>
-          </div>
+        <M3Pressable
+          type="button"
+          pair="secondaryContainer"
+          disabled={loading}
+          aria-busy={loading}
+          onClick={() => void refreshOrders()}
+          className="min-h-[48px] px-5 rounded-full bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] text-labelLarge-emphasized flex items-center justify-center gap-space2 self-start sm:self-auto"
+        >
+          <ArrowClockwiseDuotone className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
+          <span>{loading ? COPY_LOADING.genericRefresh : 'Segarkan'}</span>
+        </M3Pressable>
+      </div>
 
-          <div className="p-6 rounded-lg border border-border bg-secondary/30 text-center space-y-1">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Estimasi Total Waktu
-            </span>
-            <div className="text-4xl sm:text-5xl font-bold font-mono text-foreground">
-              {queue.estimatedTime}
-            </div>
-            <span className="text-xs text-muted-foreground">Menit pemrosesan rata-rata</span>
-          </div>
+      {error && (
+        <div
+          role="alert"
+          className="p-space4 rounded-l bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] text-bodyMedium"
+        >
+          {error}
         </div>
+      )}
 
-        {error && (
-          <div role="alert" className="p-3 bg-red-50 border border-red-200 text-red-900 rounded-md text-xs">
-            {error}
-          </div>
-        )}
-
-        {/* Informational Cards */}
-        <div className="border-t border-border pt-6 space-y-3">
-          <h2 className="text-sm font-semibold text-foreground">
-            Ketentuan Antrean Cetak:
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-muted-foreground">
-            <div className="p-3 rounded border border-border bg-background space-y-1">
-              <strong className="text-foreground font-medium block">Perlindungan Privasi</strong>
-              Halaman publik ini hanya menampilkan agregat jumlah pekerjaan tanpa mengungkap nama, kontak, maupun isi berkas.
-            </div>
-            <div className="p-3 rounded border border-border bg-background space-y-1">
-              <strong className="text-foreground font-medium block">Konfirmasi Fisik</strong>
-              Status selesai di printer menandakan dokumen fisik telah dicetak dan siap diambil di meja kasir sekretariat.
-            </div>
-          </div>
+      {/* Real queue count */}
+      <div className="p-space6 rounded-lPlus bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-on-surface)] flex items-center justify-between gap-space4">
+        <div className="flex items-center gap-space3">
+          <ClockDuotone className="w-6 h-6 text-[var(--md-sys-color-primary)] shrink-0" aria-hidden="true" />
+          <span className="text-titleMedium-emphasized">{COPY_PAGES.queue.text002}</span>
         </div>
+        <span className="text-headlineLarge-emphasized font-code text-[var(--md-sys-color-primary)]">
+          {queue.count}
+        </span>
+      </div>
+
+      <div className="p-space5 rounded-l border border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] flex items-start gap-space3">
+        <CheckCircleDuotone className="w-5 h-5 text-[var(--md-sys-color-primary)] shrink-0 mt-0.5" aria-hidden="true" />
+        <p className="text-bodyMedium text-[var(--md-sys-color-on-surface-variant)]">
+          {COPY_PAGES.home.text018}
+        </p>
       </div>
     </div>
   );

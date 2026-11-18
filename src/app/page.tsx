@@ -1,121 +1,106 @@
-﻿'use client'
+﻿import Link from 'next/link';
+import { FileTextDuotone } from '@/components/icons';
+import { COPY_PAGES, COPY_UI } from '@/lib/copy';
+import { getM3LayerVars, M3StateLayer } from '@/components/m3';
+import { HomeQueueStrip } from '@/components/HomeQueueStrip';
 
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { QueueWidget } from '@/components/QueueWidget'
-import { FileText, ShieldCheck, Clock, CheckCircle2, ArrowRight, Printer, AlertCircle } from 'lucide-react'
+export default function HomePage() {
+  const processSteps = [
+    { title: COPY_PAGES.home.text012, desc: COPY_PAGES.home.text013 },
+    { title: COPY_PAGES.home.text014, desc: COPY_PAGES.home.text015 },
+    { title: COPY_PAGES.home.text016, desc: COPY_PAGES.home.text017 },
+  ];
 
-export default function Home() {
   return (
-    <div className="flex flex-col min-h-[calc(100vh-4rem)]">
-      {/* Editorial Hero Section */}
-      <section className="border-b border-border bg-card/40 py-16 sm:py-24">
-        <div className="container mx-auto px-4 max-w-4xl text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-background text-xs text-muted-foreground mb-6 font-medium">
-            <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
-            Layanan Resmi ARSC FTAB Universitas Brawijaya
-          </div>
-          
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground leading-[1.15] mb-6">
-            Cetak dokumen kuliah,<br className="hidden sm:inline" />
-            tertib dan terprediksi.
+    <div className="max-w-[1200px] mx-auto px-4 md:px-8 pt-6 md:pt-12 pb-12">
+      {/* §6.1 Two-column hero at >=840 (7/5, gap 48px), stacked at 375 */}
+      <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+        <div className="lg:col-span-7 min-w-0">
+          <h1 className="text-displaySmall-emphasized lg:text-displayLarge-emphasized font-display text-[var(--md-sys-color-on-surface)] whitespace-pre-line max-w-[620px]">
+            {COPY_PAGES.home.text001.replace('\\n', '\n')}
           </h1>
-
-          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-8">
-            Kirim berkas PDF dari ponsel atau laptop, dapatkan estimasi tarif transparan,
-            dan ambil cetakan fisik langsung di sekretariat ARSC setelah disetujui operator.
+          <p className="text-bodyLarge text-[var(--md-sys-color-on-surface-variant)] mt-space4 max-w-[520px]">
+            {COPY_PAGES.home.text002}
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-            <Button asChild size="lg" className="w-full sm:w-auto h-12 px-7 text-base bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-xs">
-              <Link href="/order">
-                <FileText className="mr-2 h-5 w-5" />
-                Mulai Pesan Cetak
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="lg" className="w-full sm:w-auto h-12 px-6 text-base border-border hover:bg-secondary">
-              <Link href="/track">
-                Lacak Status Pesanan
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
+          <div className="mt-space6 flex flex-col sm:flex-row sm:items-center gap-space2 sm:gap-space4">
+            <Link
+              href="/order"
+              style={getM3LayerVars('primary')}
+              className="m3-control h-12 px-6 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] text-labelLarge-emphasized flex items-center justify-center gap-space2 w-full sm:w-auto"
+            >
+              <M3StateLayer />
+              <FileTextDuotone className="w-5 h-5" aria-hidden="true" />
+              <span>{COPY_UI.orderCta}</span>
+            </Link>
 
-          <div className="mt-8 pt-6 border-t border-border/60 flex flex-wrap justify-center items-center gap-6 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Tarif Hitam Putih Rp500/halaman
-            </span>
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Tarif Warna Rp750/halaman
-            </span>
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Ukuran A4 & F4
-            </span>
+            <Link
+              href="/track"
+              style={getM3LayerVars('surface')}
+              className="m3-control h-12 px-4 rounded-full text-[var(--md-sys-color-primary)] text-labelLarge-emphasized flex items-center justify-center w-full sm:w-auto"
+            >
+              <M3StateLayer />
+              <span>{COPY_PAGES.home.text004}</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Asymmetric tariff panel: 48/16/48/16 clockwise */}
+        <div className="lg:col-span-5 min-w-0">
+          <div className="p-6 rounded-tl-[48px] rounded-tr-[16px] rounded-br-[48px] rounded-bl-[16px] bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-on-surface)] lg:min-h-[260px] flex flex-col justify-between">
+            <h2 className="text-headlineSmall-emphasized font-display">
+              {COPY_PAGES.home.text005}
+            </h2>
+            <div className="mt-space6 space-y-space4">
+              <div className="flex items-baseline justify-between gap-space4 border-b border-[var(--md-sys-color-outline-variant)] pb-space3">
+                <span className="text-titleMedium text-[var(--md-sys-color-on-surface)]">{COPY_PAGES.home.text006}</span>
+                <span className="text-amount-emphasized font-code text-[var(--md-sys-color-primary)]">
+                  {COPY_PAGES.home.text007}
+                </span>
+              </div>
+              <div className="flex items-baseline justify-between gap-space4">
+                <span className="text-titleMedium text-[var(--md-sys-color-on-surface)]">{COPY_PAGES.home.text008}</span>
+                <span className="text-amount-emphasized font-code text-[var(--md-sys-color-primary)]">
+                  {COPY_PAGES.home.text009}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Alur & Status Section */}
-      <section className="py-12 sm:py-16 container mx-auto px-4 max-w-5xl">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          {/* Card 1 */}
-          <div className="rounded-lg border border-border bg-card p-6 shadow-card">
-            <div className="w-10 h-10 rounded-md bg-secondary text-primary flex items-center justify-center font-bold mb-4">
-              1
-            </div>
-            <h2 className="text-lg font-semibold text-foreground mb-2">Unggah PDF & Hitung Tarif</h2>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Pilih opsi salinan, warna, dan ukuran kertas. Jumlah halaman dan estimasi tagihan dihitung transparan sebelum transfer.
-            </p>
-          </div>
+      {/* Queue strip */}
+      <HomeQueueStrip />
 
-          {/* Card 2 */}
-          <div className="rounded-lg border border-border bg-card p-6 shadow-card">
-            <div className="w-10 h-10 rounded-md bg-secondary text-primary flex items-center justify-center font-bold mb-4">
-              2
-            </div>
-            <h2 className="text-lg font-semibold text-foreground mb-2">Verifikasi Admin Mandiri</h2>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Upload bukti transfer QRIS. Admin memeriksa keabsahan berkas dan bukti sebelum mencetak agar tidak terjadi kesalahan.
-            </p>
-          </div>
-
-          {/* Card 3 */}
-          <div className="rounded-lg border border-border bg-card p-6 shadow-card">
-            <div className="w-10 h-10 rounded-md bg-secondary text-primary flex items-center justify-center font-bold mb-4">
-              3
-            </div>
-            <h2 className="text-lg font-semibold text-foreground mb-2">Ambil di Sekretariat</h2>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Pantau status antrean berkala. Ambil fisik dokumen di sekretariat ARSC Gedung F FTAB UB setelah selesai dicetak.
-            </p>
-          </div>
-        </div>
-
-        {/* Live Queue Overview Widget */}
-        <div className="rounded-lg border border-border bg-card p-6 sm:p-8 shadow-card max-w-2xl mx-auto text-center">
-          <div className="flex items-center justify-center gap-2 text-sm font-semibold text-primary mb-3">
-            <Clock className="h-4 w-4" />
-            Ringkasan Antrean Saat Ini
-          </div>
-          <QueueWidget />
-          <p className="text-xs text-muted-foreground mt-4">
-            Data antrean menampilkan jumlah total pesanan yang sedang diproses tanpa memuat data pribadi pemesan.
+      {/* Process section: 384/768 split on desktop, 3 stacked rows */}
+      <section className="mt-12 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 items-start">
+        <div className="lg:col-span-4 min-w-0">
+          <h2 className="text-headlineSmall-emphasized font-display text-[var(--md-sys-color-on-surface)]">
+            {COPY_PAGES.home.text011}
+          </h2>
+          <p className="text-bodyMedium text-[var(--md-sys-color-on-surface-variant)] mt-space2">
+            {COPY_PAGES.home.text018}
           </p>
         </div>
-      </section>
 
-      {/* Operator Notice / Policy */}
-      <section className="mt-auto border-t border-border bg-secondary/30 py-8">
-        <div className="container mx-auto px-4 max-w-4xl">
-          <div className="flex items-start gap-3 text-xs sm:text-sm text-muted-foreground">
-            <AlertCircle className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-            <p className="leading-relaxed">
-              <strong className="text-foreground font-semibold">Pemberitahuan Layanan:</strong> ARSC Printing beroperasi sesuai jam piket sekretariat mahasiswa. Pesanan yang disubmit di luar jam operasional akan diverifikasi dan dicetak pada sesi piket berikutnya. Hubungi admin ARSC bila memerlukan bantuan mendesak.
-            </p>
-          </div>
-        </div>
+        <ol className="lg:col-span-8 min-w-0 divide-y divide-[var(--md-sys-color-outline-variant)] border-y border-[var(--md-sys-color-outline-variant)]">
+          {processSteps.map((step, idx) => (
+            <li key={step.title} className="py-space4 flex items-start gap-space4">
+              <span className="w-8 h-8 rounded-full bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] text-labelLarge-emphasized flex items-center justify-center shrink-0">
+                {idx + 1}
+              </span>
+              <div className="min-w-0">
+                <h3 className="text-titleMedium-emphasized text-[var(--md-sys-color-on-surface)]">
+                  {step.title}
+                </h3>
+                <p className="text-bodyMedium text-[var(--md-sys-color-on-surface-variant)] mt-space1">
+                  {step.desc}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ol>
       </section>
     </div>
-  )
+  );
 }
