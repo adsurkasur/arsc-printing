@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { FileUp, Image as ImageIcon, CheckCircle2, AlertCircle, QrCode, ArrowRight, ShieldCheck, Info } from 'lucide-react';
 import LivePDFPreview from '@/components/LivePDFPreview';
+import { COPY_PAGES } from '@/lib/copy';
 
 export default function OrderPage() {
   const router = useRouter();
@@ -113,25 +114,25 @@ export default function OrderPage() {
     <div className="container mx-auto px-4 py-8 sm:py-12 max-w-4xl w-full min-w-0">
       {/* Page Header */}
       <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-          Pesan Cetak Dokumen
+        <h1 className="text-headlineMedium-emphasized md:text-headlineLarge-emphasized font-display text-[var(--md-sys-color-on-surface)]">
+          {COPY_PAGES.order.text001}
         </h1>
-        <p className="text-sm sm:text-base text-muted-foreground mt-1 break-words">
-          Lengkapi rincian pesanan dan unggah berkas PDF. Tagihan dihitung otomatis berdasarkan jumlah halaman.
+        <p className="text-bodyLarge text-[var(--md-sys-color-on-surface-variant)] mt-space2 break-words">
+          {COPY_PAGES.order.text002}
         </p>
 
-        {/* Step Indicator */}
-        <div className="grid grid-cols-3 gap-1.5 sm:gap-2 mt-6 p-1 bg-secondary/50 rounded-lg border border-border text-xs sm:text-sm font-medium text-center">
-          <div className="py-2 px-1 rounded bg-background text-foreground shadow-xs font-semibold truncate">
+        {/* §5 Stepper: Berkas, Pembayaran, Kirim */}
+        <ol className="grid grid-cols-3 gap-2 mt-6 p-2 bg-[var(--md-sys-color-surface-container-low)] rounded-l border border-[var(--md-sys-color-outline-variant)] text-labelLarge text-center">
+          <li aria-current="step" className="py-2 px-2 rounded-m bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] font-bold truncate">
             1. Berkas
-          </div>
-          <div className="py-2 px-1 text-muted-foreground truncate">
-            2. Tagihan
-          </div>
-          <div className="py-2 px-1 text-muted-foreground truncate">
-            3. Ambil
-          </div>
-        </div>
+          </li>
+          <li className="py-2 px-2 text-[var(--md-sys-color-on-surface-variant)] truncate">
+            2. Pembayaran
+          </li>
+          <li className="py-2 px-2 text-[var(--md-sys-color-on-surface-variant)] truncate">
+            3. Kirim
+          </li>
+        </ol>
       </div>
 
       <form onSubmit={submit} className="space-y-8">

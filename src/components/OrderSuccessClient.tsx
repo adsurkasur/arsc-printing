@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import StatusBadge from './StatusBadge';
+import { COPY_PAGES } from '@/lib/copy';
 import { CheckCircle2, Clock, MapPin, ArrowRight, Copy, Check, AlertCircle, Ban, Tag } from 'lucide-react';
 
 export default function OrderSuccessClient({ initialOrderId }: { initialOrderId: string | null }) {

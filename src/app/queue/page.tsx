@@ -2,7 +2,7 @@
 
 import { useOrders } from '@/contexts/OrderContext';
 import { ArrowClockwiseDuotone, ClockDuotone, CheckCircleDuotone } from '@/components/icons';
-import { COPY_PAGES, COPY_LOADING } from '@/lib/copy';
+import { COPY_PAGES, COPY_LOADING, COPY_TOASTS } from '@/lib/copy';
 import { M3Pressable } from '@/components/m3';
 
 export default function QueuePage() {
@@ -50,7 +50,7 @@ export default function QueuePage() {
           <span className="text-titleMedium-emphasized">{COPY_PAGES.queue.text002}</span>
         </div>
         <span className="text-headlineLarge-emphasized font-code text-[var(--md-sys-color-primary)]">
-          {queue.count}
+          {loading ? COPY_LOADING.list : error ? COPY_TOASTS.backendUnavailable : queue.count}
         </span>
       </div>
 
