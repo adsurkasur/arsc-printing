@@ -1,0 +1,2 @@
+import {adminAuth,json,JobError,jobFailure} from '@/lib/api-security'
+export async function GET(request:Request){try{const {db}=await adminAuth(request);const {data,error}=await db.from('print_workers').select('id,printer_key,enabled').order('id');if(error)throw new JobError('LOCAL_BACKEND_UNAVAILABLE',503);return json({items:data.map(w=>({id:w.id,printerKey:w.printer_key,enabled:w.enabled}))})}catch(error){return jobFailure(error)}}

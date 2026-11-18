@@ -1,1300 +1,741 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import StatusBadge from '@/components/StatusBadge';
+import { Button } from '@/components/ui/button';
+import {
+  RefreshCw, FileText, ImageIcon, CheckCircle, XCircle, RotateCcw,
+  AlertTriangle, Shield, CheckCheck, Search, Filter, HardDrive,
+  Receipt, X, ChevronLeft, ChevronRight, Info, Calendar, DollarSign,
+  Printer, Check, AlertCircle
+} from 'lucide-react';
+import type { Order } from '@/types/order';
+import type { AdminAction } from '@/types/print-job';
 
-// Small helper: Download link that shows countdown until deletion on hover
-function DownloadWithCountdown({ fileUrl, expiresAt }: { fileUrl: string; expiresAt?: string | null }) {
-  const [remaining, setRemaining] = useState<string | null>(null);
-  const intervalRef = useRef<number | null>(null);
+interface WorkerItem {
+  id: string;
+  printerKey: string;
+  enabled: boolean;
+}
 
-  const computeRemaining = useCallback(() => {
-    if (!expiresAt) {
-      setRemaining(null);
-      return;
-    }
-    const diff = new Date(expiresAt).getTime() - Date.now();
-    if (diff <= 0) {
-      setRemaining('0s');
-      return;
-    }
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-    if (hours > 0) setRemaining(`${hours}h ${minutes}m ${seconds}s`);
-    else if (minutes > 0) setRemaining(`${minutes}m ${seconds}s`);
-    else setRemaining(`${seconds}s`);
-  }, [expiresAt]);
+interface DailySummary {
+  date: string;
+  timeZone: string;
+  orderCount: number;
+  pages: number;
+  revenueVerified: number;
+}
 
-  useEffect(() => {
-    // Keep updating in the background when the component mounts
-    computeRemaining();
-    intervalRef.current = window.setInterval(computeRemaining, 1000);
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [computeRemaining]);
-
-  // Ensure immediate calculation when user hovers (avoids initial 'Download' showing briefly)
-  const handleMouseEnter = () => {
-    computeRemaining();
+interface ReceiptData {
+  order: {
+    id: string;
+    pickupCode: string;
+    customerName: string;
+    status: string;
+    paymentStatus: string;
+    amountDue: number;
+    pages: number;
+    copies: number;
+    createdAt: string;
+    verifiedAt: string | null;
+    approvedAt: string | null;
+    deliveredAt: string | null;
   };
-
-  // Programmatic download helper (uses fetch to ensure download even when server doesn't set content-disposition)
-  const downloadFile = async (url: string) => {
-    try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('Network response was not ok');
-      const blob = await res.blob();
-      const contentDisposition = res.headers.get('content-disposition');
-      let filename = 'file';
-      if (contentDisposition) {
-        const match = /filename\*=UTF-8''(.+)|filename="?([^";]+)"?/.exec(contentDisposition);
-        if (match) filename = decodeURIComponent(match[1] || match[2]);
-      } else {
-        try {
-          const urlObj = new URL(url);
-          filename = decodeURIComponent(urlObj.pathname.split('/').pop() || filename);
-        } catch (e) {
-          console.warn('Failed to derive filename from URL', e);
-        }
-      }
-
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(blobUrl);
-    } catch (err) {
-      // Fallback: open in new tab
-      window.open(url, '_blank');
-    }
-  };
-
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onMouseEnter={handleMouseEnter}
-          onClick={() => downloadFile(fileUrl)}
-          className="text-primary hover:text-primary/80"
-        >
-          <Download className="h-4 w-4" />
-        </motion.button>
-      </TooltipTrigger>
-      <TooltipContent side="top">{remaining ? `Hapus file dalam ${remaining}` : 'Unduh file'}</TooltipContent>
-    </Tooltip>
-  );
-}
-
-// Simple inline deletion timer shown in the proof modal
-function DeletionTimer({ expiresAt }: { expiresAt?: string | null }) {
-  const [remaining, setRemaining] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!expiresAt) {
-      setRemaining(null);
-      return;
-    }
-
-    const compute = () => {
-      const diff = new Date(expiresAt!).getTime() - Date.now();
-      if (diff <= 0) return setRemaining('0s');
-      const hours = Math.floor(diff / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-      if (hours > 0) setRemaining(`${hours}h ${minutes}m ${seconds}s`);
-      else if (minutes > 0) setRemaining(`${minutes}m ${seconds}s`);
-      else setRemaining(`${seconds}s`);
-    };
-
-    compute();
-    const id = window.setInterval(compute, 1000);
-    return () => clearInterval(id);
-  }, [expiresAt]);
-
-  if (!expiresAt) return null;
-
-  return <p className="text-sm text-muted-foreground mt-2">Hapus bukti dalam {remaining ?? '—'}</p>;
-}
-
-// Tooltip content component that updates every second while mounted (used for proof tooltip)
-function ProofTooltipContent({ expiresAt }: { expiresAt?: string | null }) {
-  const [remaining, setRemaining] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!expiresAt) {
-      setRemaining(null);
-      return;
-    }
-
-    const compute = () => {
-      const diff = new Date(expiresAt!).getTime() - Date.now();
-      if (diff <= 0) return setRemaining('0s');
-      const hours = Math.floor(diff / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-      if (hours > 0) setRemaining(`${hours}h ${minutes}m ${seconds}s`);
-      else if (minutes > 0) setRemaining(`${minutes}m ${seconds}s`);
-      else setRemaining(`${seconds}s`);
-    };
-
-    compute();
-    const id = window.setInterval(compute, 1000);
-    return () => clearInterval(id);
-  }, [expiresAt]);
-
-  if (!expiresAt) return <>Lihat bukti pembayaran</>;
-  return <>Hapus bukti dalam {remaining ?? '—'}</>;
-}
-
-import { useRouter } from "next/navigation";
-import { Badge } from "@/components/ui/badge";
-import StatusBadge from "@/components/StatusBadge";
-import ColorModeBadge from "../../components/ColorModeBadge";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { useOrders } from "@/contexts/OrderContext";
-import { createClient } from "@/lib/supabase/client";
-import { CheckCircle, Clock, Printer, LogOut, RefreshCw, Download, XCircle, Shield, TrendingUp, Trash, Home, FileText, Eye } from "lucide-react";
-import dynamic from "next/dynamic";
-
-const LivePDFPreview = dynamic(() => import("@/components/LivePDFPreview"), { ssr: false });
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogAction,
-  AlertDialogCancel,
-} from "@/components/ui/alert-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogClose,
-} from "@/components/ui/dialog";
-import { formatDistanceToNow } from "date-fns";
-import { id as idLocale } from "date-fns/locale";
-import { useToast } from "@/hooks/use-toast";
-import { motion, PageTransition, FadeInUp, StaggerContainer, StaggerItem } from "@/components/animations";
-import { ToastAction } from "@/components/ui/toast";
-import type { OrderStatus, Order } from "@/types/order";
-
-// Check if Supabase is properly configured
-function isSupabaseConfigured() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  return url && key && !url.includes('placeholder') && !key.includes('placeholder')
+  jobs: Array<{
+    id: string;
+    revision: number;
+    status: string;
+    printerKey: string;
+    workerId: string;
+    backendJobId: string | null;
+    backendInstanceId: string | null;
+    lastErrorCode: string | null;
+  }>;
+  events: Array<{
+    eventId: string;
+    jobId: string;
+    type: string;
+    createdAt: string;
+  }>;
+  backendCompletionIsPhysicalProof: boolean;
 }
 
 export default function Admin() {
-  const router = useRouter();
-  const { toast } = useToast();
-  const { orders, updateOrderStatus, loading, refreshOrders, error } = useOrders();
-  const [user, setUser] = useState<{ email: string } | null>(null);
-  const [demoMode, setDemoMode] = useState(false);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [totalOrders, setTotalOrders] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(20);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState('');
 
-  // Refresh state to match /queue 'Segarkan' behavior
-  const [refreshing, setRefreshing] = useState(false);
-  const lastClickRef = useRef<number | null>(null);
+  // Daily summary & workers state
+  const [summary, setSummary] = useState<DailySummary | null>(null);
+  const [workers, setWorkers] = useState<WorkerItem[]>([]);
+  const [selectedWorkerId, setSelectedWorkerId] = useState('');
+
+  // Receipt modal state
+  const [activeReceipt, setActiveReceipt] = useState<ReceiptData | null>(null);
+  const [loadingReceipt, setLoadingReceipt] = useState(false);
+
+  const [busy, setBusy] = useState(false);
+
+  // Helper for admin headers
+  const getAuthHeaders = useCallback(async () => {
+    const { data } = await createClient().auth.getSession();
+    if (!data.session) throw new Error('Harap masuk terlebih dahulu.');
+    return {
+      Authorization: 'Bearer ' + data.session.access_token,
+      'Content-Type': 'application/json'
+    };
+  }, []);
+
+  // Fetch daily summary
+  const fetchSummary = useCallback(async () => {
+    try {
+      const headers = await getAuthHeaders();
+      const res = await fetch('/api/admin/summary', { headers, cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        setSummary(data);
+      }
+    } catch {
+      // Ignore background summary failure
+    }
+  }, [getAuthHeaders]);
+
+  // Fetch workers
+  const fetchWorkers = useCallback(async () => {
+    try {
+      const headers = await getAuthHeaders();
+      const res = await fetch('/api/admin/workers', { headers, cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        const items = data.items || [];
+        setWorkers(items);
+        if (items.length > 0 && !selectedWorkerId) {
+          const firstEnabled = items.find((w: WorkerItem) => w.enabled) || items[0];
+          setSelectedWorkerId(firstEnabled.id);
+        }
+      }
+    } catch {
+      // Ignore background worker failure
+    }
+  }, [getAuthHeaders, selectedWorkerId]);
+
+  // Fetch orders with search, filter, pagination
+  const fetchOrders = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const headers = await getAuthHeaders();
+      const params = new URLSearchParams();
+      params.set('page', String(page));
+      params.set('pageSize', String(pageSize));
+      if (statusFilter) params.set('status', statusFilter);
+      if (searchQuery.trim()) params.set('q', searchQuery.trim());
+
+      const res = await fetch(`/api/admin/orders?${params.toString()}`, { headers, cache: 'no-store' });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error?.message || data.error?.code || 'Gagal memuat data pesanan.');
+      }
+      setOrders(data.items || []);
+      setTotalOrders(data.total || 0);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Terjadi kendala.');
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [getAuthHeaders, page, pageSize, statusFilter, searchQuery]);
+
+  // Refresh all
+  const refreshAll = useCallback(async () => {
+    await Promise.all([fetchOrders(), fetchSummary(), fetchWorkers()]);
+  }, [fetchOrders, fetchSummary, fetchWorkers]);
 
   useEffect(() => {
-    const checkDemoMode = !isSupabaseConfigured();
-    setDemoMode(checkDemoMode);
+    void refreshAll();
+  }, [refreshAll]);
 
-    if (checkDemoMode) {
-      // Check demo auth from localStorage
-      const demoAuth = localStorage.getItem('demo_admin_auth');
-      if (demoAuth) {
-        try {
-          const auth = JSON.parse(demoAuth);
-          // Check if demo auth is less than 24 hours old
-          const demoAdminTtlHours = Number(process.env.NEXT_PUBLIC_DEMO_ADMIN_AUTH_TTL_HOURS ?? process.env.NEXT_PUBLIC_ADMIN_AUTH_TTL_HOURS ?? 24);
-          if (auth.authenticated && Date.now() - auth.timestamp < demoAdminTtlHours * 60 * 60 * 1000) {
-            setUser({ email: auth.email });
-            return;
-          }
-        } catch {
-          // Invalid auth, redirect to login
-        }
-      }
-      // No valid demo auth, redirect to login
-      router.push('/admin/login');
-    } else {
-      // Check real Supabase auth
-      const checkUser = async () => {
-        const supabase = createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          setUser({ email: user.email || '' });
-        }
-      };
-      checkUser();
-    }
-  }, [router]);
-
-  const handleLogout = async () => {
-    if (demoMode) {
-      localStorage.removeItem('demo_admin_auth');
-    } else {
-      const supabase = createClient();
-      await supabase.auth.signOut();
-    }
-    router.push('/admin/login');
-    router.refresh();
-  };
-
-  // Use the reusable StatusBadge component (see src/components/StatusBadge.tsx)
-  // Replaced local getStatusBadge function with component usage below.
-
-  const handleStatusUpdate = async (id: string, currentStatus: string) => {
-    if (currentStatus === "pending") {
-      const ok = await updateOrderStatus(id, "printing");
-      if (ok) toast({ title: "Status diperbarui", description: "Pesanan sedang dicetak" });
-    } else if (currentStatus === "printing") {
-      const ok = await updateOrderStatus(id, "completed");
-      if (ok) toast({ title: "Status diperbarui", description: "Pesanan selesai" });
-    }
-  };
-
-  const handleCancelOrder = async (id: string) => {
-    const ok = await updateOrderStatus(id, "cancelled");
-    if (ok) toast({ title: "Pesanan dibatalkan", variant: "destructive" });
-  };
-
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState(false);
-
-  const [cancelModalOpen, setCancelModalOpen] = useState(false);
-  const [cancelTargetId, setCancelTargetId] = useState<string | null>(null);
-  const [cancelling, setCancelling] = useState(false);
-
-  // Payment proof modal state
-  const [proofModalOpen, setProofModalOpen] = useState(false);
-  const [proofOrderId, setProofOrderId] = useState<string | null>(null);
-  const [proofUrl, setProofUrl] = useState<string | null>(null);
-  const [proofExpiresAt, setProofExpiresAt] = useState<string | null>(null);
-  const [proofDeleting, setProofDeleting] = useState(false);
-
-  // Minimal typed order shape for payment proof actions
-  type ProofableOrder = {
-    id: string;
-    payment_proof_url?: string | null;
-    payment_proof_expires_at?: string | null;
-  };
-
-  // Visual audit modal state
-  const [auditModalOpen, setAuditModalOpen] = useState(false);
-  const [auditOrder, setAuditOrder] = useState<Order | null>(null);
-
-  const openAuditModal = (order: Order) => {
-    setAuditOrder(order);
-    setTimeout(() => setAuditModalOpen(true), 0);
-  };
-
-  const openProofModal = (order: ProofableOrder) => {
-    setProofOrderId(order.id);
-    setProofUrl(order.payment_proof_url ?? null);
-    setProofExpiresAt(order.payment_proof_expires_at ?? null);
-    // Open modal on next tick
-    setTimeout(() => setProofModalOpen(true), 0);
-  };
-
-  const closeProofModal = () => {
-    setProofModalOpen(false);
-    setProofOrderId(null);
-    setProofUrl(null);
-    setProofExpiresAt(null);
-  };
-
-  const confirmDeletePaymentProof = async () => {
-    if (!proofOrderId) return setProofModalOpen(false);
-    setProofDeleting(true);
+  // Action handler
+  const handleAdminAction = async (order: Order, action: AdminAction, extra: Record<string, unknown> = {}) => {
+    setBusy(true);
+    setMessage('');
     try {
-      const res = await fetch('/api/delete-file', {
+      const headers = await getAuthHeaders();
+      const res = await fetch('/api/admin/orders/' + order.id + '/action', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: proofOrderId, type: 'payment_proof' }),
+        headers,
+        body: JSON.stringify({
+          action,
+          expectedVersion: order.version,
+          ...extra
+        })
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data?.error || 'Gagal menghapus bukti pembayaran');
+        throw new Error(data.error?.message || data.error?.code || 'Aksi ditolak.');
       }
-      toast({ title: 'Bukti pembayaran dihapus', description: 'Bukti pembayaran berhasil dihapus dari storage' });
-      await refreshOrders();
-      setProofModalOpen(false);
-      setProofOrderId(null);
+      setMessage(`Aksi '${action}' berhasil diproses.`);
+      await refreshAll();
     } catch (err: unknown) {
-      console.error('Delete payment proof error:', err);
-      const message = err instanceof Error ? err.message : String(err);
-      toast({ title: 'Gagal', description: message || 'Tidak dapat menghapus bukti pembayaran', variant: 'destructive' });
+      setMessage(err instanceof Error ? err.message : 'Aksi gagal.');
     } finally {
-      setProofDeleting(false);
+      setBusy(false);
     }
   };
 
-  const requestDeleteFile = (id: string) => {
-    setDeleteTargetId(id);
-    // Open modal on next tick to avoid immediate click on the confirm button
-    setTimeout(() => setDeleteModalOpen(true), 0);
-  };
-
-  const confirmDeleteFile = async () => {
-    if (!deleteTargetId) return setDeleteModalOpen(false);
-    setDeleting(true);
+  // View Receipt
+  const handleViewReceipt = async (orderId: string) => {
+    setLoadingReceipt(true);
+    setMessage('');
     try {
-      const res = await fetch('/api/delete-file', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: deleteTargetId }),
-      });
+      const headers = await getAuthHeaders();
+      const res = await fetch(`/api/admin/orders/${orderId}/receipt`, { headers, cache: 'no-store' });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data?.error || 'Gagal menghapus file');
+        throw new Error(data.error?.message || data.error?.code || 'Gagal memuat receipt.');
       }
-      toast({ title: 'File dihapus', description: 'File berhasil dihapus dari storage' });
-      await refreshOrders();
-      setDeleteModalOpen(false);
-      setDeleteTargetId(null);
+      setActiveReceipt(data);
     } catch (err: unknown) {
-      console.error('Delete file error:', err);
-      const message = err instanceof Error ? err.message : String(err);
-      toast({ title: 'Gagal', description: message || 'Tidak dapat menghapus file', variant: 'destructive' });
+      setMessage(err instanceof Error ? err.message : 'Gagal memuat receipt.');
     } finally {
-      setDeleting(false);
+      setLoadingReceipt(false);
     }
   };
 
-  const requestCancelOrder = (id: string) => {
-    setCancelTargetId(id);
-    setTimeout(() => setCancelModalOpen(true), 0);
-  };
-
-  const confirmCancelOrder = async () => {
-    if (!cancelTargetId) return setCancelModalOpen(false);
-    setCancelling(true);
+  // Document preview
+  const handleOpenDoc = async (id: string, kind: string) => {
     try {
-      // capture previous status for undo
-      const order = orders.find((o) => o.id === cancelTargetId);
-      const prevStatus = order?.status || 'pending';
-
-      const ok = await updateOrderStatus(cancelTargetId, 'cancelled');
-
-      if (!ok) {
-        // update failed; keep modal open and let the toast from updateOrderStatus explain the error
-        setCancelling(false);
+      const { data } = await createClient().auth.getSession();
+      if (!data.session) {
+        setMessage('Harap masuk terlebih dahulu.');
         return;
       }
-
-      // show toast with undo action
-      toast({
-        title: 'Pesanan dibatalkan',
-        variant: 'destructive',
-        action: (
-          <ToastAction altText="Undo" onClick={async () => {
-            // revert status
-            try {
-              const rev = await updateOrderStatus(cancelTargetId, prevStatus as OrderStatus); // prevStatus is one of OrderStatus types
-              if (rev) {
-                await refreshOrders();
-                toast({ title: 'Undo: Pesanan dipulihkan', description: `Status dikembalikan ke ${prevStatus}` });
-              } else {
-                toast({ title: 'Gagal', description: 'Tidak dapat memulihkan status', variant: 'destructive' });
-              }
-            } catch (e) {
-              toast({ title: 'Gagal', description: 'Tidak dapat memulihkan status', variant: 'destructive' });
-            }
-          }}>
-            Undo
-          </ToastAction>
-        ),
+      const response = await fetch('/api/admin/orders/' + id + '/document?kind=' + kind, {
+        headers: { Authorization: 'Bearer ' + data.session.access_token },
+        cache: 'no-store'
       });
-
-      await refreshOrders();
-      setCancelModalOpen(false);
-      setCancelTargetId(null);
-    } catch (err: unknown) {
-      console.error('Cancel order error:', err);
-      const message = err instanceof Error ? err.message : String(err);
-      toast({ title: 'Gagal', description: message || 'Tidak dapat membatalkan pesanan', variant: 'destructive' });
-    } finally {
-      setCancelling(false);
+      if (!response.ok) {
+        setMessage('Akses berkas ditolak.');
+        return;
+      }
+      const value = await response.json();
+      if (typeof value.url === 'string') {
+        const url = new URL(value.url, location.origin);
+        if (['http:', 'https:'].includes(url.protocol)) {
+          window.open(url.toString(), '_blank', 'noopener,noreferrer');
+        }
+      }
+    } catch {
+      setMessage('Gagal membuka berkas.');
     }
   };
 
+  const totalPages = Math.max(1, Math.ceil(totalOrders / pageSize));
+
   return (
-    <PageTransition>
-      <div className="min-h-full py-8 px-4">
-        <div className="container mx-auto">
+    <div className="container mx-auto px-4 py-8 max-w-5xl space-y-6 w-full min-w-0">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-5">
+        <div>
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary text-primary text-xs font-semibold mb-1.5">
+            <Shield className="h-3.5 w-3.5" />
+            Portal Kontrol Operator
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+            Review Pesanan & Antrean Cetak
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+            Verifikasi bukti bayar, setujui pekerjaan cetak, dan kelola serah-terima fisik dokumen.
+          </p>
+        </div>
+        <Button
+          disabled={loading || busy}
+          onClick={() => void refreshAll()}
+          variant="outline"
+          className="border-border hover:bg-secondary h-10 shrink-0"
+        >
+          <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          Segarkan Data
+        </Button>
+      </div>
 
-          {/* Delete confirmation modal */}
-          <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Hapus file</DialogTitle>
-                <DialogDescription>
-                  Hapus file terkait pesanan ini sekarang? Tindakan ini tidak dapat dibatalkan.
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => { setDeleteModalOpen(false); setDeleteTargetId(null); }}>
-                    Batal
-                  </Button>
-                  <Button variant="destructive" onClick={confirmDeleteFile} disabled={deleting}>
-                    {deleting ? 'Menghapus...' : 'Hapus file'}
-                  </Button>
-                </div>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-
-          {/* Cancel confirmation modal */}
-          <Dialog open={cancelModalOpen} onOpenChange={setCancelModalOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Batalkan pesanan</DialogTitle>
-                <DialogDescription>
-                  Apakah Anda yakin ingin membatalkan pesanan ini? Pesanan yang dibatalkan tidak akan diproses.
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => { setCancelModalOpen(false); setCancelTargetId(null); }}>
-                    Batal
-                  </Button>
-                  <Button variant="destructive" onClick={confirmCancelOrder} disabled={cancelling}>
-                    {cancelling ? 'Membatalkan...' : 'Batalkan pesanan'}
-                  </Button>
-                </div>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-
-          {/* Visual Audit Modal */}
-          <Dialog open={auditModalOpen} onOpenChange={setAuditModalOpen}>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Visual Audit: {auditOrder?.file_name}</DialogTitle>
-                <DialogDescription>
-                  Pratinjau struktur dokumen berdasarkan spesifikasi yang diminta pengguna.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="py-4 flex flex-col items-center">
-                {auditOrder?.file_url ? (
-                  <div className="w-full h-[60vh] bg-muted/10 rounded-xl border overflow-hidden relative">
-                    <LivePDFPreview
-                      fileUrl={auditOrder.file_url}
-                      colorMode={auditOrder.color_mode}
-                      layout={auditOrder.layout || '1-up'}
-                      scaleMode={auditOrder.scale_mode || 'fit'}
-                      orientation={auditOrder.orientation || 'portrait'}
-                      paperSize={auditOrder.paper_size}
-                      actualPages={auditOrder.actual_pages}
-                      claimedPages={auditOrder.pages}
-                    />
-                  </div>
-                ) : (
-                  <div className="py-12 text-center text-muted-foreground">
-                    URL file tidak tersedia untuk pratinjau.
-                  </div>
-                )}
-
-                {/* Specs Summary row */}
-                {auditOrder && (
-                  <div className="w-full mt-4 p-4 rounded-xl bg-muted/30 border grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-center">
-                    <div>
-                      <span className="text-muted-foreground block text-xs">Orientasi</span>
-                      <span className="font-medium capitalize">{auditOrder.orientation || 'Portrait'}</span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground block text-xs">Layout</span>
-                      <span className="font-medium">{auditOrder.layout || '1-up'}</span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground block text-xs">Skala</span>
-                      <span className="font-medium capitalize">{auditOrder.scale_mode || 'Fit'}</span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground block text-xs">Kertas</span>
-                      <span className="font-medium">{auditOrder.paper_size}</span>
-                    </div>
-                  </div>
-                )}
-
-                {auditOrder?.user_note && (
-                  <div className="w-full mt-4 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-sm">
-                    <span className="font-semibold text-amber-600 block mb-1">Catatan Pengguna:</span>
-                    <p className="text-amber-700 whitespace-pre-wrap">{auditOrder.user_note}</p>
-                  </div>
-                )}
+      {/* Daily Summary Card */}
+      {summary && (
+        <div className="rounded-lg border border-border bg-card p-5 shadow-card space-y-3">
+          <div className="flex items-center justify-between border-b border-border/60 pb-2">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+              <Calendar className="h-4 w-4 text-primary" />
+              Ringkasan Harian Operasional ({summary.date} · {summary.timeZone})
+            </h2>
+            <span className="text-xs text-muted-foreground font-medium">Rekapitulasi Manual</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+            <div className="p-3.5 rounded-md bg-secondary/30 border border-border space-y-1">
+              <span className="text-xs text-muted-foreground block">Total Pesanan Masuk:</span>
+              <div className="text-2xl font-bold font-mono text-foreground">{summary.orderCount}</div>
+              <span className="text-[11px] text-muted-foreground">Semua pesanan dibuat hari ini</span>
+            </div>
+            <div className="p-3.5 rounded-md bg-secondary/30 border border-border space-y-1">
+              <span className="text-xs text-muted-foreground block">Total Lembar/Halaman:</span>
+              <div className="text-2xl font-bold font-mono text-foreground">{summary.pages}</div>
+              <span className="text-[11px] text-muted-foreground">Akumulasi halaman dokumen</span>
+            </div>
+            <div className="p-3.5 rounded-md bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 space-y-1">
+              <span className="text-xs text-emerald-800 dark:text-emerald-300 font-medium block">Pendapatan Terverifikasi:</span>
+              <div className="text-2xl font-bold font-mono text-emerald-900 dark:text-emerald-100">
+                Rp {summary.revenueVerified.toLocaleString('id-ID')}
               </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setAuditModalOpen(false)}>
-                  Tutup
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+              <span className="text-[11px] text-emerald-700 dark:text-emerald-400">Pembayaran disetujui kasir</span>
+            </div>
+          </div>
+        </div>
+      )}
 
-          {/* Payment proof modal */}
-          <Dialog open={proofModalOpen} onOpenChange={setProofModalOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Bukti Pembayaran</DialogTitle>
-                <DialogDescription>Preview dan unduh bukti pembayaran</DialogDescription>
-                <DeletionTimer expiresAt={proofExpiresAt} />
-              </DialogHeader>
+      {/* Operator Worker Selection & Filter Bar */}
+      <div className="rounded-lg border border-border bg-card p-5 shadow-card space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Worker Dropdown from /api/admin/workers */}
+          <div>
+            <label htmlFor="worker-select" className="block text-xs font-semibold text-foreground mb-1.5 flex items-center gap-1.5">
+              <HardDrive className="h-3.5 w-3.5 text-primary" />
+              Target Worker Cetak Aktif
+            </label>
+            <select
+              id="worker-select"
+              value={selectedWorkerId}
+              onChange={(e) => setSelectedWorkerId(e.target.value)}
+              className="w-full h-10 px-3 text-sm rounded-md border border-input bg-background text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              <option value="">-- Pilih Worker Printer --</option>
+              {workers.map((w) => (
+                <option key={w.id} value={w.id}>
+                  {w.printerKey} {w.enabled ? '(Aktif)' : '(Nonaktif)'}
+                </option>
+              ))}
+            </select>
+            <span className="text-[11px] text-muted-foreground mt-1 block">
+              Pekerjaan yang disetujui akan dialokasikan ke antrean worker ini.
+            </span>
+          </div>
 
-              <div className="py-4">
-                {proofUrl ? (
-                  // Detect file type by extension and show preview for images, link for PDFs, or download link for others
-                  (() => {
-                    const lower = proofUrl.toLowerCase();
-                    const isPdf = lower.endsWith('.pdf');
-                    const isImage = /\.(png|jpe?g|webp|svg|tiff?|gif)$/.test(lower);
+          {/* Search Input (q) */}
+          <div>
+            <label htmlFor="admin-search-input" className="block text-xs font-semibold text-foreground mb-1.5 flex items-center gap-1.5">
+              <Search className="h-3.5 w-3.5 text-primary" />
+              Cari Nama / Kode Pengambilan
+            </label>
+            <div className="flex gap-2">
+              <input
+                id="admin-search-input"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Contoh: Budi atau ARSC-4821"
+                className="w-full h-10 px-3 text-sm rounded-md border border-input bg-background text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              />
+              <Button
+                size="sm"
+                onClick={() => { setPage(1); void fetchOrders(); }}
+                className="h-10 px-4 bg-primary text-primary-foreground text-xs font-semibold shrink-0"
+              >
+                Cari
+              </Button>
+            </div>
+            <span className="text-[11px] text-muted-foreground mt-1 block">
+              Pencarian literal substring nama pemesan atau pickup code.
+            </span>
+          </div>
+        </div>
 
-                    // programmatic download helper (we keep this inline to have access to proofUrl)
-                    const downloadProof = async (url: string) => {
-                      try {
-                        const res = await fetch(url);
-                        if (!res.ok) throw new Error('Network response was not ok');
-                        const blob = await res.blob();
-                        const contentDisposition = res.headers.get('content-disposition');
-                        let filename = 'bukti';
-                        if (contentDisposition) {
-                          const match = /filename\*=UTF-8''(.+)|filename="?([^";]+)"?/.exec(contentDisposition);
-                          if (match) filename = decodeURIComponent(match[1] || match[2]);
-                        } else {
-                          try {
-                            const urlObj = new URL(url);
-                            filename = decodeURIComponent(urlObj.pathname.split('/').pop() || filename);
-                          } catch (e) {
-                            console.warn('Failed to derive filename from proof URL', e);
-                          }
-                        }
+        {/* Status Filter Tab row */}
+        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/60">
+          <span className="text-xs font-medium text-muted-foreground flex items-center gap-1 mr-1">
+            <Filter className="h-3 w-3" /> Filter Status:
+          </span>
+          {[
+            { key: '', label: 'Semua' },
+            { key: 'pending_verification', label: 'Menunggu Verifikasi' },
+            { key: 'approved', label: 'Disetujui / Antrean' },
+            { key: 'delivered', label: 'Diserahkan' },
+            { key: 'cancelled', label: 'Dibatalkan' }
+          ].map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => { setStatusFilter(item.key); setPage(1); }}
+              className={`px-2.5 py-1 text-xs font-medium rounded-md border transition-colors ${
+                statusFilter === item.key
+                  ? 'bg-primary text-primary-foreground border-primary font-semibold'
+                  : 'bg-background border-border text-muted-foreground hover:bg-secondary'
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
-                        const blobUrl = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = blobUrl;
-                        a.download = filename;
-                        document.body.appendChild(a);
-                        a.click();
-                        a.remove();
-                        URL.revokeObjectURL(blobUrl);
-                      } catch (err) {
-                        window.open(url, '_blank');
-                      }
-                    };
+      {(error || message) && (
+        <div role="alert" className="p-3.5 bg-secondary/80 border border-border rounded-md text-xs sm:text-sm text-foreground flex items-center justify-between">
+          <span>{error || message}</span>
+          <button type="button" onClick={() => { setError(null); setMessage(''); }} className="text-xs font-semibold underline ml-2">
+            Tutup
+          </button>
+        </div>
+      )}
 
-                    if (isPdf) {
-                      return (
-                        <button className="text-primary underline" onClick={() => downloadProof(proofUrl)}>
-                          Buka PDF bukti pembayaran
-                        </button>
-                      );
-                    }
-                    if (isImage) {
-                      return (
-                        <div className="w-full h-96 flex items-center justify-center bg-muted/10 rounded-md p-4">
-                          <img src={proofUrl} alt="Bukti pembayaran" className="max-h-full object-contain" />
-                        </div>
-                      );
-                    }
-                    // Fallback: provide a download/open link
-                    return (
-                      <button className="text-primary underline" onClick={() => downloadProof(proofUrl)}>
-                        Buka/Unduh bukti pembayaran
-                      </button>
-                    );
-                  })()
-                ) : (
-                  <p className="text-muted-foreground">Tidak ada bukti pembayaran</p>
-                )}
+      {/* Orders List Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-semibold text-foreground">
+            Daftar Pesanan ({totalOrders} hasil)
+          </h2>
+          <span className="text-xs text-muted-foreground">
+            Halaman {page} dari {totalPages}
+          </span>
+        </div>
 
-                {/* Show helpful note only when no timer is scheduled (the timer is displayed in the header) */}
-                {proofUrl && !proofExpiresAt && (
-                  <p className="text-sm text-muted-foreground mt-2">Jadwal penghapusan belum diatur. Penghapusan akan dihitung saat pesanan ditandai sebagai Diambil atau Dibatalkan.</p>
-                )}
-              </div>
+        {orders.length === 0 ? (
+          <div className="rounded-lg border border-border bg-card p-12 text-center text-muted-foreground space-y-2">
+            <p className="text-sm font-medium">Tidak ada pesanan yang sesuai dengan filter.</p>
+            <p className="text-xs">Coba sesuaikan kata kunci pencarian atau ubah filter status.</p>
+          </div>
+        ) : (
+          orders.map((order) => {
+            const job = order.print_jobs?.find((j) => j.revision === order.revision);
+            const pickupCode = (order as unknown as { pickupCode?: string; pickup_code?: string }).pickupCode ||
+                               (order as unknown as { pickupCode?: string; pickup_code?: string }).pickup_code;
 
-              <DialogFooter>
-                <div className="flex gap-2">
-                  {proofUrl && (
-                    <Button
-                      variant="outline"
-                      onClick={async () => {
-                        try {
-                          // reuse the download helper logic - fetch blob and download
-                          const res = await fetch(proofUrl);
-                          if (!res.ok) throw new Error('Network response was not ok');
-                          const blob = await res.blob();
-                          const contentDisposition = res.headers.get('content-disposition');
-                          let filename = 'bukti';
-                          if (contentDisposition) {
-                            const match = /filename\*=UTF-8''(.+)|filename="?([^";]+)"?/.exec(contentDisposition);
-                            if (match) filename = decodeURIComponent(match[1] || match[2]);
-                          } else {
-                            try {
-                              const urlObj = new URL(proofUrl);
-                              filename = decodeURIComponent(urlObj.pathname.split('/').pop() || filename);
-                            } catch (e) {
-                              console.warn('Failed to derive filename from proof URL', e);
-                            }
-                          }
-
-                          const blobUrl = URL.createObjectURL(blob);
-                          const a = document.createElement('a');
-                          a.href = blobUrl;
-                          a.download = filename;
-                          document.body.appendChild(a);
-                          a.click();
-                          a.remove();
-                          URL.revokeObjectURL(blobUrl);
-                        } catch (err) {
-                          window.open(proofUrl, '_blank');
-                        }
-                      }}
-                    >
-                      Unduh
-                    </Button>
-                  )}
-                  <Button variant="destructive" onClick={confirmDeletePaymentProof} disabled={proofDeleting}>{proofDeleting ? 'Menghapus...' : 'Hapus bukti'}</Button>
-                </div>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          {/* Header */}
-          <FadeInUp className="mb-6 sm:mb-8">
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-              <div className="flex items-center gap-3 sm:gap-4">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", bounce: 0.5 }}
-                  className="h-10 w-10 sm:h-14 sm:w-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg"
-                >
-                  <Shield className="h-5 w-5 sm:h-7 sm:w-7 text-white" />
-                </motion.div>
-                <div>
-                  <h1 className="text-xl sm:text-3xl font-bold text-foreground md:text-4xl tracking-tight">
-                    Dashboard Admin
-                  </h1>
-                  <div className="mt-1 text-sm sm:text-base text-muted-foreground flex items-center gap-2 flex-wrap">
-                    <span className="truncate max-w-[200px] sm:max-w-none">{user ? `${user.email}` : 'Kelola pesanan cetak dokumen'}</span>
-                    {demoMode && <Badge variant="outline">Demo</Badge>}
+            return (
+              <article key={order.id} className="rounded-lg border border-border bg-card p-5 sm:p-6 shadow-card space-y-4 w-full min-w-0">
+                {/* Order Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border pb-3">
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-base font-bold text-foreground">
+                        {order.customer_name}
+                      </h3>
+                      {pickupCode && (
+                        <span className="px-2 py-0.5 rounded text-xs font-extrabold font-mono bg-emerald-100 text-emerald-800 border border-emerald-300">
+                          {pickupCode}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground font-mono mt-0.5 break-all">
+                      ID: {order.id} · Kontak: <span className="text-foreground font-sans font-medium">{order.contact}</span>
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <StatusBadge status={order.status} />
+                    {job && <StatusBadge status={job.status} />}
                   </div>
                 </div>
-              </div>
-              <div className="flex gap-2 self-end sm:self-auto">
-                <Tooltip>
-                  <TooltipTrigger asChild>
+
+                {/* Financial & Job Details */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs bg-secondary/25 p-3 rounded-md">
+                  <div>
+                    <span className="text-muted-foreground block">Status Bayar:</span>
+                    <strong className="text-foreground capitalize">{order.payment_status}</strong>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block">Tagihan Server:</span>
+                    <strong className="text-foreground font-mono">Rp {order.amount_due?.toLocaleString('id-ID') || '—'}</strong>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block">Versi Dokumen:</span>
+                    <strong className="text-foreground font-mono">Rev {order.revision}</strong>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block">ID Pekerjaan:</span>
+                    <strong className="text-foreground font-mono truncate block">{job?.id || 'Belum dibuat'}</strong>
+                  </div>
+                </div>
+
+                {/* Document & Receipt Actions */}
+                <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-border/60">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={busy}
+                    onClick={() => void handleOpenDoc(order.id, 'document')}
+                    className="h-8 text-xs border-border"
+                  >
+                    <FileText className="mr-1.5 h-3.5 w-3.5 text-primary" />
+                    Tinjau PDF
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={busy}
+                    onClick={() => void handleOpenDoc(order.id, 'proof')}
+                    className="h-8 text-xs border-border"
+                  >
+                    <ImageIcon className="mr-1.5 h-3.5 w-3.5 text-primary" />
+                    Tinjau Bukti Bayar
+                  </Button>
+
+                  {/* Receipt Viewer Button */}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={busy || loadingReceipt}
+                    onClick={() => void handleViewReceipt(order.id)}
+                    className="h-8 text-xs border-primary/30 text-primary hover:bg-primary/10 font-medium"
+                  >
+                    <Receipt className="mr-1.5 h-3.5 w-3.5" />
+                    Lihat Receipt
+                  </Button>
+
+                  {order.legacy_review_required && (
                     <Button
                       size="sm"
-                      onClick={async () => {
-                        const now = Date.now();
-                        if (refreshing) return;
-                        if (lastClickRef.current && now - lastClickRef.current < 1000) return; // 1s debounce
-                        lastClickRef.current = now;
+                      variant="outline"
+                      disabled={busy}
+                      onClick={() => void handleAdminAction(order, 'review_legacy')}
+                      className="h-8 text-xs border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100"
+                    >
+                      <AlertTriangle className="mr-1.5 h-3.5 w-3.5 text-amber-700" />
+                      Catat Review Data Lama
+                    </Button>
+                  )}
 
-                        setRefreshing(true);
-                        try {
-                          await refreshOrders();
-                          if ((error as string | null)) {
-                            toast({ title: 'Gagal', description: error as string, variant: 'destructive' });
-                          } else {
-                            toast({ title: 'Sukses', description: 'Status antrean diperbarui' });
-                          }
-                        } catch (err) {
-                          toast({ title: 'Gagal', description: 'Terjadi kesalahan saat menyegarkan', variant: 'destructive' });
-                        } finally {
-                          setRefreshing(false);
+                  {/* Verification Workflow Buttons */}
+                  {order.status === 'pending_verification' && (
+                    <>
+                      <Button
+                        size="sm"
+                        disabled={busy}
+                        onClick={() => void handleAdminAction(order, 'verify_payment')}
+                        className="h-8 text-xs bg-emerald-700 hover:bg-emerald-800 text-white font-medium"
+                      >
+                        <CheckCircle className="mr-1.5 h-3.5 w-3.5" />
+                        Verifikasi Bayar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={busy}
+                        onClick={() => void handleAdminAction(order, 'reject_payment')}
+                        className="h-8 text-xs border-red-200 text-red-700 hover:bg-red-50"
+                      >
+                        <XCircle className="mr-1.5 h-3.5 w-3.5" />
+                        Tolak Bayar
+                      </Button>
+                      <Button
+                        size="sm"
+                        disabled={busy || order.payment_status !== 'verified' || order.legacy_review_required || !selectedWorkerId}
+                        onClick={() => void handleAdminAction(order, 'approve', { workerId: selectedWorkerId, printerKey: 'fake' })}
+                        className="h-8 text-xs bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+                      >
+                        Setujui Cetak
+                      </Button>
+                    </>
+                  )}
+
+                  {/* Cancellation */}
+                  {(!job || job.status === 'ready') && ['pending_verification', 'approved'].includes(order.status) && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={busy}
+                      onClick={() => void handleAdminAction(order, 'cancel')}
+                      className="h-8 text-xs border-border text-muted-foreground hover:text-destructive"
+                    >
+                      Batalkan Pesanan
+                    </Button>
+                  )}
+
+                  {/* Physical Delivery Confirmation */}
+                  {job?.status === 'backend_completed' && order.status === 'approved' && (
+                    <Button
+                      size="sm"
+                      disabled={busy}
+                      onClick={() => {
+                        if (window.confirm('Pastikan dokumen fisik telah diperiksa dan diserahkan kepada pelanggan?')) {
+                          void handleAdminAction(order, 'deliver');
                         }
                       }}
-                      aria-label="Segarkan antrean"
-                      disabled={refreshing}
+                      className="h-8 text-xs bg-emerald-700 hover:bg-emerald-800 text-white font-semibold"
                     >
-                      {refreshing ? (
-                        <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                          className="mr-2"
-                        >
-                          <RefreshCw className="h-4 w-4" />
-                        </motion.div>
-                      ) : (
-                        <RefreshCw className="mr-2 h-4 w-4" />
-                      )}
-                      {refreshing ? 'Menyegarkan...' : 'Segarkan'}
+                      <CheckCheck className="mr-1.5 h-3.5 w-3.5" />
+                      Konfirmasi Serah-Terima Fisik
                     </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Segarkan status antrean</TooltipContent>
-                </Tooltip>
+                  )}
 
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <Button variant="outline" onClick={handleLogout} className="rounded-xl">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Logout
-                  </Button>
-                </motion.div>
+                  {/* Reprint Workflow */}
+                  {job && ['failed', 'needs_reconciliation', 'backend_completed'].includes(job.status) && order.status === 'approved' && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={busy || !selectedWorkerId}
+                      onClick={() => {
+                        if (window.confirm('PERINGATAN: Dokumen fisik mungkin telah tercetak. Setujui cetak ulang dengan risiko duplikasi?')) {
+                          void handleAdminAction(order, 'reprint', { workerId: selectedWorkerId, printerKey: 'fake', acknowledgeDuplicateRisk: true });
+                        }
+                      }}
+                      className="h-8 text-xs border-amber-300 text-amber-900 hover:bg-amber-50"
+                    >
+                      <RotateCcw className="mr-1.5 h-3.5 w-3.5 text-amber-700" />
+                      Reprint (Revisi Baru)
+                    </Button>
+                  )}
+                </div>
+              </article>
+            );
+          })
+        )}
+
+        {/* Pagination Navigation */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between border-t border-border pt-4">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={page <= 1 || loading}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              className="h-8 text-xs"
+            >
+              <ChevronLeft className="h-3.5 w-3.5 mr-1" />
+              Sebelumnya
+            </Button>
+            <span className="text-xs text-muted-foreground font-mono">
+              Halaman {page} / {totalPages}
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={page >= totalPages || loading}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              className="h-8 text-xs"
+            >
+              Selanjutnya
+              <ChevronRight className="h-3.5 w-3.5 ml-1" />
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* Receipt Modal Viewer */}
+      {activeReceipt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+          <div className="bg-background rounded-lg border border-border shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <div className="flex items-center gap-2">
+                <Receipt className="h-5 w-5 text-primary" />
+                <h3 className="text-base font-bold text-foreground">
+                  Detail Audit Receipt Pesanan
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveReceipt(null)}
+                className="text-muted-foreground hover:text-foreground p-1 rounded-md"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Disclaimer Banner per ADMIN_API.md */}
+            <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2">
+              <Info className="h-4 w-4 text-amber-700 shrink-0 mt-0.5" />
+              <span>
+                <strong>Perhatian:</strong> Selesainya pekerjaan di backend (status backend_completed) bukan merupakan bukti otomatis bahwa dokumen fisik telah selesai dicetak di printer atau diserahkan kepada pelanggan.
+              </span>
+            </div>
+
+            {/* Order Projections */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider">
+                Informasi Pesanan:
+              </h4>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-3 bg-secondary/30 rounded-md text-xs">
+                <div>
+                  <span className="text-muted-foreground block">ID:</span>
+                  <span className="font-mono font-semibold break-all">{activeReceipt.order.id}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground block">Pickup Code:</span>
+                  <span className="font-mono font-bold text-primary">{activeReceipt.order.pickupCode || '—'}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground block">Pelanggan:</span>
+                  <span className="font-semibold">{activeReceipt.order.customerName}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground block">Status Order:</span>
+                  <StatusBadge status={activeReceipt.order.status} />
+                </div>
+                <div>
+                  <span className="text-muted-foreground block">Status Bayar:</span>
+                  <span className="capitalize">{activeReceipt.order.paymentStatus}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground block">Total Tagihan:</span>
+                  <span className="font-mono font-bold">Rp {activeReceipt.order.amountDue?.toLocaleString('id-ID') || 0}</span>
+                </div>
               </div>
             </div>
-          </FadeInUp>
 
-          {/* Stats Cards */}
-          <StaggerContainer className="mb-6 sm:mb-8 grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-            {/* Total Pesanan */}
-            <StaggerItem>
-              <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ duration: 0.2 }}>
-                <Card className="p-4 sm:p-6 border-border/50 shadow-smooth bg-gradient-to-br from-primary/10 to-primary/5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs sm:text-sm text-muted-foreground">Total Pesanan</p>
-                      <motion.p
-                        key={orders.length}
-                        initial={{ scale: 0.5, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="text-2xl sm:text-3xl font-bold text-primary"
-                      >
-                        {orders.length}
-                      </motion.p>
-                    </div>
-                    <div className="rounded-lg sm:rounded-xl bg-primary/10 p-2 sm:p-3">
-                      <TrendingUp className="h-4 w-4 sm:h-6 sm:w-6 text-primary" />
-                    </div>
-                  </div>
-                </Card>
-              </motion.div>
-            </StaggerItem>
-
-            {/* Menunggu */}
-            <StaggerItem>
-              <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ duration: 0.2 }}>
-                <Card className="p-4 sm:p-6 border-border/50 shadow-smooth bg-gradient-to-br from-yellow-500/10 to-yellow-500/5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs sm:text-sm text-muted-foreground">Menunggu</p>
-                      <motion.p
-                        key={orders.filter((o) => o.status === "pending").length}
-                        initial={{ scale: 0.5, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="text-2xl sm:text-3xl font-bold text-yellow-600"
-                      >
-                        {orders.filter((o) => o.status === "pending").length}
-                      </motion.p>
-                    </div>
-                    <div className="rounded-lg sm:rounded-xl bg-yellow-500/10 p-2 sm:p-3">
-                      <Clock className="h-4 w-4 sm:h-6 sm:w-6 text-yellow-600" />
-                    </div>
-                  </div>
-                </Card>
-              </motion.div>
-            </StaggerItem>
-
-            {/* Sedang Dicetak */}
-            <StaggerItem>
-              <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ duration: 0.2 }}>
-                <Card className="p-4 sm:p-6 border-border/50 shadow-smooth bg-gradient-to-br from-blue-500/10 to-blue-500/5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs sm:text-sm text-muted-foreground">Sedang Dicetak</p>
-                      <motion.p
-                        key={orders.filter((o) => o.status === "printing").length}
-                        initial={{ scale: 0.5, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="text-2xl sm:text-3xl font-bold text-blue-600"
-                      >
-                        {orders.filter((o) => o.status === "printing").length}
-                      </motion.p>
-                    </div>
-                    <div className="rounded-lg sm:rounded-xl bg-blue-500/10 p-2 sm:p-3">
-                      <Printer className="h-4 w-4 sm:h-6 sm:w-6 text-blue-600" />
-                    </div>
-                  </div>
-                </Card>
-              </motion.div>
-            </StaggerItem>
-
-            {/* Selesai */}
-            <StaggerItem>
-              <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ duration: 0.2 }}>
-                <Card className="p-4 sm:p-6 border-border/50 shadow-smooth bg-gradient-to-br from-green-500/10 to-green-500/5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs sm:text-sm text-muted-foreground">Selesai</p>
-                      <motion.p
-                        key={orders.filter((o) => o.status === "completed").length}
-                        initial={{ scale: 0.5, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="text-2xl sm:text-3xl font-bold text-green-600"
-                      >
-                        {orders.filter((o) => o.status === "completed").length}
-                      </motion.p>
-                    </div>
-                    <div className="rounded-lg sm:rounded-xl bg-green-500/10 p-2 sm:p-3">
-                      <CheckCircle className="h-4 w-4 sm:h-6 sm:w-6 text-green-600" />
-                    </div>
-                  </div>
-                </Card>
-              </motion.div>
-            </StaggerItem>
-
-            {/* Diambil */}
-            <StaggerItem>
-              <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ duration: 0.2 }}>
-                <Card className="p-4 sm:p-6 border-border/50 shadow-smooth bg-gradient-to-br from-indigo-500/10 to-indigo-500/5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs sm:text-sm text-muted-foreground">Diambil</p>
-                      <motion.p
-                        key={orders.filter((o) => o.status === "delivered").length}
-                        initial={{ scale: 0.5, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="text-2xl sm:text-3xl font-bold text-indigo-600"
-                      >
-                        {orders.filter((o) => o.status === "delivered").length}
-                      </motion.p>
-                    </div>
-                    <div className="rounded-lg sm:rounded-xl bg-indigo-500/10 p-2 sm:p-3">
-                      <Home className="h-4 w-4 sm:h-6 sm:w-6 text-indigo-600" />
-                    </div>
-                  </div>
-                </Card>
-              </motion.div>
-            </StaggerItem>
-          </StaggerContainer>
-
-          {/* Orders Table */}
-          <FadeInUp delay={0.2}>
-            {/* Mobile Card View */}
-            <div className="block lg:hidden space-y-3">
-              <div className="p-3 sm:p-4 border-b border-border bg-muted/30 rounded-t-lg">
-                <h2 className="font-semibold text-sm sm:text-base">Daftar Pesanan</h2>
-              </div>
-
-              {loading ? (
-                <Card className="p-6 text-center">
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    className="inline-block"
-                  >
-                    <RefreshCw className="h-6 w-6 text-primary mx-auto mb-2" />
-                  </motion.div>
-                  <p className="text-sm text-muted-foreground">Memuat pesanan...</p>
-                </Card>
-              ) : orders.length === 0 ? (
-                <Card className="p-6 text-center">
-                  <div className="h-12 w-12 mx-auto mb-3 rounded-xl bg-muted flex items-center justify-center">
-                    <Printer className="h-6 w-6 text-muted-foreground" />
-                  </div>
-                  <p className="text-sm text-muted-foreground">Belum ada pesanan</p>
-                </Card>
+            {/* Jobs List */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider">
+                Riwayat Pekerjaan Cetak ({activeReceipt.jobs.length}):
+              </h4>
+              {activeReceipt.jobs.length === 0 ? (
+                <p className="text-xs text-muted-foreground italic">Belum ada pekerjaan cetak untuk pesanan ini.</p>
               ) : (
-                orders.map((order, index) => (
-                  <motion.div
-                    key={order.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.03 }}
-                  >
-                    <Card className="p-3 sm:p-4">
-                      {/* Header: Name + Status */}
-                      <div className="flex items-start justify-between gap-2 mb-3">
-                        <div className="min-w-0 flex-1">
-                          <p className="font-medium truncate">{order.customer_name}</p>
-                          <p className="text-xs text-muted-foreground truncate">{order.contact}</p>
-                        </div>
-                        <StatusBadge status={order.status} />
+                <div className="space-y-2">
+                  {activeReceipt.jobs.map((j) => (
+                    <div key={j.id} className="p-3 border border-border rounded-md bg-secondary/15 text-xs space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono font-bold">Job Rev {j.revision} ({j.id.slice(0, 8)}…)</span>
+                        <StatusBadge status={j.status} />
                       </div>
-
-                      {/* Details Grid */}
-                      <div className="grid grid-cols-2 gap-2 text-xs mb-3">
-                        <div>
-                          <span className="text-muted-foreground">File:</span>
-                          <p className="font-medium truncate">{order.file_name}</p>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Mode:</span>
-                          <div><ColorModeBadge mode={order.color_mode} /></div>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Halaman:</span>
-                          <p className="font-medium">
-                            {`${order.pages ?? 1} x ${order.copies} = ${(order.pages ?? 1) * order.copies}`}
-                            {order.actual_pages && order.actual_pages !== order.pages && (
-                              <span className="text-destructive ml-1 block text-[10px] sm:inline sm:text-xs">
-                                (Asli: {order.actual_pages}) ⚠️
-                              </span>
-                            )}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Print Specs:</span>
-                          <p className="font-medium">{order.paper_size} • {order.orientation === 'landscape' ? 'Lansekap' : 'Potret'}</p>
-                          <p className="text-muted-foreground text-[10px] mt-0.5">{order.layout || '1-up'} • {order.scale_mode || 'fit'}</p>
-                        </div>
+                      <div className="grid grid-cols-2 gap-2 text-muted-foreground text-[11px] pt-1">
+                        <div>Worker ID: <span className="font-mono text-foreground">{j.workerId || '—'}</span></div>
+                        <div>Printer Key: <span className="font-mono text-foreground">{j.printerKey}</span></div>
+                        <div>Backend Job ID: <span className="font-mono text-foreground break-all">{j.backendJobId || '—'}</span></div>
+                        <div>Instance: <span className="font-mono text-foreground">{j.backendInstanceId || '—'}</span></div>
                       </div>
-
-                      {order.user_note && (
-                        <div className="bg-amber-500/10 border border-amber-500/20 p-2 rounded text-xs text-amber-700 mb-3">
-                          <span className="font-semibold">Catatan:</span> {order.user_note}
-                        </div>
-                      )}
-
-                      <div className="text-xs text-muted-foreground mb-3">
-                        {formatDistanceToNow(new Date(order.created_at), { addSuffix: true, locale: idLocale })}
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex flex-wrap gap-2">
-                        {/* Visual Audit */}
-                        {order.file_url && (
-                          <Button size="sm" variant="outline" className="h-7 text-xs border-primary/20 bg-primary/5 text-primary hover:bg-primary/10" onClick={() => openAuditModal(order)}>
-                            <Eye className="h-3 w-3 mr-1" /> Audit
-                          </Button>
-                        )}
-
-                        {/* File actions */}
-                        {order.file_deleted || !order.file_url ? (
-                          <span className="text-xs text-muted-foreground flex items-center gap-1"><XCircle className="h-3 w-3" /> File dihapus</span>
-                        ) : (
-                          <DownloadWithCountdown fileUrl={order.file_url} expiresAt={order.file_expires_at} />
-                        )}
-
-                        {/* Payment proof */}
-                        {!order.payment_proof_deleted && order.payment_proof_url && (
-                          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => openProofModal(order)}>
-                            <FileText className="h-3 w-3 mr-1" /> Bukti
-                          </Button>
-                        )}
-
-                        {/* Status actions */}
-                        {order.status === "pending" && (
-                          <>
-                            <Button size="sm" className="h-7 text-xs" onClick={() => handleStatusUpdate(order.id, order.status)}>
-                              Cetak
-                            </Button>
-                            <Button size="sm" variant="outline" className="h-7 text-xs hover:!bg-destructive/90 hover:!text-destructive-foreground" onClick={() => requestCancelOrder(order.id)}>
-                              <XCircle className="h-3 w-3" />
-                            </Button>
-                          </>
-                        )}
-                        {order.status === "printing" && (
-                          <Button size="sm" className="h-7 text-xs" onClick={() => handleStatusUpdate(order.id, order.status)}>
-                            Selesai
-                          </Button>
-                        )}
-                        {order.status === "completed" && (
-                          <Button size="sm" className="h-7 text-xs" onClick={async () => {
-                            const ok = await updateOrderStatus(order.id, 'delivered');
-                            if (ok) toast({ title: 'Diambil', description: 'Pesanan ditandai sebagai diambil' });
-                            else toast({ title: 'Gagal', description: 'Tidak dapat menandai sebagai diambil', variant: 'destructive' });
-                          }}>
-                            Diambil
-                          </Button>
-                        )}
-                        {(order.status === "completed" || order.status === "delivered" || order.status === "cancelled") && (order.file_url || order.file_path) && !order.file_deleted && (
-                          <Button size="sm" variant="outline" className="h-7 text-xs hover:!bg-destructive/90 hover:!text-destructive-foreground" onClick={() => requestDeleteFile(order.id)}>
-                            <Trash className="h-3 w-3" />
-                          </Button>
-                        )}
-                      </div>
-                    </Card>
-                  </motion.div>
-                ))
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
 
-            {/* Desktop Table View */}
-            <Card className="shadow-smooth border-border/50 overflow-hidden hidden lg:block">
-              <div className="p-4 border-b border-border bg-muted/30">
-                <h2 className="font-semibold">Daftar Pesanan</h2>
-              </div>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/20">
-                      <TableHead>Nama Pelanggan</TableHead>
-                      <TableHead>Kontak</TableHead>
-                      <TableHead>File</TableHead>
-                      <TableHead>Bukti Bayar</TableHead>
-                      <TableHead>Print Specs</TableHead>
-                      <TableHead>Salinan</TableHead>
-                      <TableHead>Halaman</TableHead>
-                      <TableHead>Waktu</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Aksi</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {loading ? (
-                      <TableRow>
-                        <TableCell colSpan={11} className="text-center py-12">
-                          <motion.div
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                            className="inline-block"
-                          >
-                            <RefreshCw className="h-8 w-8 text-primary mx-auto mb-3" />
-                          </motion.div>
-                          <p className="text-muted-foreground">Memuat pesanan...</p>
-                        </TableCell>
-                      </TableRow>
-                    ) : orders.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={11} className="text-center py-12">
-                          <div className="h-16 w-16 mx-auto mb-4 rounded-2xl bg-muted flex items-center justify-center">
-                            <Printer className="h-8 w-8 text-muted-foreground" />
-                          </div>
-                          <p className="text-muted-foreground">Belum ada pesanan</p>
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      orders.map((order, index) => (
-                        <motion.tr
-                          key={order.id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.05 }}
-                          className="border-b border-border hover:bg-muted/30 transition-colors"
-                        >
-                          <TableCell className="font-medium">
-                            {order.customer_name}
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {order.contact}
-                          </TableCell>
-                          <TableCell className="max-w-[150px]">
-                            <div className="flex items-center gap-2">
-                              <span className="truncate">{order.file_name}</span>
+            {/* Events Timeline */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider">
+                Linimasa Audit Event ({activeReceipt.events.length}):
+              </h4>
+              {activeReceipt.events.length === 0 ? (
+                <p className="text-xs text-muted-foreground italic">Belum ada audit event tercatat.</p>
+              ) : (
+                <div className="max-h-40 overflow-y-auto space-y-1.5 p-2 bg-secondary/10 rounded-md border border-border">
+                  {activeReceipt.events.map((e) => (
+                    <div key={e.eventId} className="text-[11px] flex items-center justify-between py-1 border-b border-border/40 last:border-0">
+                      <span className="font-mono font-semibold text-primary">{e.type}</span>
+                      <span className="text-muted-foreground font-mono">{new Date(e.createdAt).toLocaleString('id-ID')}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
-                              {/* Deleted file indicator */}
-                              {order.file_deleted || !order.file_url ? (
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <motion.span whileHover={{ scale: 1.05 }} className="text-muted-foreground">
-                                      <XCircle className="h-4 w-4" />
-                                    </motion.span>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="top">File sudah dihapus</TooltipContent>
-                                </Tooltip>
-                              ) : (
-                                // Active file with download and expiry countdown hover
-                                <DownloadWithCountdown fileUrl={order.file_url} expiresAt={order.file_expires_at} />
-                              )}
-                            </div>
-                          </TableCell>
-
-                          {/* Payment Proof Column */}
-                          <TableCell className="max-w-[150px]">
-                            <div className="flex items-center gap-2">
-                              {order.payment_proof_deleted || !order.payment_proof_url ? (
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <motion.span whileHover={{ scale: 1.05 }} className="text-muted-foreground">
-                                      <XCircle className="h-4 w-4" />
-                                    </motion.span>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="top">Bukti pembayaran tidak tersedia</TooltipContent>
-                                </Tooltip>
-                              ) : (
-                                // Show button to open modal preview
-                                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Button size="sm" variant="outline" className="rounded-lg" onClick={() => openProofModal(order)}>
-                                        <FileText className="h-4 w-4" />
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="top">
-                                      <ProofTooltipContent expiresAt={order.payment_proof_expires_at} />
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </motion.div>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div><ColorModeBadge mode={order.color_mode} /></div>
-                            <div className="text-[10px] mt-1 space-y-0.5">
-                              <p className="font-medium">{order.paper_size} • {order.orientation === 'landscape' ? 'Lansekap' : 'Potret'}</p>
-                              <p className="text-muted-foreground">{order.layout || '1-up'} • {order.scale_mode || 'fit'}</p>
-                            </div>
-                            {order.user_note && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <div className="mt-1 cursor-help flex items-center gap-1 text-[10px] text-amber-600 bg-amber-50 max-w-max px-1.5 py-0.5 rounded border border-amber-200">
-                                    <FileText className="h-3 w-3" /> Catatan
-                                  </div>
-                                </TooltipTrigger>
-                                <TooltipContent side="top">
-                                  <p className="max-w-[200px] whitespace-pre-wrap">{order.user_note}</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            )}
-                          </TableCell>
-                          <TableCell>{order.copies}x</TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {`${order.pages ?? 1} x ${order.copies} = ${(order.pages ?? 1) * order.copies}`}
-                            {order.actual_pages && order.actual_pages !== order.pages && (
-                              <span className="text-destructive ml-1 font-medium">
-                                (Asli: {order.actual_pages}) ⚠️
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {formatDistanceToNow(new Date(order.created_at), { addSuffix: true, locale: idLocale })}
-                          </TableCell>
-                          <TableCell><StatusBadge status={order.status} /></TableCell>
-                          <TableCell>
-                            <div className="flex gap-1">
-                              {order.file_url && (
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="rounded-lg border-primary/20 bg-primary/5 text-primary hover:bg-primary/10"
-                                        onClick={() => openAuditModal(order)}
-                                      >
-                                        <Eye className="h-4 w-4" />
-                                      </Button>
-                                    </motion.div>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="top">Visual Audit Print</TooltipContent>
-                                </Tooltip>
-                              )}
-
-                              {order.status === "pending" && (
-                                <>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                        <Button
-                                          size="sm"
-                                          className="rounded-lg"
-                                          onClick={() => handleStatusUpdate(order.id, order.status)}
-                                        >
-                                          Cetak
-                                        </Button>
-                                      </motion.div>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="top">Mulai cetak (tandai sebagai sedang dicetak)</TooltipContent>
-                                  </Tooltip>
-
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                        <Button
-                                          size="sm"
-                                          variant="outline"
-                                          className="rounded-lg hover:!bg-destructive/90 hover:!text-destructive-foreground focus-visible:!ring-destructive"
-                                          onClick={() => requestCancelOrder(order.id)}
-                                        >
-                                          <XCircle className="h-4 w-4" />
-                                        </Button>
-                                      </motion.div>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="top">Batalkan pesanan</TooltipContent>
-                                  </Tooltip>
-                                </>
-                              )}
-
-                              {order.status === "printing" && (
-                                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                  <Button
-                                    size="sm"
-                                    className="rounded-lg"
-                                    onClick={() => handleStatusUpdate(order.id, order.status)}
-                                  >
-                                    Selesai
-                                  </Button>
-                                </motion.div>
-                              )}
-
-                              {order.status === "completed" && (
-                                <>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                        <Button
-                                          size="sm"
-                                          className="rounded-lg"
-                                          onClick={async () => {
-                                            const ok = await updateOrderStatus(order.id, 'delivered');
-                                            if (ok) {
-                                              toast({ title: 'Diambil', description: 'Pesanan ditandai sebagai diambil' });
-                                            } else {
-                                              toast({ title: 'Gagal', description: 'Tidak dapat menandai sebagai diambil', variant: 'destructive' });
-                                            }
-                                          }}
-                                        >
-                                          Diambil
-                                        </Button>
-                                      </motion.div>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="top">Tandai pesanan sudah diambil</TooltipContent>
-                                  </Tooltip>
-                                </>
-                              )}
-
-                              {/* Allow admins to delete uploaded file immediately for completed orders */}
-                              {(order.status === "completed" || order.status === "delivered" || order.status === "cancelled") && (order.file_url || order.file_path) && !order.file_deleted && (
-                                <>
-                                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Button
-                                          size="sm"
-                                          variant="outline"
-                                          className="rounded-lg hover:!bg-destructive/90 hover:!text-destructive-foreground focus-visible:!ring-destructive"
-                                          onClick={() => requestDeleteFile(order.id)}
-                                        >
-                                          <Trash className="h-4 w-4" />
-                                        </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent side="top">Hapus file</TooltipContent>
-                                    </Tooltip>
-
-                                  </motion.div>
-                                </>
-                              )}
-                            </div>
-                          </TableCell>
-                        </motion.tr>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </Card>
-          </FadeInUp>
+            <div className="pt-2 flex justify-end">
+              <Button size="sm" onClick={() => setActiveReceipt(null)} className="h-9 px-5">
+                Tutup
+              </Button>
+            </div>
+          </div>
         </div>
-      </div>
-    </PageTransition>
+      )}
+    </div>
   );
 }

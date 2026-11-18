@@ -1,3 +1,6 @@
+> **Audit & Implementation Status (2026-11-18)**:
+> Features marked as *(Roadmap)* below—including server-side Office document conversion (DOC/DOCX), automatic CUPS driver execution, raw realtime public tracking, and demo-mode bypass—are design aspirations not yet active in the core local-first release. The current verified baseline strictly enforces server-validated PDF printing, signed private storage, admin verification boundaries, and durable worker reconciliation. See [docs/LOCAL_PRINTING_RUNBOOK.md](docs/LOCAL_PRINTING_RUNBOOK.md).
+
 ## ARSC Printing — Whitepaper (Draft)
 
 Provided by: Agritech Research and Study Club (ARSC), Faculty of Agrotechnology (FAT), Brawijaya University (UB)
@@ -29,7 +32,7 @@ These limitations lead to poor user experience (extra visits, confusion), ineffi
 ARSC Printing is designed specifically to eliminate the two core pain points above by providing:
 
 - A centralized, web-accessible order queue so users can submit jobs remotely and receive clear status updates (pending → printing → completed). This removes the need to check staff availability in person.
-- Print-ready processing: uploaded documents are normalized server-side (e.g., convert office docs to print-ready PDF, enforce page size and duplex settings) so jobs are driver-agnostic and more likely to print successfully regardless of which workstation handles them.
+- Print-ready processing: uploaded documents are normalized server-side (e.g., convert office docs to print-ready PDF *(Roadmap)*, enforce page size and duplex settings) so jobs are driver-agnostic and more likely to print successfully regardless of which workstation handles them.
 - Admin tooling for predictable handling: a compact admin UI shows a prioritized queue, per-job metadata (copies, color mode, estimated time), and bulk actions (assign, mark printing, complete, export). This reduces interruptions and clarifies responsibility.
 - Public tracking and notifications: users receive a short order ID and can check status online or receive notifications when jobs are ready to pick up.
 - Operational safeguards: use signed or expiring URLs for downloads, storage permissions per-bucket, and clear demo-mode behavior for local testing without Supabase.
@@ -54,10 +57,10 @@ These gaps reveal a clear opportunity to professionalize the service through a w
 - Web-based order form that accepts PDF, DOC, DOCX with server-side checks and a 10 MB limit. Users select copies, color mode, and paper size and receive a short order ID.
 
 2. Print-Ready Processing
-- Server-side normalization (convert office formats to print-optimized PDF, enforce page size and duplex options) to reduce dependency on specific driver setups.
+- Server-side normalization (convert office formats to print-optimized PDF *(Roadmap)*, enforce page size and duplex options) to reduce dependency on specific driver setups.
 
 3. Real-time Notifications & Tracking
-- Email/onscreen notifications for status changes. Public tracking by order ID for transparency.
+- Email/onscreen notifications for status changes. Public tracking by order ID for transparency *(Roadmap - currently capability/admin gated)*.
 
 4. Admin Workflow & Queue Management
 - Compact admin UI with a prioritized queue, metadata, estimated times, and bulk actions (assign, mark printing, complete, export CSV).

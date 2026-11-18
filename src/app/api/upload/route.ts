@@ -1,114 +1,37 @@
-﻿import { createClient } from '@/lib/supabase/server'
-import { NextRequest, NextResponse } from 'next/server'
-import { PDFDocument } from 'pdf-lib'
-
-// Check if Supabase is properly configured
-function isSupabaseConfigured() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  return url && key && !url.includes('placeholder') && !key.includes('placeholder')
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    const formData = await request.formData()
-    const file = formData.get('file') as File
-
-    if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
-    }
-
-    // Validate file type (support common print formats and images)
-    const allowedTypes = [
-      'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // docx
-      'application/vnd.ms-powerpoint',
-      'application/vnd.openxmlformats-officedocument.presentationml.presentation', // pptx
-      'application/vnd.oasis.opendocument.text', // odt
-      'application/rtf',
-      'text/plain',
-      'image/png',
-      'image/jpeg',
-      'image/webp',
-      'image/tiff',
-      'image/svg+xml',
-    ];
-
-    if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json(
-        { error: 'Invalid file type. Only common document and image formats are allowed (PDF/DOC/DOCX/PPTX/ODT/RTF/TXT/PNG/JPEG/WEBP/TIFF/SVG).' },
-        { status: 400 }
-      )
-    }
-
-    // Validate file size (10MB max)
-    const maxSize = 10 * 1024 * 1024 // 10MB
-    if (file.size > maxSize) {
-      return NextResponse.json(
-        { error: 'File too large. Maximum size is 10MB.' },
-        { status: 400 }
-      )
-    }
-
-    let actualPages: number | null = null;
-
-    try {
-      // If PDF, extract actual pages and validate corruption
-      if (file.type === 'application/pdf') {
-        const fileBuffer = await file.arrayBuffer();
-        const pdfDoc = await PDFDocument.load(fileBuffer, { ignoreEncryption: true });
-        actualPages = pdfDoc.getPageCount();
-      }
-    } catch (err) {
-      console.error('PDF parsing error:', err);
-      return NextResponse.json({ error: 'File PDF corrupt atau diproteksi password.' }, { status: 400 });
-    }
-
-    // Return demo response if Supabase not configured
-    if (!isSupabaseConfigured()) {
-      return NextResponse.json({
-        fileName: file.name,
-        filePath: `demo/${file.name}`,
-        fileUrl: null,
-        actualPages,
-        demoMode: true,
-      })
-    }
-
-    const supabase = await createClient()
-
-    // Generate unique filename
-    const timestamp = Date.now()
-    const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
-    const fileName = `${timestamp}_${sanitizedName}`
-
-    // Upload to Supabase Storage
-    const { data, error } = await supabase.storage
-      .from('documents')
-      .upload(fileName, file, {
-        cacheControl: '3600',
-        upsert: false,
-      })
-
-    if (error) {
-      console.error('Upload error:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    // Get public URL
-    const { data: urlData } = supabase.storage
-      .from('documents')
-      .getPublicUrl(fileName)
-
-    return NextResponse.json({
-      fileName: file.name,
-      filePath: data.path,
-      fileUrl: urlData.publicUrl,
-      actualPages,
-    })
-  } catch (error) {
-    console.error('Upload error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+import {randomUUID} from 'node:crypto'
+import {assertOrigin,customerAuth,JobError,json,jobFailure} from '@/lib/api-security'
+import {readUpload,validateFile,computePrice} from '@/lib/storage'
+export const runtime='nodejs'
+export async function POST(request:Request){
+ try{
+  assertOrigin(request)
+  // Reject missing CSRF before parsing expensive multipart content.
+  if(!/^[a-f0-9]{64}$/.test(request.headers.get('x-csrf-token')??''))throw new JobError('FORBIDDEN',403)
+  const raw=await readUpload(request)
+  const {db,order}=await customerAuth(request,raw.id,true)
+  if(order.status!=='pending_verification')throw new JobError('INVALID_TRANSITION')
+  const upload={...raw,...await validateFile(raw.kind,raw.bytes,raw.file.type)}
+  const old=upload.kind==='document'?order.file_path:order.payment_proof_path
+  const suffix=upload.sha256+(upload.mime==='application/pdf'?'.pdf':upload.mime==='image/png'?'.png':'.jpg')
+  if(old){
+   if(!old.endsWith('_'+suffix))throw new JobError('IDEMPOTENCY_CONFLICT')
+   return json({uploaded:true,actualPages:order.actual_pages,amountDue:order.amount_due})
   }
+  const path='orders/'+order.id+'/'+upload.kind+'/'+randomUUID()+'_'+suffix
+  const amount=upload.kind==='document'?computePrice(upload.pages!,order.copies,order.color_mode):order.amount_due
+  const {error:storageError}=await db.storage.from('documents').upload(path,upload.bytes,{contentType:upload.mime,cacheControl:'0',upsert:false})
+  if(storageError)throw new JobError('LOCAL_BACKEND_UNAVAILABLE',503)
+  const patch=upload.kind==='document'?{
+   file_path:path,file_name:Array.from(upload.file.name).filter(c=>c.charCodeAt(0)>=32&&c.charCodeAt(0)!==127).join('').slice(0,128),file_sha256:upload.sha256,file_size:upload.size,file_mime:upload.mime,
+   actual_pages:upload.pages,pages:upload.pages,amount_due:amount,estimated_time:upload.pages!*order.copies*(order.color_mode==='color'?3:2),
+   file_deleted:false,file_url:null,payment_status:'pending',verified_by:null,verified_at:null,
+  }:{payment_proof_path:path,payment_proof_deleted:false,payment_proof_url:null,payment_status:'pending',verified_by:null,verified_at:null}
+  const {data,error}=await db.from('orders').update({...patch,version:order.version+1}).eq('id',order.id).eq('version',order.version).eq('status','pending_verification').select('id').maybeSingle()
+  if(error||!data){
+   const cleanup=await db.storage.from('documents').remove([path])
+   if(cleanup.error)throw new JobError('STORAGE_DELETE_PENDING',503)
+   throw new JobError('STALE_VERSION')
+  }
+  return json({uploaded:true,actualPages:upload.pages,amountDue:amount})
+ }catch(error){return jobFailure(error)}
 }

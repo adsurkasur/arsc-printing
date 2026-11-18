@@ -1,270 +1,48 @@
-﻿import { createClient } from '@/lib/supabase/server'
-import { NextRequest, NextResponse } from 'next/server'
-import { CreateOrderInput } from '@/types/order'
-
-// Check if Supabase is properly configured
-function isSupabaseConfigured() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  return url && key && !url.includes('placeholder') && !key.includes('placeholder')
-}
-
-// GET /api/orders - Get all orders or filter by ID
-export async function GET(request: NextRequest) {
-  // Return demo mode flag if Supabase not configured
-  if (!isSupabaseConfigured()) {
-    return NextResponse.json({ demoMode: true, orders: [] })
+import {z} from 'zod'
+import {randomUUID} from 'node:crypto'
+import {adminAuth,assertOrigin,capabilityToken,capabilityCookie,csrfFor,customerAuth,customerOrder,parseOrder,readJson,localDb,signingSecret,sha256,JobError,json,jobFailure} from '@/lib/api-security'
+export const runtime='nodejs'
+const adminColumns='id,pickup_code,customer_name,contact,file_name,status,version,revision,payment_status,amount_due,legacy_review_required,created_at,estimated_time,copies,pages,actual_pages,paper_size,color_mode,layout,scale_mode,orientation,user_note,file_deleted,payment_proof_deleted,print_jobs(id,order_id,revision,status,version,target_worker_id,printer_key,lease_generation,lease_until,submission_started_at,backend_job_id,last_error_code)'
+export async function GET(request:Request){
+ try{
+  const params=new URL(request.url).searchParams
+  if([...params.keys()].some(k=>k!=='id'))throw new JobError('INVALID_INPUT',400)
+  const id=params.get('id')
+  if(id){
+   const {order,token:customerAuthToken}=await customerAuth(request,id)
+   return json({...customerOrder(order),csrfToken:csrfFor(customerAuthToken)})
   }
-
-  try {
-    const supabase = await createClient()
-    const { searchParams } = new URL(request.url)
-    const id = searchParams.get('id')
-    const trackingId = searchParams.get('trackingId')
-
-    if (id) {
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('id', id)
-        .single()
-
-      if (error) {
-        return NextResponse.json({ error: 'Order not found' }, { status: 404 })
-      }
-      return NextResponse.json(data)
-    }
-
-    if (trackingId) {
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('id', trackingId)
-        .single()
-
-      if (error) {
-        return NextResponse.json({ error: 'Order not found' }, { status: 404 })
-      }
-      // Return limited info for public tracking
-      return NextResponse.json({
-        id: data.id,
-        customer_name: data.customer_name,
-        file_name: data.file_name,
-        status: data.status,
-        created_at: data.created_at,
-        estimated_time: data.estimated_time,
-      })
-    }
-
-    const { data, error } = await supabase
-      .from('orders')
-      .select('*')
-      .order('created_at', { ascending: false })
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    return NextResponse.json(data)
-  } catch (error) {
-    return NextResponse.json({ error: 'Internal server error', demoMode: true }, { status: 500 })
-  }
+  const {db}=await adminAuth(request)
+  const {data,error}=await db.from('orders').select(adminColumns).order('created_at',{ascending:false}).limit(200)
+  if(error)throw new JobError('LOCAL_BACKEND_UNAVAILABLE',503)
+  return json(data.map(o=>({...o,pickupCode:o.pickup_code})))
+ }catch(error){return jobFailure(error)}
 }
-
-// POST /api/orders - Create a new order
-export async function POST(request: NextRequest) {
-  try {
-    const body: CreateOrderInput = await request.json()
-
-    // Calculate base estimated time
-    let estimated_time = body.copies * (body.pages ?? 1) * (body.color_mode === 'color' ? 3 : 2)
-
-    if (body.color_mode === 'color' || (body.layout && body.layout !== '1-up')) {
-      estimated_time += 1
-    }
-
-    // Return demo order if Supabase not configured
-    if (!isSupabaseConfigured()) {
-      const demoOrder = {
-        id: crypto.randomUUID(),
-        customer_name: body.customer_name,
-        contact: body.contact,
-        file_name: body.file_name,
-        file_url: body.file_url || null,
-        file_path: body.file_path || null,
-        payment_proof_url: body.payment_proof_url || null,
-        payment_proof_path: body.payment_proof_path || null,
-        // Payment proof expiry is set only when the order is marked as 'delivered' (24 hours). Don't start timer on upload.
-        payment_proof_expires_at: null,
-        color_mode: body.color_mode,
-        copies: body.copies,
-        pages: body.pages || 1,
-        paper_size: body.paper_size,
-        layout: body.layout || '1-up',
-        scale_mode: body.scale_mode || 'fit',
-        orientation: body.orientation || 'portrait',
-        user_note: body.user_note || null,
-        status: 'pending' as const,
-        estimated_time,
-        notes: body.notes || null,
-        created_at: new Date().toISOString(),
-        demoMode: true,
-      }
-      return NextResponse.json(demoOrder, { status: 201 })
-    }
-
-    const supabase = await createClient()
-
-    // Calculate dynamic SLA (Global Workload)
-    const { data: pendingOrders, error: queueError } = await supabase
-      .from('orders')
-      .select('copies, pages, color_mode')
-      .in('status', ['pending', 'printing'])
-
-    let globalWaitTime = 0
-    if (!queueError && pendingOrders) {
-      globalWaitTime = pendingOrders.reduce((sum, order) => {
-        return sum + (order.copies * (order.pages ?? 1) * (order.color_mode === 'color' ? 3 : 2))
-      }, 0)
-    }
-
-    estimated_time += globalWaitTime;
-
-    // Build insert payload dynamically
-    const insertPayload: Record<string, unknown> = {
-      customer_name: body.customer_name,
-      contact: body.contact,
-      file_name: body.file_name,
-      file_url: body.file_url || null,
-      file_path: body.file_path || null,
-      color_mode: body.color_mode,
-      copies: body.copies,
-      pages: body.pages ?? 1,
-      actual_pages: body.actual_pages ?? null,
-      paper_size: body.paper_size,
-      layout: body.layout || '1-up',
-      scale_mode: body.scale_mode || 'fit',
-      orientation: body.orientation || 'portrait',
-      user_note: body.user_note || null,
-      status: 'pending',
-      estimated_time,
-      notes: body.notes || null,
-    }
-
-    // If payment proof present, store metadata.
-    if (body.payment_proof_url) {
-      insertPayload.payment_proof_url = body.payment_proof_url
-      insertPayload.payment_proof_path = body.payment_proof_path || null
-      insertPayload.payment_proof_deleted = false
-    }
-
-    const { data, error } = await supabase
-      .from('orders')
-      .insert(insertPayload)
-      .select()
-      .single()
-
-    if (error) {
-      console.error('Insert error:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    return NextResponse.json(data, { status: 201 })
-  } catch (error) {
-    console.error('POST error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+export async function POST(request:Request){
+ try{
+  assertOrigin(request)
+  const key=request.headers.get('idempotency-key')
+  if(!z.string().uuid().safeParse(key).success)throw new JobError('INVALID_INPUT',400)
+  const input=parseOrder(await readJson(request))
+  const requestHash=sha256(JSON.stringify(input));const token=capabilityToken(key!,signingSecret())
+  const db=localDb()
+  const {data:existing,error:lookupError}=await db.from('orders').select('id,status,request_hash,pickup_code').eq('creation_key',key).maybeSingle()
+  if(lookupError)throw new JobError('LOCAL_BACKEND_UNAVAILABLE',503)
+  let order=existing
+  if(!order){
+   const {data,error}=await db.from('orders').insert({...input,id:randomUUID(),file_name:'',status:'pending_verification',
+    payment_status:'pending',file_deleted:false,payment_proof_deleted:false,capability_hash:sha256(token),
+    creation_key:key,request_hash:requestHash,amount_due:0,estimated_time:0}).select('id,status,request_hash,pickup_code').single()
+   if(error?.message==='PICKUP_CAPACITY')throw new JobError('PICKUP_CAPACITY',503)
+   if(error&&error.code!=='23505')throw new JobError('LOCAL_BACKEND_UNAVAILABLE',503)
+   order=data
+   if(!order){const retry=await db.from('orders').select('id,status,request_hash,pickup_code').eq('creation_key',key).maybeSingle();order=retry.data}
   }
+  if(!order)throw new JobError('LOCAL_BACKEND_UNAVAILABLE',503)
+  if(order.request_hash!==requestHash)throw new JobError('IDEMPOTENCY_CONFLICT')
+  const response=json({id:order.id,status:order.status,csrfToken:csrfFor(token),pickupCode:order.pickup_code},existing?200:201)
+  response.headers.set('Set-Cookie',capabilityCookie(order.id,token,new URL(request.url).protocol==='https:'))
+  return response
+ }catch(error){return jobFailure(error)}
 }
-
-// PATCH /api/orders - Update order status
-export async function PATCH(request: NextRequest) {
-  try {
-    const body = await request.json()
-    const { id, status } = body
-
-    if (!id || !status) {
-      return NextResponse.json({ error: 'Missing id or status' }, { status: 400 })
-    }
-
-    // Return demo response if Supabase not configured
-    if (!isSupabaseConfigured()) {
-      return NextResponse.json({
-        id,
-        status,
-        demoMode: true,
-        updated_at: new Date().toISOString()
-      })
-    }
-
-    const updatePayload: { status: string } = { status };
-
-    // If Authorization header present, forward update to PostgREST using the provided token (so RLS is applied based on the JWT)
-    const authHeader = request.headers.get('authorization');
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.split(' ')[1];
-      try {
-        const restUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/orders?id=eq.${encodeURIComponent(id)}`;
-        const restRes = await fetch(restUrl, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-            'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
-            'Prefer': 'return=representation',
-          },
-          body: JSON.stringify(updatePayload),
-        });
-
-        const body = await restRes.json().catch(() => null);
-        if (!restRes.ok) {
-          console.error('PostgREST returned non-OK', restRes.status, body);
-          return NextResponse.json({ error: body?.message || body || 'Unauthorized or invalid token' }, { status: restRes.status });
-        }
-
-        // If PostgREST returned empty array, log token's user info to help debug RLS
-        if (Array.isArray(body) && body.length === 0) {
-          try {
-            const authUserRes = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/user`, {
-              headers: { Authorization: `Bearer ${token}` },
-            });
-            const authUser = await authUserRes.json().catch(() => null);
-            console.error('PostgREST returned empty array and token did not update any rows. Token user:', authUser);
-          } catch (e) {
-            console.error('Failed to fetch auth user for diagnostic:', e);
-          }
-          // Return empty response same as before
-          return NextResponse.json([]);
-        }
-
-        // PostgREST returns an array when using return=representation. Return first item for compatibility
-        return NextResponse.json(Array.isArray(body) ? body[0] ?? body : body);
-      } catch (error) {
-        console.error('PostgREST update error:', error);
-        return NextResponse.json({ error: 'Failed to update order via PostgREST' }, { status: 500 });
-      }
-    }
-
-    // Fallback: use server-side client (will rely on cookies/session)
-    try {
-      const supabase = await createClient()
-
-      const { data, error } = await supabase
-        .from('orders')
-        .update(updatePayload)
-        .eq('id', id)
-        .select()
-        .single()
-
-      if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 })
-      }
-
-      return NextResponse.json(data)
-    } catch (error) {
-      console.error('Server update error:', error)
-      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-    }
-  } catch (error) {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
+export async function PATCH(){return json({error:{code:'METHOD_NOT_ALLOWED',message:'Use authorized admin actions'}},405)}

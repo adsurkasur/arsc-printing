@@ -1,28 +1,9 @@
-﻿import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-
-export async function createClient() {
-  const cookieStore = await cookies()
-
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
-          } catch {
-            // The set method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing user sessions.
-          }
-        },
-      },
-    }
-  )
+import {createServerClient} from '@supabase/ssr'
+import {cookies} from 'next/headers'
+import {localUrl,JobError} from './service'
+export async function createClient(){
+ const url=localUrl();const key=process.env.ARSC_LOCAL_SUPABASE_ANON_KEY
+ if(!key)throw new JobError('LOCAL_BACKEND_UNAVAILABLE',503)
+ const store=await cookies()
+ return createServerClient(url,key,{cookies:{getAll:()=>store.getAll(),setAll(items){try{for(const {name,value,options} of items)store.set(name,value,options)}catch{/* Server component cookie writes are unavailable. */}}}})
 }

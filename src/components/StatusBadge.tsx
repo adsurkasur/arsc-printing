@@ -1,54 +1,78 @@
-"use client";
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
-import React from "react";
-import { Badge } from "@/components/ui/badge";
-import { Clock, Printer, CheckCircle, XCircle, Home } from "lucide-react";
-
-type Props = {
-  status?: string | null;
-  className?: string;
+const badgeConfig: Record<string, { label: string; className: string }> = {
+  pending_verification: {
+    label: 'Menunggu Verifikasi Bayar',
+    className: 'bg-amber-50 text-amber-900 border-amber-300 dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-800'
+  },
+  approved: {
+    label: 'Disetujui Admin (Siap Antre)',
+    className: 'bg-blue-50 text-blue-900 border-blue-300 dark:bg-blue-950/40 dark:text-blue-200 dark:border-blue-800'
+  },
+  ready: {
+    label: 'Siap Diambil Worker',
+    className: 'bg-emerald-50 text-emerald-900 border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-800'
+  },
+  claimed: {
+    label: 'Diproses Worker',
+    className: 'bg-sky-50 text-sky-900 border-sky-300 dark:bg-sky-950/40 dark:text-sky-200 dark:border-sky-800'
+  },
+  submitted: {
+    label: 'Terkirim ke Printer',
+    className: 'bg-indigo-50 text-indigo-900 border-indigo-300 dark:bg-indigo-950/40 dark:text-indigo-200 dark:border-indigo-800'
+  },
+  backend_completed: {
+    label: 'Selesai di Printer (Ambil di Kasir)',
+    className: 'bg-emerald-100 text-emerald-950 border-emerald-400 dark:bg-emerald-900/50 dark:text-emerald-100 dark:border-emerald-700 font-semibold'
+  },
+  delivered: {
+    label: 'Telah Diserahkan ke Pelanggan',
+    className: 'bg-zinc-100 text-zinc-900 border-zinc-300 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700'
+  },
+  needs_reconciliation: {
+    label: 'Perlu Rekonsiliasi Operator',
+    className: 'bg-amber-100 text-amber-950 border-amber-400 dark:bg-amber-900/50 dark:text-amber-100 dark:border-amber-700 font-medium'
+  },
+  failed: {
+    label: 'Gagal Diproses',
+    className: 'bg-red-50 text-red-900 border-red-300 dark:bg-red-950/40 dark:text-red-200 dark:border-red-800'
+  },
+  cancelled: {
+    label: 'Pesanan Dibatalkan',
+    className: 'bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-900 dark:text-zinc-400 dark:border-zinc-800'
+  },
+  pending: {
+    label: 'Data Lama (Perlu Review)',
+    className: 'bg-zinc-100 text-zinc-800 border-zinc-300'
+  },
+  printing: {
+    label: 'Status Lama (Belum Terbukti)',
+    className: 'bg-zinc-100 text-zinc-800 border-zinc-300'
+  },
+  completed: {
+    label: 'Status Lama (Belum Terbukti)',
+    className: 'bg-zinc-100 text-zinc-800 border-zinc-300'
+  }
 };
 
-export default function StatusBadge({ status, className }: Props) {
-  const s = (status || "").toLowerCase();
+export default function StatusBadge({ status, className }: { status?: string | null; className?: string }) {
+  const config = badgeConfig[status ?? ''] ?? {
+    label: 'Status Tidak Diketahui',
+    className: 'bg-zinc-100 text-zinc-700 border-zinc-300'
+  };
 
-  switch (s) {
-    case "pending":
-      return (
-        <Badge className={`bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20 ${className || ""}`}>
-          <Clock className="mr-1 h-3 w-3" />
-          Pending
-        </Badge>
-      );
-    case "printing":
-      return (
-        <Badge className={`bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 ${className || ""}`}>
-          <Printer className="mr-1 h-3 w-3" />
-          Printing
-        </Badge>
-      );
-    case "completed":
-      return (
-        <Badge className={`bg-green-500/10 text-green-600 hover:bg-green-500/20 ${className || ""}`}>
-          <CheckCircle className="mr-1 h-3 w-3" />
-          Selesai
-        </Badge>
-      );
-    case "delivered":
-      return (
-        <Badge className={`bg-indigo-500/10 text-indigo-600 hover:bg-indigo-500/20 ${className || ""}`}>
-          <Home className="mr-1 h-3 w-3" />
-          Diambil
-        </Badge>
-      );
-    case "cancelled":
-      return (
-        <Badge className={`bg-red-500/10 text-red-600 hover:bg-red-500/20 ${className || ""}`}>
-          <XCircle className="mr-1 h-3 w-3" />
-          Dibatalkan
-        </Badge>
-      );
-    default:
-      return <Badge variant="outline">{status}</Badge>;
-  }
+  return (
+    <Badge
+      variant="outline"
+      className={cn(
+        "font-normal text-xs px-2.5 py-0.5 rounded-full border transition-colors inline-flex items-center gap-1.5",
+        config.className,
+        className
+      )}
+    >
+      <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
+      {config.label}
+    </Badge>
+  );
 }

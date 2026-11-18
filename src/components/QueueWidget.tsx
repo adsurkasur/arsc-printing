@@ -35,7 +35,7 @@ export function QueueWidget() {
               <h3 className="text-base sm:text-lg font-semibold text-card-foreground">
                 Status Antrean
               </h3>
-              <p className="text-xs text-muted-foreground">Update real-time</p>
+              <p className="text-xs text-muted-foreground">Ringkasan berkala</p>
             </div>
           </div>
 
@@ -85,7 +85,7 @@ export function QueueWidget() {
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-success"></span>
               </span>
               <span className="text-xs font-medium text-muted-foreground">
-                Data diperbarui secara real-time
+                Ringkasan diperbarui setiap 20 detik
               </span>
             </div>
           </div>

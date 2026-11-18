@@ -7,7 +7,10 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "typecheck": "bun x --no-install tsc --noEmit",
+    "test": "bun test tests/ && node --test worker/worker.test.mjs",
+    "worker:fake": "node worker/main.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

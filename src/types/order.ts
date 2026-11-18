@@ -1,7 +1,14 @@
-export type OrderStatus = "pending" | "printing" | "completed" | "delivered" | "cancelled";
+import type { PrintJob } from './print-job'
+export type OrderStatus = 'pending_verification' | 'approved' | 'delivered' | 'cancelled';
 
 export interface Order {
   id: string;
+  version: number;
+  revision: number;
+  payment_status: 'pending' | 'verified' | 'rejected';
+  amount_due: number;
+  legacy_review_required: boolean;
+  print_jobs?: PrintJob[];
   customer_name: string;
   contact: string;
   file_name: string;

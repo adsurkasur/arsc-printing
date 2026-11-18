@@ -43,3 +43,13 @@ next-env.d.ts
 # OS
 .DS_Store
 Thumbs.db
+
+# Worker state & temporary files
+.worker-state/
+.worker-tmp/
+worker-receipts/
+.test-worker-env/
+.audit/
+
+# Isolated t530 simulation secrets
+.env.arsc-sim

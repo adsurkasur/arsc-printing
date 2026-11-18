@@ -1,367 +1,121 @@
 ﻿'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { QueueWidget } from '@/components/QueueWidget'
-import { CheckCircle, Clock, Shield, Zap, ArrowRight, Sparkles, ChevronUp, ChevronDown } from 'lucide-react'
-import { motion, FadeInUp, StaggerContainer, StaggerItem, PageTransition } from '@/components/animations'
-import { AnimatePresence } from 'framer-motion'
-
-const cyclingTexts = [
-  { text: 'dengan Praktis.', duration: 2000 },
-  { text: 'dari Jauh.', duration: 2000 },
-  { text: 'oleh ARSC.', duration: 6000 },
-]
+import { FileText, ShieldCheck, Clock, CheckCircle2, ArrowRight, Printer, AlertCircle } from 'lucide-react'
 
 export default function Home() {
-  const router = useRouter()
-  const [textIndex, setTextIndex] = useState(0)
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setTextIndex((prev) => (prev + 1) % cyclingTexts.length)
-    }, cyclingTexts[textIndex].duration)
-    return () => clearTimeout(timer)
-  }, [textIndex])
-
-  const nextSectionRef = useRef<HTMLElement | null>(null)
-
-  const scrollToNext = () => {
-    nextSectionRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
-
-  const scrollToTop = () => {
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    }
-  }
-
-  const features = [
-    {
-      icon: Zap,
-      title: 'Proses Cepat',
-      description: 'Upload dan pesan dalam hitungan detik',
-      color: 'primary'
-    },
-    {
-      icon: Clock,
-      title: 'Real-Time Status',
-      description: 'Pantau antrean secara langsung',
-      color: 'secondary'
-    },
-    {
-      icon: Shield,
-      title: 'Aman & Terpercaya',
-      description: 'Layanan oleh ARSC',
-      color: 'primary'
-    },
-    {
-      icon: CheckCircle,
-      title: 'Kualitas Terjamin',
-      description: 'Hasil cetak berkualitas',
-      color: 'secondary'
-    }
-  ]
-
   return (
-    <PageTransition>
-      <div className="min-h-screen overflow-hidden">
-        {/* Hero Section */}
-        <section className="relative min-h-[90vh] flex items-center overflow-hidden">
-          {/* Animated Background */}
-          <div className="absolute inset-0 animated-gradient" />
+    <div className="flex flex-col min-h-[calc(100vh-4rem)]">
+      {/* Editorial Hero Section */}
+      <section className="border-b border-border bg-card/40 py-16 sm:py-24">
+        <div className="container mx-auto px-4 max-w-4xl text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-background text-xs text-muted-foreground mb-6 font-medium">
+            <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
+            Layanan Resmi ARSC FTP Universitas Brawijaya
+          </div>
           
-          {/* Decorative Elements */}
-          <div className="absolute inset-0 overflow-hidden">
-            <motion.div
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 0.1, scale: 1 }}
-              transition={{ duration: 1, delay: 0.5 }}
-              className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-white/20 blur-3xl"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 0.1, scale: 1 }}
-              transition={{ duration: 1, delay: 0.7 }}
-              className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-white/20 blur-3xl"
-            />
-            <motion.div
-              initial={{ y: 100, opacity: 0 }}
-              animate={{ y: 0, opacity: 0.05 }}
-              transition={{ duration: 1.5, delay: 0.3 }}
-              className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzRoLTJ2LTRoMnY0em0wLTZoLTJ2LTRoMnY0em0tNCA2aC0ydi00aDJ2NHptMC02aC0ydi00aDJ2NHoiLz48L2c+PC9nPjwvc3ZnPg==')]"
-            />
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground leading-[1.15] mb-6">
+            Cetak dokumen kuliah,<br className="hidden sm:inline" />
+            tertib dan terprediksi.
+          </h1>
+
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-8">
+            Kirim berkas PDF dari ponsel atau laptop, dapatkan estimasi tarif transparan,
+            dan ambil cetakan fisik langsung di sekretariat ARSC setelah disetujui operator.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+            <Button asChild size="lg" className="w-full sm:w-auto h-12 px-7 text-base bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-xs">
+              <Link href="/order">
+                <FileText className="mr-2 h-5 w-5" />
+                Mulai Pesan Cetak
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="w-full sm:w-auto h-12 px-6 text-base border-border hover:bg-secondary">
+              <Link href="/track">
+                Lacak Status Pesanan
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
           </div>
 
-          <div className="container relative mx-auto px-4 py-20">
-            <div className="mx-auto max-w-4xl text-center">
-              {/* Badge */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-8"
-              >
-                <Sparkles className="h-4 w-4 text-yellow-300" />
-                <span className="text-sm font-medium text-white">Layanan Cetak Terbaru!</span>
-              </motion.div>
+          <div className="mt-8 pt-6 border-t border-border/60 flex flex-wrap justify-center items-center gap-6 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Tarif Hitam Putih Rp500/halaman
+            </span>
+            <span className="flex items-center gap-1.5">
+              <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Tarif Warna Rp750/halaman
+            </span>
+            <span className="flex items-center gap-1.5">
+              <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Ukuran A4 & F4
+            </span>
+          </div>
+        </div>
+      </section>
 
-              {/* Main Heading */}
-              <motion.h1
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.2 }}
-                className="mb-6 text-3xl font-extrabold leading-tight text-white sm:text-4xl md:text-5xl lg:text-7xl tracking-tight"
-              >
-                Cetak Dokumen
-                <br />
-                <span className="relative inline-block min-h-[1.2em] pb-2">
-                  <AnimatePresence mode="wait">
-                    <motion.span
-                      key={textIndex}
-                      initial={{ y: 40, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      exit={{ y: -40, opacity: 0 }}
-                      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                      className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-yellow-400"
-                    >
-                      {cyclingTexts[textIndex].text}
-                    </motion.span>
-                  </AnimatePresence>
-                </span>
-              </motion.h1>
-
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-                className="mb-8 sm:mb-10 text-base sm:text-lg text-white/80 md:text-xl max-w-2xl mx-auto leading-relaxed px-2"
-              >
-                Layanan cetak oleh ARSC. Upload dokumen dari mana saja,
-                pantau status real-time, dan ambil hasil cetak kapan siap.
-              </motion.p>
-
-              {/* CTA Buttons */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.6 }}
-                className="flex flex-col sm:flex-row gap-4 justify-center"
-              >
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <Button
-                    size="lg"
-                    onClick={() => router.push('/order')}
-                    className="h-14 px-8 text-lg font-semibold bg-white text-primary hover:bg-white/90 shadow-2xl hover:shadow-white/25 transition-all duration-300 group"
-                  >
-                    Pesan Sekarang
-                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </motion.div>
-                {/*
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    onClick={() => router.push('/track')}
-                    className="h-14 px-8 text-lg font-semibold bg-transparent text-white border-white/30 hover:bg-white/10 hover:border-white/50 transition-all duration-300"
-                  >
-                    Lacak Pesanan
-                  </Button>
-                </motion.div>
-                */}
-              </motion.div>
-
-              {/* Highlights */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.8 }}
-                className="mt-10 sm:mt-16 grid grid-cols-3 gap-4 sm:gap-8 max-w-lg mx-auto px-2"
-              >
-                {[
-                  { value: '24/7', label: 'Akses Online' },
-                  { value: 'A4', label: 'Ukuran Kertas' },
-                  { value: 'ALL', label: 'Format Support' }
-                ].map((stat, i) => (
-                  <div key={i} className="text-center">
-                    <div className="text-xl sm:text-2xl md:text-3xl font-bold text-white">{stat.value}</div>
-                    <div className="text-xs sm:text-sm text-white/60">{stat.label}</div>
-                  </div>
-                ))}
-              </motion.div>
+      {/* Alur & Status Section */}
+      <section className="py-12 sm:py-16 container mx-auto px-4 max-w-5xl">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          {/* Card 1 */}
+          <div className="rounded-lg border border-border bg-card p-6 shadow-card">
+            <div className="w-10 h-10 rounded-md bg-secondary text-primary flex items-center justify-center font-bold mb-4">
+              1
             </div>
+            <h2 className="text-lg font-semibold text-foreground mb-2">Unggah PDF & Hitung Tarif</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Pilih opsi salinan, warna, dan ukuran kertas. Jumlah halaman dan estimasi tagihan dihitung transparan sebelum transfer.
+            </p>
           </div>
 
-          {/* Scroll Indicator */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.5 }}
-            className="absolute bottom-8 left-1/2 -translate-x-1/2"
-          >
-            <button
-              onClick={scrollToNext}
-              aria-label="Scroll down"
-              className="flex flex-col items-center gap-1 bg-transparent focus:outline-none focus:ring-2 focus:ring-white/60 p-2 rounded-full"
-            >
-              <motion.div
-                animate={{ y: [0, -10, 0], opacity: [0.6, 1, 0.6] }}
-                transition={{ duration: 1.2, repeat: Infinity, delay: 0 }}
-                className="text-white/80"
-              >
-                <ChevronDown className="h-4 w-4" />
-              </motion.div>
-
-              <motion.div
-                animate={{ y: [0, -10, 0], opacity: [0.6, 1, 0.6] }}
-                transition={{ duration: 1.2, repeat: Infinity, delay: 0.18 }}
-                className="text-white/80"
-              >
-                <ChevronDown className="h-4 w-4" />
-              </motion.div>
-
-              <motion.div
-                animate={{ y: [0, -10, 0], opacity: [0.6, 1, 0.6] }}
-                transition={{ duration: 1.2, repeat: Infinity, delay: 0.36 }}
-                className="text-white/80"
-              >
-                <ChevronDown className="h-4 w-4" />
-              </motion.div>
-
-              <span className="sr-only">Scroll down</span>
-            </button>
-          </motion.div>
-        </section>
-
-        {/* Queue Status Section */}
-        <section ref={nextSectionRef} className="pt-24 md:pt-28 pb-12 md:pb-14 relative">
-          <div className="absolute inset-0 bg-gradient-to-b from-muted/30 to-transparent" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_hsl(var(--primary)/0.05)_0%,_transparent_70%)]" />
-          <div className="container relative mx-auto px-4">
-            <FadeInUp className="mx-auto max-w-3xl space-y-4">
-              <div className="mx-auto max-w-xl">
-                <QueueWidget />
-              </div>
-            </FadeInUp>
+          {/* Card 2 */}
+          <div className="rounded-lg border border-border bg-card p-6 shadow-card">
+            <div className="w-10 h-10 rounded-md bg-secondary text-primary flex items-center justify-center font-bold mb-4">
+              2
+            </div>
+            <h2 className="text-lg font-semibold text-foreground mb-2">Verifikasi Admin Mandiri</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Upload bukti transfer QRIS. Admin memeriksa keabsahan berkas dan bukti sebelum mencetak agar tidak terjadi kesalahan.
+            </p>
           </div>
-        </section>
 
-        {/* Features Section */}
-        <section className="py-12 md:py-14 relative">
-          <div className="container mx-auto px-4">
-            <FadeInUp className="text-center mb-10 sm:mb-16">
-              <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
-                Keunggulan Kami
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground md:text-5xl tracking-tight">
-                Kenapa Pilih <span className="gradient-text">ARSC Printing?</span>
-              </h2>
-              <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">
-                ARSC menyediakan layanan cetak digital inovatif dengan teknologi modern untuk memenuhi kebutuhan Anda
-              </p>
-            </FadeInUp>
-
-            <StaggerContainer className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-              {features.map((feature, index) => (
-                <StaggerItem key={index}>
-                  <motion.div
-                    whileHover={{ y: -8, scale: 1.02 }}
-                    transition={{ duration: 0.3 }}
-                    className="group relative p-5 sm:p-8 rounded-2xl bg-card border border-border hover:border-primary/30 hover:shadow-xl transition-all duration-300"
-                  >
-                    {/* Glow effect on hover */}
-                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/5 to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    
-                    <div className="relative">
-                      <div className={`mb-6 inline-flex h-14 w-14 items-center justify-center rounded-xl bg-${feature.color}/10 group-hover:scale-110 transition-transform duration-300`}>
-                        <feature.icon className={`h-7 w-7 text-${feature.color}`} />
-                      </div>
-                      <h3 className="mb-3 text-lg font-semibold text-foreground">
-                        {feature.title}
-                      </h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        {feature.description}
-                      </p>
-                    </div>
-                  </motion.div>
-                </StaggerItem>
-              ))}
-            </StaggerContainer>
+          {/* Card 3 */}
+          <div className="rounded-lg border border-border bg-card p-6 shadow-card">
+            <div className="w-10 h-10 rounded-md bg-secondary text-primary flex items-center justify-center font-bold mb-4">
+              3
+            </div>
+            <h2 className="text-lg font-semibold text-foreground mb-2">Ambil di Sekretariat</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Pantau status antrean berkala. Ambil fisik dokumen di sekretariat ARSC Gedung F FTP UB setelah selesai dicetak.
+            </p>
           </div>
-        </section>
+        </div>
 
-        {/* CTA Section */}
-        <section className="py-16 relative overflow-hidden">
-          <div className="absolute inset-0 animated-gradient opacity-90" />
-          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0aC0ydi00aDJ2NHptMC02aC0ydi00aDJ2NHptLTQgNmgtMnYtNGgydjR6bTAtNmgtMnYtNGgydjR6Ii8+PC9nPjwvZz48L3N2Zz4=')]" />
-          
-          <div className="container relative mx-auto px-4 text-center">
-            <FadeInUp>
-              <motion.div
-                initial={{ scale: 0.9 }}
-                whileInView={{ scale: 1 }}
-                transition={{ duration: 0.5 }}
-                className="max-w-3xl mx-auto"
-              >
-                <div className="flex justify-center mb-8">
-                  <button
-                    onClick={scrollToTop}
-                    aria-label="Scroll to top"
-                    className="flex flex-col items-center bg-transparent focus:outline-none focus:ring-2 focus:ring-white/60 p-2 rounded-full"
-                  >
-                    <motion.div
-                      animate={{ y: [0, -8, 0], opacity: [0.6, 1, 0.6] }}
-                      transition={{ duration: 1.0, repeat: Infinity, delay: 0 }}
-                      className="text-white/80"
-                    >
-                      <ChevronUp className="h-4 w-4" />
-                    </motion.div>
-
-                    <motion.div
-                      animate={{ y: [0, -8, 0], opacity: [0.6, 1, 0.6] }}
-                      transition={{ duration: 1.0, repeat: Infinity, delay: 0.14 }}
-                      className="text-white/80"
-                    >
-                      <ChevronUp className="h-4 w-4" />
-                    </motion.div>
-
-                    <motion.div
-                      animate={{ y: [0, -8, 0], opacity: [0.6, 1, 0.6] }}
-                      transition={{ duration: 1.0, repeat: Infinity, delay: 0.28 }}
-                      className="text-white/80"
-                    >
-                      <ChevronUp className="h-4 w-4" />
-                    </motion.div>
-
-                    <span className="sr-only">Scroll to top</span>
-                  </button>
-                </div>
-
-                <h2 className="mb-4 sm:mb-6 text-2xl sm:text-3xl font-bold text-white md:text-5xl tracking-tight">
-                  Siap Untuk Mencetak?
-                </h2>
-                <p className="mb-6 sm:mb-10 text-base sm:text-lg text-white/80 max-w-xl mx-auto px-2">
-                  Mulai cetak dokumen Anda sekarang dan hemat waktu berharga Anda
-                </p>
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <Button
-                    size="lg"
-                    onClick={() => router.push('/order')}
-                    className="h-14 px-10 text-lg font-semibold bg-white text-primary hover:bg-white/90 shadow-2xl group"
-                  >
-                    Mulai Pesan
-                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </motion.div>
-              </motion.div>
-            </FadeInUp>
+        {/* Live Queue Overview Widget */}
+        <div className="rounded-lg border border-border bg-card p-6 sm:p-8 shadow-card max-w-2xl mx-auto text-center">
+          <div className="flex items-center justify-center gap-2 text-sm font-semibold text-primary mb-3">
+            <Clock className="h-4 w-4" />
+            Ringkasan Antrean Saat Ini
           </div>
-        </section>
+          <QueueWidget />
+          <p className="text-xs text-muted-foreground mt-4">
+            Data antrean menampilkan jumlah total pesanan yang sedang diproses tanpa memuat data pribadi pemesan.
+          </p>
+        </div>
+      </section>
 
-
-      </div>
-    </PageTransition>
+      {/* Operator Notice / Policy */}
+      <section className="mt-auto border-t border-border bg-secondary/30 py-8">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="flex items-start gap-3 text-xs sm:text-sm text-muted-foreground">
+            <AlertCircle className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+            <p className="leading-relaxed">
+              <strong className="text-foreground font-semibold">Pemberitahuan Layanan:</strong> ARSC Printing beroperasi sesuai jam piket sekretariat mahasiswa. Pesanan yang disubmit di luar jam operasional akan diverifikasi dan dicetak pada sesi piket berikutnya. Hubungi admin ARSC bila memerlukan bantuan mendesak.
+            </p>
+          </div>
+        </div>
+      </section>
+    </div>
   )
 }

@@ -8,12 +8,14 @@ ARSC Printing is a campus-focused document printing platform built with Next.js 
 
 ## Key Features
 
-- Upload PDF / DOC / DOCX files (10 MB limit) with server-side validation
-- Create and manage print orders with print preferences (color, copies, paper size)
-- Public order tracking via a short order ID
-- Admin dashboard for viewing and updating order status
-- Demo mode fallback when Supabase is not configured (for local development)
+- Upload PDF files (10 MB limit) with strict server-side validation and signed URLs
+- Create and manage print orders with preferences (color, copies, paper size: A4/F4)
+- Secure admin dashboard for payment verification and explicit print approval
+- Dedicated local print worker protocol with atomic submit-intent journaling and fault-tolerant reconciliation
+- Pure local-first simulation mode (scripts/local-dev.mjs) failing closed on remote URLs
 - Built with accessibility and responsive design in mind
+
+> **Note on Roadmap Features**: Direct Office (DOC/DOCX) server-side conversion, automatic CUPS hardware execution, and public order tracking are ongoing development roadmap items. Refer to [WHITEPAPER.md](WHITEPAPER.md) and [docs/LOCAL_PRINTING_RUNBOOK.md](docs/LOCAL_PRINTING_RUNBOOK.md).
 
 ## Tech Stack
 

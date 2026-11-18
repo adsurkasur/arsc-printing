@@ -2,86 +2,97 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/*
+ * ARSC Printing - Editorial Campus Print Identity
+ * Calm paper palette, rich academic emerald, deep ink text.
+ * Strictly adheres to WCAG AA contrast (minimum 4.5:1 text, 3:1 components).
+ */
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 220 65% 20%;
+    /* Warm paper canvas */
+    --background: 45 10% 98%;
+    /* Deep forest ink */
+    --foreground: 156 21% 11%;
 
+    /* Crisp white cards with hairline border */
     --card: 0 0% 100%;
-    --card-foreground: 220 65% 20%;
+    --card-foreground: 156 21% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 65% 20%;
+    --popover-foreground: 156 21% 11%;
 
-    --primary: 220 65% 33%;
+    /* Academic rich emerald */
+    --primary: 149 55% 24%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 217 91% 60%;
-    --secondary-foreground: 0 0% 100%;
+    /* Warm stone secondary */
+    --secondary: 130 9% 93%;
+    --secondary-foreground: 156 21% 11%;
 
-    --muted: 210 40% 94%;
-    --muted-foreground: 220 20% 50%;
+    /* Sage muted text */
+    --muted: 130 9% 93%;
+    --muted-foreground: 158 8% 38%;
 
-    --accent: 217 91% 60%;
+    /* Accent leaf */
+    --accent: 149 45% 30%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
+    /* Destructive brick red */
+    --destructive: 0 72% 42%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 88%;
-    --input: 220 15% 88%;
-    --ring: 217 91% 60%;
+    /* Structural hairline border */
+    --border: 130 9% 88%;
+    --input: 130 9% 88%;
+    --ring: 149 55% 24%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
-    --success: 142 71% 45%;
+    /* Semantic badges */
+    --success: 149 55% 24%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;
+    --warning: 28 88% 32%;
     --warning-foreground: 0 0% 100%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(220 65% 33%), hsl(217 91% 60%));
-    --gradient-hero: linear-gradient(180deg, hsl(220 65% 33%), hsl(217 80% 45%));
-    
-    --shadow-primary: 0 10px 40px -10px hsl(220 65% 33% / 0.3);
-    --shadow-card: 0 4px 20px -2px hsl(220 20% 50% / 0.1);
-    --shadow-glow: 0 0 60px -15px hsl(217 91% 60% / 0.3);
-    
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
   }
 
   .dark {
-    --background: 220 65% 10%;
-    --foreground: 210 40% 98%;
+    --background: 156 25% 8%;
+    --foreground: 45 10% 98%;
 
-    --card: 220 60% 15%;
-    --card-foreground: 210 40% 98%;
+    --card: 156 20% 12%;
+    --card-foreground: 45 10% 98%;
 
-    --popover: 220 60% 15%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 156 20% 12%;
+    --popover-foreground: 45 10% 98%;
 
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 149 50% 45%;
+    --primary-foreground: 156 25% 8%;
 
-    --secondary: 220 65% 33%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 156 20% 18%;
+    --secondary-foreground: 45 10% 98%;
 
-    --muted: 220 50% 20%;
-    --muted-foreground: 220 20% 70%;
+    --muted: 156 20% 18%;
+    --muted-foreground: 150 10% 65%;
 
-    --accent: 217 91% 60%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 149 50% 35%;
+    --accent-foreground: 45 10% 98%;
 
-    --destructive: 0 62% 50%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 65% 55%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 220 40% 25%;
-    --input: 220 40% 25%;
-    --ring: 217 91% 60%;
+    --border: 156 15% 22%;
+    --input: 156 15% 22%;
+    --ring: 149 50% 45%;
+
+    --success: 149 50% 45%;
+    --success-foreground: 156 25% 8%;
+
+    --warning: 35 85% 50%;
+    --warning-foreground: 156 25% 8%;
   }
 }
 
@@ -89,170 +100,12 @@ All colors MUST be HSL.
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground antialiased;
-    /* Reserve scrollbar gutter to avoid layout shift when scrollbars appear */
-    scrollbar-gutter: stable;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    overflow-x: clip;
   }
-  
   html {
-    /* Use instant scrolling behavior globally to avoid unexpected smooth scrolls during navigation */
-    scroll-behavior: auto;
-  }
-}
-
-@layer utilities {
-  /* Glassmorphism */
-  .glass {
-    @apply bg-white/80 backdrop-blur-xl border border-white/20;
-  }
-  
-  .glass-dark {
-    @apply bg-black/30 backdrop-blur-xl border border-white/10;
-  }
-
-  /* Gradient text */
-  .gradient-text {
-    @apply bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent;
-  }
-
-  /* Card hover effects */
-  .card-hover {
-    @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
-  }
-
-  /* Shimmer effect */
-  .shimmer {
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.4) 50%,
-      transparent 100%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 2s infinite;
-  }
-
-  @keyframes shimmer {
-    0% {
-      background-position: -200% 0;
-    }
-    100% {
-      background-position: 200% 0;
-    }
-  }
-
-  /* Glow effect */
-  .glow {
-    box-shadow: 0 0 40px -10px hsl(var(--primary) / 0.5);
-  }
-
-  .glow-secondary {
-    box-shadow: 0 0 40px -10px hsl(var(--secondary) / 0.5);
-  }
-
-  /* Animated gradient background */
-  .animated-gradient {
-    background: linear-gradient(
-      -45deg,
-      hsl(var(--primary)),
-      hsl(var(--secondary)),
-      hsl(var(--primary) / 0.8),
-      hsl(var(--secondary) / 0.8)
-    );
-    background-size: 400% 400%;
-    animation: gradient 15s ease infinite;
-  }
-
-  @keyframes gradient {
-    0% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-    100% {
-      background-position: 0% 50%;
-    }
-  }
-
-  /* Floating animation */
-  .float {
-    animation: float 6s ease-in-out infinite;
-  }
-
-  @keyframes float {
-    0%, 100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-20px);
-    }
-  }
-
-  /* Pulse ring */
-  .pulse-ring {
-    @apply relative;
-  }
-
-  .pulse-ring::before {
-    content: '';
-    @apply absolute inset-0 rounded-full;
-    animation: pulse-ring 2s ease-out infinite;
-  }
-
-  @keyframes pulse-ring {
-    0% {
-      box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4);
-    }
-    100% {
-      box-shadow: 0 0 0 20px hsl(var(--primary) / 0);
-    }
-  }
-
-  /* Smooth shadow */
-  .shadow-smooth {
-    box-shadow: 
-      0 1px 2px hsl(var(--foreground) / 0.04),
-      0 2px 4px hsl(var(--foreground) / 0.04),
-      0 4px 8px hsl(var(--foreground) / 0.04),
-      0 8px 16px hsl(var(--foreground) / 0.04),
-      0 16px 32px hsl(var(--foreground) / 0.04);
-  }
-
-  /* Icon wrapper styles */
-  .icon-wrapper {
-    @apply relative flex items-center justify-center rounded-2xl p-4 transition-all duration-300;
-  }
-
-  .icon-wrapper::before {
-    content: '';
-    @apply absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300;
-    background: linear-gradient(135deg, hsl(var(--primary) / 0.1), hsl(var(--secondary) / 0.1));
-  }
-
-  .icon-wrapper:hover::before {
-    @apply opacity-100;
-  }
-
-  /* Status badge pulse */
-  .status-pulse {
-    @apply relative;
-  }
-
-  .status-pulse::after {
-    content: '';
-    @apply absolute inset-0 rounded-full;
-    animation: status-pulse 2s ease-in-out infinite;
-  }
-
-  @keyframes status-pulse {
-    0%, 100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.5;
-    }
+    overflow-x: clip;
   }
 }
