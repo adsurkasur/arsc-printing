@@ -76,24 +76,39 @@ async function run() {
   await page.waitForTimeout(1000);
 
   // 3. Search pickup code
-  const searchInput = page.locator('input[placeholder*="Cari"], input[type="search"]').first();
-  if ((await searchInput.count()) > 0) {
-    await searchInput.fill(pickupCode);
-    await page.waitForTimeout(800);
-  }
+  const searchInput = page.locator('#admin-search-input');
+  await searchInput.waitFor({ state: 'visible', timeout: 10000 });
+  await searchInput.fill(pickupCode);
+  await searchInput.press('Enter');
+  await page.locator(`text=${pickupCode}`).first().waitFor({ state: 'visible', timeout: 15000 });
+  console.log('E2E_ADMIN_SEARCH:', pickupCode, 'visible');
   await page.screenshot({ path: path.join(outDir, 'admin-list-1280.png') });
 
-  // 4. Verify payment & Approve
-  const verifyBtn = page.locator('button:has-text("Verifikasi")').first();
-  if ((await verifyBtn.count()) > 0) {
-    await verifyBtn.click();
-    await page.waitForTimeout(1000);
-  }
-  const approveBtn = page.locator('button:has-text("Setujui")').first();
-  if ((await approveBtn.count()) > 0) {
-    await approveBtn.click();
-    await page.waitForTimeout(1000);
-  }
+  // 4. Verify payment & Approve (with M3 confirmation dialogs)
+  const verifyBtn = page.locator('button:has-text("Verifikasi pembayaran")').first();
+  await verifyBtn.waitFor({ state: 'visible', timeout: 10000 });
+  await verifyBtn.click();
+  const verifyConfirmBtn = page.locator('[role="dialog"] button:has-text("Verifikasi pembayaran")').first();
+  await verifyConfirmBtn.waitFor({ state: 'visible', timeout: 5000 });
+  await verifyConfirmBtn.click();
+  await page.waitForTimeout(1500);
+  console.log('E2E_ADMIN_VERIFY: confirmed');
+
+  // Select our synthetic worker in #worker-select
+  const workerSelect = page.locator('#worker-select');
+  await workerSelect.waitFor({ state: 'visible', timeout: 10000 });
+  await workerSelect.selectOption(workerId);
+
+  const approveBtn = page.locator('button:has-text("Setujui cetak")').first();
+  await approveBtn.waitFor({ state: 'visible', timeout: 10000 });
+  await approveBtn.click();
+  const approveConfirmBtn = page.locator('[role="dialog"] button:has-text("Setujui cetak")').first();
+  await approveConfirmBtn.waitFor({ state: 'visible', timeout: 5000 });
+  await approveConfirmBtn.click();
+  await page.waitForTimeout(2000);
+  const { data: ordAfter } = await backend.from('orders').select('status').eq('id', orderId).single();
+  const { data: jobsAfter } = await backend.from('print_jobs').select('id, status, worker_id').eq('order_id', orderId);
+  console.log('E2E_ADMIN_APPROVE:', { orderStatus: ordAfter?.status, jobs: jobsAfter });
 
   // 5. Run fake worker once
   const stateDir = fs.mkdtempSync('E:/OpenBot/tmp/e2e-worker-');
@@ -105,30 +120,55 @@ async function run() {
     stateDir,
     adapter: new FakePrinterAdapter({ latencyMs: 50 }),
   });
-  const job = await worker.claimJob();
-  if (job) {
-    await worker.processJob(job);
-  }
-  console.log('E2E_ADMIN_WORKER_JOB:', job ? job.id : 'none');
-  await page.waitForTimeout(1000);
-  await page.reload({ waitUntil: 'networkidle' });
-  await page.screenshot({ path: path.join(outDir, 'admin-completed-1280.png') });
-
-  // 6. Deliver
-  const deliverBtn = page.locator('button:has-text("Serahkan")').first();
-  if ((await deliverBtn.count()) > 0) {
-    await deliverBtn.click();
+  let job = null;
+  for (let i = 0; i < 5; i++) {
+    job = await worker.claimJob();
+    if (job) break;
     await page.waitForTimeout(1000);
   }
+  if (!job) {
+    throw new Error('PrintWorker.claimJob() returned null after approve');
+  }
+  await worker.processJob(job);
+  console.log('E2E_ADMIN_WORKER_JOB:', job.id);
+  await page.waitForTimeout(1500);
+  await page.reload({ waitUntil: 'networkidle' });
+  await searchInput.fill(pickupCode);
+  await searchInput.press('Enter');
+  await page.locator(`text=${pickupCode}`).first().waitFor({ state: 'visible', timeout: 15000 });
+  await page.screenshot({ path: path.join(outDir, 'admin-completed-1280.png') });
+
+  // 6. Open receipt & Deliver
+  const receiptBtn = page.locator('button:has-text("Lihat rincian")').first();
+  await receiptBtn.waitFor({ state: 'visible', timeout: 10000 });
+  await receiptBtn.click();
+  await page.locator('[role="dialog"]').waitFor({ state: 'visible', timeout: 5000 });
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: path.join(outDir, 'admin-receipt-1280.png') });
+  await page.locator('[role="dialog"] button:has-text("Tutup")').click();
+  await page.waitForTimeout(500);
+
+  const deliverBtn = page.locator('button:has-text("Konfirmasi penyerahan")').first();
+  await deliverBtn.waitFor({ state: 'visible', timeout: 10000 });
+  await deliverBtn.click();
+  const deliverCheck = page.locator('[role="dialog"] input[type="checkbox"]').first();
+  await deliverCheck.waitFor({ state: 'visible', timeout: 5000 });
+  await deliverCheck.check();
+  await page.locator('[role="dialog"] button:has-text("Sudah diserahkan")').click();
+  await page.waitForTimeout(1500);
+  console.log('E2E_ADMIN_DELIVER: confirmed');
   await page.screenshot({ path: path.join(outDir, 'admin-delivered-1280.png') });
 
   // 7. Customer track check
   await page.goto(`${baseUrl}/track`, { waitUntil: 'networkidle' });
   await page.fill('#tracking-id', orderId);
   await page.click('button[type="submit"]');
-  await page.waitForTimeout(1200);
+  await page.waitForTimeout(1500);
   const trackText = await page.locator('main').innerText();
   console.log('E2E_ADMIN_FINAL_TRACK:', trackText.replace(/\s+/g, ' ').trim().slice(0, 300));
+  if (!/selesai|diserahkan|delivered/i.test(trackText)) {
+    throw new Error(`Expected delivered status on /track, got: ${trackText.slice(0, 200)}`);
+  }
 
   await browser.close();
 }

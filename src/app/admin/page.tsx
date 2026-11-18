@@ -1,17 +1,43 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import StatusBadge from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
+import { M3ResponsiveDialog, m3Toast } from '@/components/m3';
 import {
-  RefreshCw, FileText, ImageIcon, CheckCircle, XCircle, RotateCcw,
-  AlertTriangle, Shield, CheckCheck, Search, Filter, HardDrive,
-  Receipt, X, ChevronLeft, ChevronRight, Info, Calendar, DollarSign,
-  Printer, Check, AlertCircle
+  RefreshCw as ArrowsClockwise,
+  FileText,
+  Image as ImageIcon,
+  CheckCircle,
+  XCircle,
+  RotateCcw as ArrowCounterClockwise,
+  AlertTriangle as Warning,
+  ShieldCheck,
+  Search as MagnifyingGlass,
+  Printer,
+  Receipt,
+  ChevronLeft as CaretLeft,
+  ChevronRight as CaretRight,
+  Calendar as CalendarBlank,
+  Info,
+  Ban as Prohibit,
 } from 'lucide-react';
+import { COPY_PAGES } from '@/lib/copy';
 import type { Order } from '@/types/order';
 import type { AdminAction } from '@/types/print-job';
+
+const IS_SIMULATION = process.env.NEXT_PUBLIC_ARSC_SIMULATION === 'true';
+const COPY_SIMULATION_DISCLOSURE =
+  'Mode simulasi: alur ini memakai printer uji. Tidak ada dokumen fisik yang dicetak.';
+
+const formatCopy = (template: string, vars: Record<string, string | number>) => {
+  let out = template;
+  for (const [k, v] of Object.entries(vars)) {
+    out = out.split(`{${k}}`).join(String(v));
+  }
+  return out;
+};
 
 interface WorkerItem {
   id: string;
@@ -58,684 +84,960 @@ interface ReceiptData {
     type: string;
     createdAt: string;
   }>;
-  backendCompletionIsPhysicalProof: boolean;
 }
 
-export default function Admin() {
+type ConfirmModalState =
+  | { type: 'verify'; order: Order }
+  | { type: 'reject'; order: Order }
+  | { type: 'approve'; order: Order }
+  | { type: 'deliver'; order: Order }
+  | { type: 'reprint'; order: Order }
+  | { type: 'cancel'; order: Order }
+  | null;
+
+const formatWib = (iso: string | null | undefined) => {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString('id-ID', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: 'Asia/Jakarta',
+  });
+};
+
+const formatWorkerOption = (w: WorkerItem) => {
+  const last4 = w.id.slice(-4);
+  if (!w.enabled) {
+    return formatCopy(COPY_PAGES.admin.text028, { last4ofId: last4 });
+  }
+  if (w.printerKey.toLowerCase().includes('fake')) {
+    return formatCopy(COPY_PAGES.admin.text026, { last4ofId: last4 });
+  }
+  return formatCopy(COPY_PAGES.admin.text027, { printerKey: w.printerKey });
+};
+
+export default function AdminDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [totalOrders, setTotalOrders] = useState(0);
-  const [page, setPage] = useState(1);
-  const [pageSize] = useState(20);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState('');
 
-  // Daily summary & workers state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const [appliedFromDate, setAppliedFromDate] = useState('');
+  const [appliedToDate, setAppliedToDate] = useState('');
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
+
+  const [summaryDate, setSummaryDate] = useState<string>(() => {
+    return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date());
+  });
   const [summary, setSummary] = useState<DailySummary | null>(null);
-  const [workers, setWorkers] = useState<WorkerItem[]>([]);
-  const [selectedWorkerId, setSelectedWorkerId] = useState('');
+  const [summaryError, setSummaryError] = useState(false);
 
-  // Receipt modal state
+  const [workers, setWorkers] = useState<WorkerItem[]>([]);
+  const [selectedWorkerId, setSelectedWorkerId] = useState<string>('');
+
+  const [processingOrderId, setProcessingOrderId] = useState<string | null>(null);
   const [activeReceipt, setActiveReceipt] = useState<ReceiptData | null>(null);
   const [loadingReceipt, setLoadingReceipt] = useState(false);
+  const [showDeviceInfo, setShowDeviceInfo] = useState(false);
 
-  const [busy, setBusy] = useState(false);
+  const [confirmModal, setConfirmModal] = useState<ConfirmModalState>(null);
+  const [rejectReason, setRejectReason] = useState('');
+  const [confirmChecked, setConfirmChecked] = useState(false);
 
-  // Helper for admin headers
+  const abortRef = useRef<AbortController | null>(null);
+  const supabase = createClient();
+
   const getAuthHeaders = useCallback(async () => {
-    const { data } = await createClient().auth.getSession();
-    if (!data.session) throw new Error('Harap masuk terlebih dahulu.');
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     return {
-      Authorization: 'Bearer ' + data.session.access_token,
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}),
     };
-  }, []);
+  }, [supabase]);
 
-  // Fetch daily summary
-  const fetchSummary = useCallback(async () => {
-    try {
-      const headers = await getAuthHeaders();
-      const res = await fetch('/api/admin/summary', { headers, cache: 'no-store' });
-      if (res.ok) {
-        const data = await res.json();
-        setSummary(data);
-      }
-    } catch {
-      // Ignore background summary failure
-    }
-  }, [getAuthHeaders]);
+  // Debounce search 350ms
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+      setPage(1);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
-  // Fetch workers
   const fetchWorkers = useCallback(async () => {
     try {
       const headers = await getAuthHeaders();
-      const res = await fetch('/api/admin/workers', { headers, cache: 'no-store' });
+      const res = await fetch('/api/admin/workers', { headers });
       if (res.ok) {
         const data = await res.json();
-        const items = data.items || [];
-        setWorkers(items);
-        if (items.length > 0 && !selectedWorkerId) {
-          const firstEnabled = items.find((w: WorkerItem) => w.enabled) || items[0];
-          setSelectedWorkerId(firstEnabled.id);
+        const list: WorkerItem[] = data.workers || [];
+        setWorkers(list);
+        if (!selectedWorkerId && list.length > 0) {
+          const active = list.find((w) => w.enabled);
+          if (active) setSelectedWorkerId(active.id);
         }
       }
-    } catch {
-      // Ignore background worker failure
+    } catch (err) {
+      console.error('Failed to fetch workers', err);
     }
   }, [getAuthHeaders, selectedWorkerId]);
 
-  // Fetch orders with search, filter, pagination
-  const fetchOrders = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const fetchSummary = useCallback(async () => {
     try {
+      setSummaryError(false);
       const headers = await getAuthHeaders();
-      const params = new URLSearchParams();
-      params.set('page', String(page));
-      params.set('pageSize', String(pageSize));
-      if (statusFilter) params.set('status', statusFilter);
-      if (searchQuery.trim()) params.set('q', searchQuery.trim());
-
-      const res = await fetch(`/api/admin/orders?${params.toString()}`, { headers, cache: 'no-store' });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error?.message || data.error?.code || 'Gagal memuat data pesanan.');
+      const res = await fetch(`/api/admin/summary?date=${summaryDate}`, { headers });
+      if (res.ok) {
+        const data = await res.json();
+        setSummary(data);
+      } else {
+        setSummary(null);
+        setSummaryError(true);
       }
-      setOrders(data.items || []);
+    } catch {
+      setSummary(null);
+      setSummaryError(true);
+    }
+  }, [getAuthHeaders, summaryDate]);
+
+  const fetchOrders = useCallback(async () => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    try {
+      setLoading(true);
+      setError(null);
+      const headers = await getAuthHeaders();
+      const params = new URLSearchParams({
+        page: String(page),
+        pageSize: String(pageSize),
+      });
+      if (statusFilter !== 'all') params.set('status', statusFilter);
+      if (debouncedQuery.trim()) params.set('q', debouncedQuery.trim());
+      if (appliedFromDate) params.set('from', appliedFromDate);
+      if (appliedToDate) params.set('to', appliedToDate);
+
+      const res = await fetch(`/api/admin/orders?${params.toString()}`, {
+        headers,
+        signal: controller.signal,
+      });
+      if (!res.ok) {
+        throw new Error('Gagal memuat daftar pesanan.');
+      }
+      const data = await res.json();
+      setOrders(data.orders || []);
       setTotalOrders(data.total || 0);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Terjadi kendala.');
-      setOrders([]);
+      if ((err as Error)?.name === 'AbortError') return;
+      setError(err instanceof Error ? err.message : 'Terjadi kesalahan saat memuat pesanan.');
     } finally {
       setLoading(false);
     }
-  }, [getAuthHeaders, page, pageSize, statusFilter, searchQuery]);
-
-  // Refresh all
-  const refreshAll = useCallback(async () => {
-    await Promise.all([fetchOrders(), fetchSummary(), fetchWorkers()]);
-  }, [fetchOrders, fetchSummary, fetchWorkers]);
+  }, [getAuthHeaders, page, pageSize, statusFilter, debouncedQuery, appliedFromDate, appliedToDate]);
 
   useEffect(() => {
-    void refreshAll();
-  }, [refreshAll]);
+    fetchWorkers();
+  }, [fetchWorkers]);
 
-  // Action handler
-  const handleAdminAction = async (order: Order, action: AdminAction, extra: Record<string, unknown> = {}) => {
-    setBusy(true);
-    setMessage('');
+  useEffect(() => {
+    fetchSummary();
+  }, [fetchSummary]);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
+
+  const handleOpenFile = async (orderId: string, kind: 'document' | 'payment-proof') => {
     try {
       const headers = await getAuthHeaders();
-      const res = await fetch('/api/admin/orders/' + order.id + '/action', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          action,
-          expectedVersion: order.version,
-          ...extra
-        })
-      });
+      const res = await fetch(`/api/admin/orders/${orderId}/${kind}`, { headers });
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error?.message || data.error?.code || 'Aksi ditolak.');
+      if (!res.ok) throw new Error(data.error || 'Gagal membuka berkas.');
+      if (data.url) {
+        window.open(data.url, '_blank', 'noopener,noreferrer');
       }
-      setMessage(`Aksi '${action}' berhasil diproses.`);
-      await refreshAll();
     } catch (err: unknown) {
-      setMessage(err instanceof Error ? err.message : 'Aksi gagal.');
-    } finally {
-      setBusy(false);
+      m3Toast.error(err instanceof Error ? err.message : 'Gagal membuka berkas.');
     }
   };
 
-  // View Receipt
-  const handleViewReceipt = async (orderId: string) => {
-    setLoadingReceipt(true);
-    setMessage('');
+  const handleOpenReceipt = async (orderId: string) => {
     try {
+      setLoadingReceipt(true);
+      setShowDeviceInfo(false);
       const headers = await getAuthHeaders();
-      const res = await fetch(`/api/admin/orders/${orderId}/receipt`, { headers, cache: 'no-store' });
+      const res = await fetch(`/api/admin/orders/${orderId}/receipt`, { headers });
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error?.message || data.error?.code || 'Gagal memuat receipt.');
-      }
+      if (!res.ok) throw new Error(data.error || 'Gagal memuat rincian pesanan.');
       setActiveReceipt(data);
     } catch (err: unknown) {
-      setMessage(err instanceof Error ? err.message : 'Gagal memuat receipt.');
+      m3Toast.error(err instanceof Error ? err.message : 'Gagal memuat rincian pesanan.');
     } finally {
       setLoadingReceipt(false);
     }
   };
 
-  // Document preview
-  const handleOpenDoc = async (id: string, kind: string) => {
+  const executeAdminAction = async (
+    orderId: string,
+    action: AdminAction,
+    extraBody?: Record<string, unknown>
+  ) => {
     try {
-      const { data } = await createClient().auth.getSession();
-      if (!data.session) {
-        setMessage('Harap masuk terlebih dahulu.');
-        return;
-      }
-      const response = await fetch('/api/admin/orders/' + id + '/document?kind=' + kind, {
-        headers: { Authorization: 'Bearer ' + data.session.access_token },
-        cache: 'no-store'
+      setProcessingOrderId(orderId);
+      const headers = await getAuthHeaders();
+      const res = await fetch(`/api/admin/orders/${orderId}/action`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ action, ...extraBody }),
       });
-      if (!response.ok) {
-        setMessage('Akses berkas ditolak.');
-        return;
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Tindakan gagal dijalankan.');
       }
-      const value = await response.json();
-      if (typeof value.url === 'string') {
-        const url = new URL(value.url, location.origin);
-        if (['http:', 'https:'].includes(url.protocol)) {
-          window.open(url.toString(), '_blank', 'noopener,noreferrer');
-        }
-      }
-    } catch {
-      setMessage('Gagal membuka berkas.');
+      m3Toast.success('Status pesanan diperbarui.');
+      await Promise.all([fetchOrders(), fetchSummary()]);
+      setConfirmModal(null);
+      setRejectReason('');
+      setConfirmChecked(false);
+    } catch (err: unknown) {
+      m3Toast.error(err instanceof Error ? err.message : 'Tindakan gagal dijalankan.');
+    } finally {
+      setProcessingOrderId(null);
     }
   };
 
+  const todayJakarta = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(
+    new Date()
+  );
   const totalPages = Math.max(1, Math.ceil(totalOrders / pageSize));
+  const selectedWorker = workers.find((w) => w.id === selectedWorkerId);
+  const hasActiveWorker = workers.some((w) => w.enabled);
+
+  const statusChips = [
+    { key: 'all', label: COPY_PAGES.admin.text009 },
+    { key: 'pending_verification', label: COPY_PAGES.admin.text010 },
+    { key: 'approved', label: COPY_PAGES.admin.text011 },
+    { key: 'delivered', label: COPY_PAGES.admin.text012 },
+    { key: 'cancelled', label: COPY_PAGES.admin.text013 },
+  ];
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-5xl space-y-6 w-full min-w-0">
+    <div className="space-y-6 pb-12">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-5">
+      <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary text-primary text-xs font-semibold mb-1.5">
-            <Shield className="h-3.5 w-3.5" />
-            Portal Kontrol Operator
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-            Review Pesanan & Antrean Cetak
+          <h1 className="text-headlineMedium font-display text-[var(--md-sys-color-on-surface)]">
+            {COPY_PAGES.admin.text002}
           </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-            Verifikasi bukti bayar, setujui pekerjaan cetak, dan kelola serah-terima fisik dokumen.
+          <p className="text-bodyMedium text-[var(--md-sys-color-on-surface-variant)] mt-1">
+            {COPY_PAGES.admin.text004}
           </p>
         </div>
-        <Button
-          disabled={loading || busy}
-          onClick={() => void refreshAll()}
-          variant="outline"
-          className="border-border hover:bg-secondary h-10 shrink-0"
-        >
-          <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          Segarkan Data
-        </Button>
-      </div>
 
-      {/* Daily Summary Card */}
-      {summary && (
-        <div className="rounded-lg border border-border bg-card p-5 shadow-card space-y-3">
-          <div className="flex items-center justify-between border-b border-border/60 pb-2">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-              <Calendar className="h-4 w-4 text-primary" />
-              Ringkasan Harian Operasional ({summary.date} · {summary.timeZone})
-            </h2>
-            <span className="text-xs text-muted-foreground font-medium">Rekapitulasi Manual</span>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <label
+              htmlFor="summary-date"
+              className="text-labelMedium text-[var(--md-sys-color-on-surface-variant)]"
+            >
+              {COPY_PAGES.admin.text003}
+            </label>
+            <input
+              id="summary-date"
+              type="date"
+              value={summaryDate}
+              onChange={(e) => setSummaryDate(e.target.value)}
+              className="h-10 px-3 rounded-lg border border-[var(--md-sys-color-outline)] bg-[var(--md-sys-color-surface)] text-bodyMedium text-[var(--md-sys-color-on-surface)]"
+            />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
-            <div className="p-3.5 rounded-md bg-secondary/30 border border-border space-y-1">
-              <span className="text-xs text-muted-foreground block">Total Pesanan Masuk:</span>
-              <div className="text-2xl font-bold font-mono text-foreground">{summary.orderCount}</div>
-              <span className="text-[11px] text-muted-foreground">Semua pesanan dibuat hari ini</span>
-            </div>
-            <div className="p-3.5 rounded-md bg-secondary/30 border border-border space-y-1">
-              <span className="text-xs text-muted-foreground block">Total Lembar/Halaman:</span>
-              <div className="text-2xl font-bold font-mono text-foreground">{summary.pages}</div>
-              <span className="text-[11px] text-muted-foreground">Akumulasi halaman dokumen</span>
-            </div>
-            <div className="p-3.5 rounded-md bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 space-y-1">
-              <span className="text-xs text-emerald-800 dark:text-emerald-300 font-medium block">Pendapatan Terverifikasi:</span>
-              <div className="text-2xl font-bold font-mono text-emerald-900 dark:text-emerald-100">
-                Rp {summary.revenueVerified.toLocaleString('id-ID')}
-              </div>
-              <span className="text-[11px] text-emerald-700 dark:text-emerald-400">Pembayaran disetujui kasir</span>
-            </div>
-          </div>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              fetchOrders();
+              fetchSummary();
+              fetchWorkers();
+            }}
+            disabled={loading}
+          >
+            <ArrowsClockwise className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            Muat ulang
+          </Button>
+        </div>
+      </header>
+
+      {IS_SIMULATION && (
+        <div
+          role="status"
+          className="flex items-start gap-2.5 p-3.5 rounded-xl bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)] text-bodySmall"
+        >
+          <Info className="w-4 h-4 shrink-0 mt-0.5" />
+          <span>{COPY_SIMULATION_DISCLOSURE}</span>
         </div>
       )}
 
-      {/* Operator Worker Selection & Filter Bar */}
-      <div className="rounded-lg border border-border bg-card p-5 shadow-card space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Worker Dropdown from /api/admin/workers */}
-          <div>
-            <label htmlFor="worker-select" className="block text-xs font-semibold text-foreground mb-1.5 flex items-center gap-1.5">
-              <HardDrive className="h-3.5 w-3.5 text-primary" />
-              Target Worker Cetak Aktif
+      {/* Summary Section */}
+      <section id="summary" aria-label={COPY_PAGES.admin.text003}>
+        {summaryError ? (
+          <div className="p-4 flex items-center justify-between gap-4">
+            <span className="text-bodyMedium text-[var(--md-sys-color-error)]">
+              {COPY_PAGES.admin.text021}
+            </span>
+            <Button variant="ghost" onClick={fetchSummary}>
+              Coba lagi
+            </Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 space-y-1">
+              <p className="text-labelMedium text-[var(--md-sys-color-on-surface-variant)]">
+                {COPY_PAGES.admin.text005}
+              </p>
+              <p className="text-headlineSmall font-display tabular-nums text-[var(--md-sys-color-on-surface)]">
+                {summary ? summary.orderCount : '—'}
+              </p>
+            </div>
+
+            <div className="p-4 space-y-1">
+              <p className="text-labelMedium text-[var(--md-sys-color-on-surface-variant)]">
+                {COPY_PAGES.admin.text006}
+              </p>
+              <p className="text-headlineSmall font-display tabular-nums text-[var(--md-sys-color-on-surface)]">
+                {summary ? summary.pages : '—'}
+              </p>
+              <p className="text-bodySmall text-[var(--md-sys-color-on-surface-variant)]">
+                {COPY_PAGES.admin.text024}
+              </p>
+            </div>
+
+            <div className="p-4 space-y-1">
+              <p className="text-labelMedium text-[var(--md-sys-color-on-surface-variant)]">
+                {COPY_PAGES.admin.text007}
+              </p>
+              <p className="text-headlineSmall font-display tabular-nums text-[var(--md-sys-color-on-surface)]">
+                {summary ? `Rp ${summary.revenueVerified.toLocaleString('id-ID')}` : '—'}
+              </p>
+              <p className="text-bodySmall text-[var(--md-sys-color-on-surface-variant)]">
+                {summaryDate === todayJakarta ? COPY_PAGES.admin.text022 : COPY_PAGES.admin.text023}
+              </p>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* Filters & Worker Selector */}
+      <section id="workers" className="space-y-4">
+        <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-end">
+          <div className="flex-1">
+            <input
+              id="admin-search-input"
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  setDebouncedQuery(searchQuery);
+                  setPage(1);
+                }
+              }}
+              placeholder={COPY_PAGES.admin.text008}
+              className="w-full h-12 px-4 rounded-xl border border-[var(--md-sys-color-outline)] bg-[var(--md-sys-color-surface)] text-bodyMedium"
+            />
+          </div>
+
+          <div className="w-full lg:w-[320px] space-y-1.5">
+            <label
+              htmlFor="worker-select"
+              className="text-labelMedium text-[var(--md-sys-color-on-surface-variant)] flex items-center gap-1.5"
+            >
+              <Printer className="w-4 h-4" />
+              {COPY_PAGES.admin.text016}
             </label>
             <select
               id="worker-select"
               value={selectedWorkerId}
               onChange={(e) => setSelectedWorkerId(e.target.value)}
-              className="w-full h-10 px-3 text-sm rounded-md border border-input bg-background text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="w-full h-12 px-3 rounded-lg border border-[var(--md-sys-color-outline)] bg-[var(--md-sys-color-surface)] text-bodyMedium text-[var(--md-sys-color-on-surface)]"
             >
-              <option value="">-- Pilih Worker Printer --</option>
+              <option value="">{COPY_PAGES.admin.text025}</option>
               {workers.map((w) => (
-                <option key={w.id} value={w.id}>
-                  {w.printerKey} {w.enabled ? '(Aktif)' : '(Nonaktif)'}
+                <option key={w.id} value={w.id} disabled={!w.enabled}>
+                  {formatWorkerOption(w)}
                 </option>
               ))}
             </select>
-            <span className="text-[11px] text-muted-foreground mt-1 block">
-              Pekerjaan yang disetujui akan dialokasikan ke antrean worker ini.
-            </span>
-          </div>
-
-          {/* Search Input (q) */}
-          <div>
-            <label htmlFor="admin-search-input" className="block text-xs font-semibold text-foreground mb-1.5 flex items-center gap-1.5">
-              <Search className="h-3.5 w-3.5 text-primary" />
-              Cari Nama / Kode Pengambilan
-            </label>
-            <div className="flex gap-2">
-              <input
-                id="admin-search-input"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Contoh: Budi atau ARSC-4821"
-                className="w-full h-10 px-3 text-sm rounded-md border border-input bg-background text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              />
-              <Button
-                size="sm"
-                onClick={() => { setPage(1); void fetchOrders(); }}
-                className="h-10 px-4 bg-primary text-primary-foreground text-xs font-semibold shrink-0"
-              >
-                Cari
-              </Button>
-            </div>
-            <span className="text-[11px] text-muted-foreground mt-1 block">
-              Pencarian literal substring nama pemesan atau pickup code.
-            </span>
+            {!hasActiveWorker && (
+              <p className="text-bodySmall text-[var(--md-sys-color-error)]">
+                {COPY_PAGES.admin.text029}
+              </p>
+            )}
+            {selectedWorker?.printerKey.toLowerCase().includes('fake') && (
+              <p className="text-bodySmall text-[var(--md-sys-color-on-surface-variant)]">
+                {COPY_PAGES.admin.text031}
+              </p>
+            )}
           </div>
         </div>
 
-        {/* Status Filter Tab row */}
-        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/60">
-          <span className="text-xs font-medium text-muted-foreground flex items-center gap-1 mr-1">
-            <Filter className="h-3 w-3" /> Filter Status:
-          </span>
-          {[
-            { key: '', label: 'Semua' },
-            { key: 'pending_verification', label: 'Menunggu Verifikasi' },
-            { key: 'approved', label: 'Disetujui / Antrean' },
-            { key: 'delivered', label: 'Diserahkan' },
-            { key: 'cancelled', label: 'Dibatalkan' }
-          ].map((item) => (
-            <button
-              key={item.key}
-              type="button"
-              onClick={() => { setStatusFilter(item.key); setPage(1); }}
-              className={`px-2.5 py-1 text-xs font-medium rounded-md border transition-colors ${
-                statusFilter === item.key
-                  ? 'bg-primary text-primary-foreground border-primary font-semibold'
-                  : 'bg-background border-border text-muted-foreground hover:bg-secondary'
-              }`}
+        {/* Status Chips */}
+        <div className="flex flex-wrap items-center gap-2">
+          {statusChips.map((chip) => (
+            <button type="button"
+              key={chip.key}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium border ${statusFilter === chip.key ? "bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] border-transparent" : "border-[var(--md-sys-color-outline)] text-[var(--md-sys-color-on-surface-variant)]"}`}
+              onClick={() => {
+                setStatusFilter(chip.key);
+                setPage(1);
+              }}
             >
-              {item.label}
+              {chip.label}
             </button>
           ))}
         </div>
-      </div>
 
-      {(error || message) && (
-        <div role="alert" className="p-3.5 bg-secondary/80 border border-border rounded-md text-xs sm:text-sm text-foreground flex items-center justify-between">
-          <span>{error || message}</span>
-          <button type="button" onClick={() => { setError(null); setMessage(''); }} className="text-xs font-semibold underline ml-2">
-            Tutup
-          </button>
+        {/* Date Range Filters */}
+        <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div>
+              <label
+                htmlFor="filter-from"
+                className="block text-labelSmall text-[var(--md-sys-color-on-surface-variant)] mb-1"
+              >
+                Dari tanggal
+              </label>
+              <input
+                id="filter-from"
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="h-10 px-3 rounded-lg border border-[var(--md-sys-color-outline)] bg-[var(--md-sys-color-surface)] text-bodyMedium"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="filter-to"
+                className="block text-labelSmall text-[var(--md-sys-color-on-surface-variant)] mb-1"
+              >
+                Sampai tanggal
+              </label>
+              <input
+                id="filter-to"
+                type="date"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                className="h-10 px-3 rounded-lg border border-[var(--md-sys-color-outline)] bg-[var(--md-sys-color-surface)] text-bodyMedium"
+              />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setAppliedFromDate(fromDate);
+                setAppliedToDate(toDate);
+                setPage(1);
+              }}
+            >
+              <CalendarBlank className="w-4 h-4" />
+              {COPY_PAGES.admin.text014}
+            </Button>
+            {(appliedFromDate || appliedToDate || searchQuery || statusFilter !== 'all') && (
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setFromDate('');
+                  setToDate('');
+                  setAppliedFromDate('');
+                  setAppliedToDate('');
+                  setSearchQuery('');
+                  setDebouncedQuery('');
+                  setStatusFilter('all');
+                  setPage(1);
+                }}
+              >
+                {COPY_PAGES.admin.text015}
+              </Button>
+            )}
+          </div>
         </div>
-      )}
+      </section>
 
-      {/* Orders List Section */}
-      <div className="space-y-4">
+      {/* Orders List */}
+      <section id="orders" className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-foreground">
-            Daftar Pesanan ({totalOrders} hasil)
-          </h2>
-          <span className="text-xs text-muted-foreground">
-            Halaman {page} dari {totalPages}
-          </span>
+          <p className="text-labelLarge text-[var(--md-sys-color-on-surface-variant)]">
+            {formatCopy(COPY_PAGES.admin.text017, { total: totalOrders })}
+          </p>
         </div>
 
-        {orders.length === 0 ? (
-          <div className="rounded-lg border border-border bg-card p-12 text-center text-muted-foreground space-y-2">
-            <p className="text-sm font-medium">Tidak ada pesanan yang sesuai dengan filter.</p>
-            <p className="text-xs">Coba sesuaikan kata kunci pencarian atau ubah filter status.</p>
+        {error && (
+          <div className="p-4 text-[var(--md-sys-color-error)] text-bodyMedium">
+            {error}
+          </div>
+        )}
+
+        {!loading && orders.length === 0 ? (
+          <div className="p-8 text-center space-y-2">
+            <p className="text-titleMedium text-[var(--md-sys-color-on-surface)]">
+              {COPY_PAGES.admin.text019}
+            </p>
+            <p className="text-bodyMedium text-[var(--md-sys-color-on-surface-variant)]">
+              {COPY_PAGES.admin.text020}
+            </p>
           </div>
         ) : (
-          orders.map((order) => {
-            const job = order.print_jobs?.find((j) => j.revision === order.revision);
-            const pickupCode = (order as unknown as { pickupCode?: string; pickup_code?: string }).pickupCode ||
-                               (order as unknown as { pickupCode?: string; pickup_code?: string }).pickup_code;
+          <div className="space-y-4">
+            {orders.map((order) => {
+              const isBusy = processingOrderId === order.id;
+              const isPendingPayment =
+                order.status === 'pending_verification' && order.payment_status !== 'verified';
+              const canApprove =
+                order.status === 'pending_verification' &&
+                order.payment_status === 'verified' &&
+                Boolean(selectedWorkerId) &&
+                Boolean(selectedWorker?.enabled);
+              const canDeliver = order.status === 'approved';
+              const canCancel =
+                order.status !== 'cancelled' && order.status !== 'delivered';
 
-            return (
-              <article key={order.id} className="rounded-lg border border-border bg-card p-5 sm:p-6 shadow-card space-y-4 w-full min-w-0">
-                {/* Order Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border pb-3">
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="text-base font-bold text-foreground">
-                        {order.customer_name}
-                      </h3>
-                      {pickupCode && (
-                        <span className="px-2 py-0.5 rounded text-xs font-extrabold font-mono bg-emerald-100 text-emerald-800 border border-emerald-300">
-                          {pickupCode}
+              return (
+                <div key={order.id} className="rounded-2xl bg-[var(--md-sys-color-surface-container-low)] p-6 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                    <div className="space-y-1">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <span className="font-mono text-[22px] leading-7 font-bold tracking-tight text-[var(--md-sys-color-primary)]">
+                          {(order as Order & { pickupCode?: string; pickup_code?: string }).pickupCode || (order as Order & { pickup_code?: string }).pickup_code || order.id.slice(0, 8)}
                         </span>
-                      )}
+                        <span className="text-[16px] font-semibold text-[var(--md-sys-color-on-surface)]">
+                          {order.customer_name}
+                        </span>
+                      </div>
+                      <p className="text-[14px] text-[var(--md-sys-color-on-surface-variant)]">
+                        {(order as Order & { customer_contact?: string }).customer_contact || '—'} · {formatWib(order.created_at)}
+                      </p>
                     </div>
-                    <p className="text-xs text-muted-foreground font-mono mt-0.5 break-all">
-                      ID: {order.id} · Kontak: <span className="text-foreground font-sans font-medium">{order.contact}</span>
-                    </p>
+
+                    <div className="flex flex-col sm:items-end gap-1">
+                      <StatusBadge status={order.status} />
+                      <span className="text-[24px] leading-8 font-bold tabular-nums text-[var(--md-sys-color-on-surface)]">
+                        Rp {order.amount_due.toLocaleString('id-ID')}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <StatusBadge status={order.status} />
-                    {job && <StatusBadge status={job.status} />}
+
+                  <p className="text-bodyMedium text-[var(--md-sys-color-on-surface-variant)]">
+                    {formatCopy(COPY_PAGES.admin.text032, {
+                      pages: order.pages,
+                      copies: order.copies,
+                      color: order.color_mode === 'color' ? 'Berwarna' : 'Hitam putih',
+                      paper: order.paper_size,
+                    })}
+                  </p>
+
+                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[var(--md-sys-color-outline-variant)]">
+                    <Button
+                      variant="outline"
+                      onClick={() => handleOpenFile(order.id, 'document')}
+                    >
+                      <FileText className="w-4 h-4" />
+                      {COPY_PAGES.admin.text033}
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      onClick={() => handleOpenFile(order.id, 'payment-proof')}
+                    >
+                      <ImageIcon className="w-4 h-4" />
+                      {COPY_PAGES.admin.text034}
+                    </Button>
+
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleOpenReceipt(order.id)}
+                      disabled={loadingReceipt}
+                    >
+                      <Receipt className="w-4 h-4" />
+                      {COPY_PAGES.admin.text035}
+                    </Button>
+
+                    <div className="flex-1" />
+
+                    {isPendingPayment && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          onClick={() => setConfirmModal({ type: 'reject', order })}
+                          disabled={isBusy}
+                        >
+                          <XCircle className="w-4 h-4" />
+                          {COPY_PAGES.admin.text045}
+                        </Button>
+                        <Button
+                          variant="default"
+                          onClick={() => setConfirmModal({ type: 'verify', order })}
+                          disabled={isBusy}
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                          {COPY_PAGES.admin.text038}
+                        </Button>
+                      </>
+                    )}
+
+                    {order.status === 'pending_verification' &&
+                      order.payment_status === 'verified' && (
+                        <Button
+                          variant="default"
+                          onClick={() => setConfirmModal({ type: 'approve', order })}
+                          disabled={isBusy || !canApprove}
+                        >
+                          <ShieldCheck className="w-4 h-4" />
+                          {COPY_PAGES.admin.text039}
+                        </Button>
+                      )}
+
+                    {canDeliver && (
+                      <Button
+                        variant="default"
+                        onClick={() => {
+                          setConfirmChecked(false);
+                          setConfirmModal({ type: 'deliver', order });
+                        }}
+                        disabled={isBusy}
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        Konfirmasi penyerahan
+                      </Button>
+                    )}
+
+                    {order.status === 'approved' && (
+                      <Button
+                        variant="secondary"
+                        onClick={() => {
+                          setConfirmChecked(false);
+                          setConfirmModal({ type: 'reprint', order });
+                        }}
+                        disabled={isBusy}
+                      >
+                        <ArrowCounterClockwise className="w-4 h-4" />
+                        {COPY_PAGES.admin.text037}
+                      </Button>
+                    )}
+
+                    {canCancel && (
+                      <Button
+                        variant="ghost"
+                        onClick={() => setConfirmModal({ type: 'cancel', order })}
+                        disabled={isBusy}
+                      >
+                        <Prohibit className="w-4 h-4" />
+                        {COPY_PAGES.admin.text036}
+                      </Button>
+                    )}
                   </div>
                 </div>
-
-                {/* Financial & Job Details */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs bg-secondary/25 p-3 rounded-md">
-                  <div>
-                    <span className="text-muted-foreground block">Status Bayar:</span>
-                    <strong className="text-foreground capitalize">{order.payment_status}</strong>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground block">Tagihan Server:</span>
-                    <strong className="text-foreground font-mono">Rp {order.amount_due?.toLocaleString('id-ID') || '—'}</strong>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground block">Versi Dokumen:</span>
-                    <strong className="text-foreground font-mono">Rev {order.revision}</strong>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground block">ID Pekerjaan:</span>
-                    <strong className="text-foreground font-mono truncate block">{job?.id || 'Belum dibuat'}</strong>
-                  </div>
-                </div>
-
-                {/* Document & Receipt Actions */}
-                <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-border/60">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={busy}
-                    onClick={() => void handleOpenDoc(order.id, 'document')}
-                    className="h-8 text-xs border-border"
-                  >
-                    <FileText className="mr-1.5 h-3.5 w-3.5 text-primary" />
-                    Tinjau PDF
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={busy}
-                    onClick={() => void handleOpenDoc(order.id, 'proof')}
-                    className="h-8 text-xs border-border"
-                  >
-                    <ImageIcon className="mr-1.5 h-3.5 w-3.5 text-primary" />
-                    Tinjau Bukti Bayar
-                  </Button>
-
-                  {/* Receipt Viewer Button */}
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={busy || loadingReceipt}
-                    onClick={() => void handleViewReceipt(order.id)}
-                    className="h-8 text-xs border-primary/30 text-primary hover:bg-primary/10 font-medium"
-                  >
-                    <Receipt className="mr-1.5 h-3.5 w-3.5" />
-                    Lihat Receipt
-                  </Button>
-
-                  {order.legacy_review_required && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={busy}
-                      onClick={() => void handleAdminAction(order, 'review_legacy')}
-                      className="h-8 text-xs border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100"
-                    >
-                      <AlertTriangle className="mr-1.5 h-3.5 w-3.5 text-amber-700" />
-                      Catat Review Data Lama
-                    </Button>
-                  )}
-
-                  {/* Verification Workflow Buttons */}
-                  {order.status === 'pending_verification' && (
-                    <>
-                      <Button
-                        size="sm"
-                        disabled={busy}
-                        onClick={() => void handleAdminAction(order, 'verify_payment')}
-                        className="h-8 text-xs bg-emerald-700 hover:bg-emerald-800 text-white font-medium"
-                      >
-                        <CheckCircle className="mr-1.5 h-3.5 w-3.5" />
-                        Verifikasi Bayar
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={busy}
-                        onClick={() => void handleAdminAction(order, 'reject_payment')}
-                        className="h-8 text-xs border-red-200 text-red-700 hover:bg-red-50"
-                      >
-                        <XCircle className="mr-1.5 h-3.5 w-3.5" />
-                        Tolak Bayar
-                      </Button>
-                      <Button
-                        size="sm"
-                        disabled={busy || order.payment_status !== 'verified' || order.legacy_review_required || !selectedWorkerId}
-                        onClick={() => void handleAdminAction(order, 'approve', { workerId: selectedWorkerId, printerKey: 'fake' })}
-                        className="h-8 text-xs bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
-                      >
-                        Setujui Cetak
-                      </Button>
-                    </>
-                  )}
-
-                  {/* Cancellation */}
-                  {(!job || job.status === 'ready') && ['pending_verification', 'approved'].includes(order.status) && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={busy}
-                      onClick={() => void handleAdminAction(order, 'cancel')}
-                      className="h-8 text-xs border-border text-muted-foreground hover:text-destructive"
-                    >
-                      Batalkan Pesanan
-                    </Button>
-                  )}
-
-                  {/* Physical Delivery Confirmation */}
-                  {job?.status === 'backend_completed' && order.status === 'approved' && (
-                    <Button
-                      size="sm"
-                      disabled={busy}
-                      onClick={() => {
-                        if (window.confirm('Pastikan dokumen fisik telah diperiksa dan diserahkan kepada pelanggan?')) {
-                          void handleAdminAction(order, 'deliver');
-                        }
-                      }}
-                      className="h-8 text-xs bg-emerald-700 hover:bg-emerald-800 text-white font-semibold"
-                    >
-                      <CheckCheck className="mr-1.5 h-3.5 w-3.5" />
-                      Konfirmasi Serah-Terima Fisik
-                    </Button>
-                  )}
-
-                  {/* Reprint Workflow */}
-                  {job && ['failed', 'needs_reconciliation', 'backend_completed'].includes(job.status) && order.status === 'approved' && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={busy || !selectedWorkerId}
-                      onClick={() => {
-                        if (window.confirm('PERINGATAN: Dokumen fisik mungkin telah tercetak. Setujui cetak ulang dengan risiko duplikasi?')) {
-                          void handleAdminAction(order, 'reprint', { workerId: selectedWorkerId, printerKey: 'fake', acknowledgeDuplicateRisk: true });
-                        }
-                      }}
-                      className="h-8 text-xs border-amber-300 text-amber-900 hover:bg-amber-50"
-                    >
-                      <RotateCcw className="mr-1.5 h-3.5 w-3.5 text-amber-700" />
-                      Reprint (Revisi Baru)
-                    </Button>
-                  )}
-                </div>
-              </article>
-            );
-          })
-        )}
-
-        {/* Pagination Navigation */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-border pt-4">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page <= 1 || loading}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="h-8 text-xs"
-            >
-              <ChevronLeft className="h-3.5 w-3.5 mr-1" />
-              Sebelumnya
-            </Button>
-            <span className="text-xs text-muted-foreground font-mono">
-              Halaman {page} / {totalPages}
-            </span>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page >= totalPages || loading}
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              className="h-8 text-xs"
-            >
-              Selanjutnya
-              <ChevronRight className="h-3.5 w-3.5 ml-1" />
-            </Button>
+              );
+            })}
           </div>
         )}
-      </div>
 
-      {/* Receipt Modal Viewer */}
-      {activeReceipt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-          <div className="bg-background rounded-lg border border-border shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-border pb-3">
-              <div className="flex items-center gap-2">
-                <Receipt className="h-5 w-5 text-primary" />
-                <h3 className="text-base font-bold text-foreground">
-                  Detail Audit Receipt Pesanan
-                </h3>
+        {/* Pagination */}
+        <div className="flex items-center justify-between pt-2">
+          <p className="text-bodySmall text-[var(--md-sys-color-on-surface-variant)]">
+            {formatCopy(COPY_PAGES.admin.text018, { page, pages: totalPages })}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1}
+            >
+              <CaretLeft className="w-4 h-4" />
+              Sebelumnya
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages}
+            >
+              Berikutnya
+              <CaretRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Receipt Dialog / Bottom Sheet */}
+      <M3ResponsiveDialog
+        open={Boolean(activeReceipt)}
+        onOpenChange={(open) => {
+          if (!open) setActiveReceipt(null);
+        }}
+        title="Rincian pesanan"
+      >
+        {activeReceipt && (
+          <div className="space-y-4">
+            {IS_SIMULATION && (
+              <div className="p-3 rounded-lg bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)] text-bodySmall">
+                {COPY_SIMULATION_DISCLOSURE}
               </div>
+            )}
+
+            <div className="p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-titleMedium font-bold">
+                  {activeReceipt.order.pickupCode}
+                </span>
+                <StatusBadge status={activeReceipt.order.status} />
+              </div>
+              <p className="text-bodyMedium font-medium">{activeReceipt.order.customerName}</p>
+              <p className="text-bodyMedium tabular-nums">
+                Rp {activeReceipt.order.amountDue.toLocaleString('id-ID')}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-titleSmall font-semibold">Riwayat proses</h3>
+              {activeReceipt.events.length === 0 ? (
+                <p className="text-bodySmall text-[var(--md-sys-color-on-surface-variant)]">
+                  Belum ada catatan proses.
+                </p>
+              ) : (
+                <ul className="space-y-1.5 text-bodySmall">
+                  {activeReceipt.events.map((ev) => (
+                    <li key={ev.eventId} className="flex justify-between gap-2">
+                      <span>{ev.type}</span>
+                      <span className="text-[var(--md-sys-color-on-surface-variant)]">
+                        {formatWib(ev.createdAt)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="space-y-2">
               <button
                 type="button"
-                onClick={() => setActiveReceipt(null)}
-                className="text-muted-foreground hover:text-foreground p-1 rounded-md"
+                onClick={() => setShowDeviceInfo((v) => !v)}
+                className="text-labelLarge text-[var(--md-sys-color-primary)] underline"
               >
-                <X className="h-5 w-5" />
+                Informasi perangkat
               </button>
-            </div>
-
-            {/* Disclaimer Banner per ADMIN_API.md */}
-            <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2">
-              <Info className="h-4 w-4 text-amber-700 shrink-0 mt-0.5" />
-              <span>
-                <strong>Perhatian:</strong> Selesainya pekerjaan di backend (status backend_completed) bukan merupakan bukti otomatis bahwa dokumen fisik telah selesai dicetak di printer atau diserahkan kepada pelanggan.
-              </span>
-            </div>
-
-            {/* Order Projections */}
-            <div className="space-y-2">
-              <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider">
-                Informasi Pesanan:
-              </h4>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-3 bg-secondary/30 rounded-md text-xs">
-                <div>
-                  <span className="text-muted-foreground block">ID:</span>
-                  <span className="font-mono font-semibold break-all">{activeReceipt.order.id}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground block">Pickup Code:</span>
-                  <span className="font-mono font-bold text-primary">{activeReceipt.order.pickupCode || '—'}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground block">Pelanggan:</span>
-                  <span className="font-semibold">{activeReceipt.order.customerName}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground block">Status Order:</span>
-                  <StatusBadge status={activeReceipt.order.status} />
-                </div>
-                <div>
-                  <span className="text-muted-foreground block">Status Bayar:</span>
-                  <span className="capitalize">{activeReceipt.order.paymentStatus}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground block">Total Tagihan:</span>
-                  <span className="font-mono font-bold">Rp {activeReceipt.order.amountDue?.toLocaleString('id-ID') || 0}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Jobs List */}
-            <div className="space-y-2">
-              <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider">
-                Riwayat Pekerjaan Cetak ({activeReceipt.jobs.length}):
-              </h4>
-              {activeReceipt.jobs.length === 0 ? (
-                <p className="text-xs text-muted-foreground italic">Belum ada pekerjaan cetak untuk pesanan ini.</p>
-              ) : (
-                <div className="space-y-2">
-                  {activeReceipt.jobs.map((j) => (
-                    <div key={j.id} className="p-3 border border-border rounded-md bg-secondary/15 text-xs space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="font-mono font-bold">Job Rev {j.revision} ({j.id.slice(0, 8)}…)</span>
-                        <StatusBadge status={j.status} />
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 text-muted-foreground text-[11px] pt-1">
-                        <div>Worker ID: <span className="font-mono text-foreground">{j.workerId || '—'}</span></div>
-                        <div>Printer Key: <span className="font-mono text-foreground">{j.printerKey}</span></div>
-                        <div>Backend Job ID: <span className="font-mono text-foreground break-all">{j.backendJobId || '—'}</span></div>
-                        <div>Instance: <span className="font-mono text-foreground">{j.backendInstanceId || '—'}</span></div>
-                      </div>
+              {showDeviceInfo && (
+                <div className="p-3 rounded-lg bg-[var(--md-sys-color-surface-container)] text-bodySmall space-y-1">
+                  {activeReceipt.jobs.map((job) => (
+                    <div key={job.id} className="space-y-0.5">
+                      <p>Perangkat: {job.printerKey}</p>
+                      <p className="break-all">
+                        Nomor proses: {job.backendJobId || '—'}
+                      </p>
                     </div>
                   ))}
                 </div>
               )}
             </div>
 
-            {/* Events Timeline */}
-            <div className="space-y-2">
-              <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider">
-                Linimasa Audit Event ({activeReceipt.events.length}):
-              </h4>
-              {activeReceipt.events.length === 0 ? (
-                <p className="text-xs text-muted-foreground italic">Belum ada audit event tercatat.</p>
-              ) : (
-                <div className="max-h-40 overflow-y-auto space-y-1.5 p-2 bg-secondary/10 rounded-md border border-border">
-                  {activeReceipt.events.map((e) => (
-                    <div key={e.eventId} className="text-[11px] flex items-center justify-between py-1 border-b border-border/40 last:border-0">
-                      <span className="font-mono font-semibold text-primary">{e.type}</span>
-                      <span className="text-muted-foreground font-mono">{new Date(e.createdAt).toLocaleString('id-ID')}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            <p className="text-bodySmall text-[var(--md-sys-color-on-surface-variant)]">
+              Status proses belum membuktikan hasil cetak fisik. Petugas tetap perlu memeriksa
+              dokumen.
+            </p>
 
-            <div className="pt-2 flex justify-end">
-              <Button size="sm" onClick={() => setActiveReceipt(null)} className="h-9 px-5">
+            <div className="flex justify-end">
+              <Button variant="secondary" onClick={() => setActiveReceipt(null)}>
                 Tutup
               </Button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </M3ResponsiveDialog>
+
+      {/* Action Confirmation Dialogs */}
+      <M3ResponsiveDialog
+        open={Boolean(confirmModal)}
+        onOpenChange={(open) => {
+          if (!open) setConfirmModal(null);
+        }}
+        title={
+          confirmModal?.type === 'verify'
+            ? COPY_PAGES.admin.text046
+            : confirmModal?.type === 'reject'
+            ? COPY_PAGES.admin.text041
+            : confirmModal?.type === 'approve'
+            ? COPY_PAGES.admin.text048
+            : confirmModal?.type === 'deliver'
+            ? 'Dokumen sudah diserahkan?'
+            : confirmModal?.type === 'reprint'
+            ? 'Cetak ulang pesanan?'
+            : 'Batalkan pesanan?'
+        }
+      >
+        {confirmModal?.type === 'verify' && (
+          <div className="space-y-4">
+            <p className="text-bodyMedium">
+              {formatCopy(COPY_PAGES.admin.text047, {
+                amount: `Rp ${confirmModal.order.amount_due.toLocaleString('id-ID')}`,
+              })}
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setConfirmModal(null)}>
+                {COPY_PAGES.admin.text044}
+              </Button>
+              <Button
+                variant="default"
+                onClick={() => executeAdminAction(confirmModal.order.id, 'verify_payment')}
+                disabled={processingOrderId === confirmModal.order.id}
+              >
+                {COPY_PAGES.admin.text038}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {confirmModal?.type === 'reject' && (
+          <div className="space-y-4">
+            <input id="reject-reason-input" type="text" value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder={COPY_PAGES.admin.text043} className="w-full h-12 px-4 rounded-xl border border-[var(--md-sys-color-outline)] bg-[var(--md-sys-color-surface)] text-bodyMedium" />
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setConfirmModal(null)}>
+                {COPY_PAGES.admin.text044}
+              </Button>
+              <Button
+                variant="default"
+                onClick={() =>
+                  executeAdminAction(confirmModal.order.id, 'reject_payment', {
+                    reason: rejectReason.trim(),
+                  })
+                }
+                disabled={!rejectReason.trim() || processingOrderId === confirmModal.order.id}
+              >
+                {COPY_PAGES.admin.text045}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {confirmModal?.type === 'approve' && (
+          <div className="space-y-4">
+            <p className="text-bodyMedium">{COPY_PAGES.admin.text049}</p>
+            {selectedWorker?.printerKey.toLowerCase().includes('fake') && (
+              <p className="text-bodySmall text-[var(--md-sys-color-on-surface-variant)]">
+                Perangkat yang dipilih adalah simulasi. Tidak ada cetak fisik.
+              </p>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setConfirmModal(null)}>
+                {COPY_PAGES.admin.text044}
+              </Button>
+              <Button
+                variant="default"
+                onClick={() =>
+                  executeAdminAction(confirmModal.order.id, 'approve', {
+                    workerId: selectedWorkerId,
+                  })
+                }
+                disabled={processingOrderId === confirmModal.order.id}
+              >
+                {COPY_PAGES.admin.text039}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {confirmModal?.type === 'deliver' && (
+          <div className="space-y-4">
+            <p className="text-bodyMedium">
+              {IS_SIMULATION
+                ? 'Ini simulasi penyerahan. Tidak ada dokumen fisik yang dicetak atau diserahkan.'
+                : 'Periksa hasil cetak dan pastikan dokumen sudah diterima pelanggan sebelum mengonfirmasi.'}
+            </p>
+            <label className="flex items-start gap-2.5 text-bodyMedium cursor-pointer">
+              <input
+                type="checkbox"
+                checked={confirmChecked}
+                onChange={(e) => setConfirmChecked(e.target.checked)}
+                className="mt-1 h-4 w-4"
+              />
+              <span>
+                {IS_SIMULATION
+                  ? 'Saya mengonfirmasi penyerahan simulasi.'
+                  : 'Saya sudah memeriksa hasil dan menyerahkannya kepada pelanggan.'}
+              </span>
+            </label>
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setConfirmModal(null)}>
+                Belum diserahkan
+              </Button>
+              <Button
+                variant="default"
+                onClick={() => executeAdminAction(confirmModal.order.id, 'deliver')}
+                disabled={!confirmChecked || processingOrderId === confirmModal.order.id}
+              >
+                Sudah diserahkan
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {confirmModal?.type === 'reprint' && (
+          <div className="space-y-4">
+            <p className="text-bodyMedium flex items-start gap-2">
+              <Warning className="w-5 h-5 shrink-0 text-[var(--md-sys-color-error)]" />
+              Hasil sebelumnya mungkin sudah tercetak. Cetak ulang dapat menghasilkan dokumen ganda.
+            </p>
+            <label className="flex items-start gap-2.5 text-bodyMedium cursor-pointer">
+              <input
+                type="checkbox"
+                checked={confirmChecked}
+                onChange={(e) => setConfirmChecked(e.target.checked)}
+                className="mt-1 h-4 w-4"
+              />
+              <span>Saya memahami risiko dokumen ganda.</span>
+            </label>
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setConfirmModal(null)}>
+                {COPY_PAGES.admin.text044}
+              </Button>
+              <Button
+                variant="default"
+                onClick={() =>
+                  executeAdminAction(confirmModal.order.id, 'reprint', {
+                    workerId: selectedWorkerId,
+                  })
+                }
+                disabled={!confirmChecked || processingOrderId === confirmModal.order.id}
+              >
+                {COPY_PAGES.admin.text037}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {confirmModal?.type === 'cancel' && (
+          <div className="space-y-4">
+            <p className="text-bodyMedium">
+              Pesanan {(confirmModal.order as Order & { pickup_code?: string }).pickup_code || confirmModal.order.id.slice(0, 8)} akan dibatalkan dan tidak dapat dilanjutkan.
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setConfirmModal(null)}>
+                {COPY_PAGES.admin.text044}
+              </Button>
+              <Button
+                variant="default"
+                onClick={() => executeAdminAction(confirmModal.order.id, 'cancel')}
+                disabled={processingOrderId === confirmModal.order.id}
+              >
+                {COPY_PAGES.admin.text036}
+              </Button>
+            </div>
+          </div>
+        )}
+      </M3ResponsiveDialog>
     </div>
   );
 }

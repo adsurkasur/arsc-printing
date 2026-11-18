@@ -82,7 +82,7 @@ export default function AdminLogin() {
             {COPY_PAGES.login.text001}
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground">
-            Akses khusus staf piket dan operator cetak ARSC FTAB UB.
+            {COPY_PAGES.login.text002}
           </p>
         </div>
 
