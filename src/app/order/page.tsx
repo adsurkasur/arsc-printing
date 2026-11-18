@@ -1,491 +1,710 @@
-"use client";
+'use client';
 
-import { useState, useId } from 'react';
+import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Button } from '@/components/ui/button';
-import { FileUp, Image as ImageIcon, CheckCircle2, AlertCircle, QrCode, ArrowRight, ShieldCheck, Info } from 'lucide-react';
-import LivePDFPreview from '@/components/LivePDFPreview';
-import { COPY_PAGES, COPY_LOADING } from '@/lib/copy';
-import { M3Pressable } from '@/components/m3';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { PDFDocument } from 'pdf-lib';
+import {
+  UploadSimpleDuotone,
+  ImageDuotone,
+  CheckCircleDuotone,
+  WarningCircleDuotone,
+  ArrowClockwiseDuotone,
+} from '@/components/icons';
+import { COPY_PAGES, COPY_UI, COPY_LOADING, COPY_VALIDATION } from '@/lib/copy';
+import { m3Transitions } from '@/lib/motion';
+import { M3Pressable, getM3LayerVars, M3StateLayer } from '@/components/m3';
+
+async function countPdfPagesSafe(file: File): Promise<number> {
+  if (file.size > 10 * 1024 * 1024) {
+    throw new Error(COPY_VALIDATION.pdfSize);
+  }
+  const buffer = await file.arrayBuffer();
+  const timeoutPromise = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error(COPY_VALIDATION.invalidPdf)), 5000),
+  );
+  const parsePromise = (async () => {
+    const doc = await PDFDocument.load(buffer, { ignoreEncryption: false });
+    return doc.getPageCount();
+  })();
+  const count = await Promise.race([parsePromise, timeoutPromise]);
+  if (!Number.isFinite(count) || count < 1) {
+    throw new Error(COPY_VALIDATION.invalidPdf);
+  }
+  return count;
+}
 
 export default function OrderPage() {
   const router = useRouter();
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-  const [draft, setDraft] = useState<{ id: string; csrfToken?: string } | null>(null);
-  const [key] = useState(() => crypto.randomUUID());
+  const prefersReduced = useReducedMotion() === true;
 
-  // Form state for live price estimation
-  const [copies, setCopies] = useState<number>(1);
-  const [colorMode, setColorMode] = useState<'bw' | 'color'>('bw');
-  const [paperSize, setPaperSize] = useState<'A4' | 'F4'>('A4');
-  const [pdfFile, setPdfFile] = useState<File | null>(null);
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-  const [proofFile, setProofFile] = useState<File | null>(null);
-  const [pageCount, setPageCount] = useState<number>(1);
-  const [showQris, setShowQris] = useState<boolean>(true);
+  const [step, setStep] = React.useState<1 | 2 | 3>(1);
+  const [direction, setDirection] = React.useState<1 | -1>(1);
+  const [busy, setBusy] = React.useState(false);
+  const [error, setError] = React.useState('');
+  const [draft, setDraft] = React.useState<{ id: string; csrfToken?: string } | null>(null);
+  const [docAcked, setDocAcked] = React.useState(false);
+  const [idempotencyKey] = React.useState(() => crypto.randomUUID());
 
-  // Pricing formula: BW = 500/page, Color = 750/page
+  // Step 1 fields
+  const [customerName, setCustomerName] = React.useState('');
+  const [contact, setContact] = React.useState('');
+  const [copies, setCopies] = React.useState<number>(1);
+  const [colorMode, setColorMode] = React.useState<'bw' | 'color'>('bw');
+  const [paperSize, setPaperSize] = React.useState<'A4' | 'F4'>('A4');
+  const [pagesPerSheet, setPagesPerSheet] = React.useState<1 | 2 | 4>(1);
+  const [orientation, setOrientation] = React.useState<'portrait' | 'landscape'>('portrait');
+  const [notes, setNotes] = React.useState('');
+
+  const [pdfFile, setPdfFile] = React.useState<File | null>(null);
+  const [pdfUrl, setPdfUrl] = React.useState<string | null>(null);
+  const [pageCount, setPageCount] = React.useState<number | null>(null);
+  const [parsingPdf, setParsingPdf] = React.useState(false);
+
+  // Step 2 fields
+  const [proofFile, setProofFile] = React.useState<File | null>(null);
+
+  // Step 3 fields
+  const [agreed, setAgreed] = React.useState(false);
+
+  const nameRef = React.useRef<HTMLInputElement>(null);
+  const contactRef = React.useRef<HTMLInputElement>(null);
+  const pdfInputRef = React.useRef<HTMLInputElement>(null);
+  const proofInputRef = React.useRef<HTMLInputElement>(null);
+  const agreementRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    return () => {
+      if (pdfUrl) URL.revokeObjectURL(pdfUrl);
+    };
+  }, [pdfUrl]);
+
   const unitRate = colorMode === 'color' ? 750 : 500;
-  const estimatedTotal = Math.max(1, pageCount) * unitRate * Math.max(1, copies);
+  const estimatedTotal =
+    pageCount !== null ? pageCount * unitRate * Math.max(1, copies) : null;
 
-  const handlePageCountChange = (count: number) => {
-    if (count > 0) setPageCount(count);
+  const handlePdfChange = async (file: File | null) => {
+    if (pdfUrl) URL.revokeObjectURL(pdfUrl);
+    setPdfUrl(null);
+    setPdfFile(file);
+    setPageCount(null);
+    setError('');
+    if (!file) return;
+
+    const url = URL.createObjectURL(file);
+    setPdfUrl(url);
+    setParsingPdf(true);
+    try {
+      const count = await countPdfPagesSafe(file);
+      setPageCount(count);
+    } catch (err) {
+      setPageCount(null);
+      setError(err instanceof Error ? err.message : COPY_VALIDATION.invalidPdf);
+    } finally {
+      setParsingPdf(false);
+    }
   };
 
-  async function submit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setBusy(true);
+  const handleProofChange = (file: File | null) => {
     setError('');
+    if (!file) {
+      setProofFile(null);
+      return;
+    }
+    if (!['image/png', 'image/jpeg'].includes(file.type)) {
+      setError(COPY_VALIDATION.proofType);
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError(COPY_VALIDATION.proofSize);
+      return;
+    }
+    setProofFile(file);
+  };
 
-    const form = new FormData(e.currentTarget);
-    const file = pdfFile || (form.get('document') as File);
-    const proof = proofFile || (form.get('proof') as File);
+  const goStep1To2 = () => {
+    setError('');
+    if (!customerName.trim()) {
+      setError(COPY_VALIDATION.name);
+      nameRef.current?.focus();
+      return;
+    }
+    if (!contact.trim()) {
+      setError(COPY_VALIDATION.contact);
+      contactRef.current?.focus();
+      return;
+    }
+    if (!pdfFile) {
+      setError(COPY_VALIDATION.pdfMissing);
+      pdfInputRef.current?.focus();
+      return;
+    }
+    if (parsingPdf || pageCount === null) {
+      setError(COPY_VALIDATION.invalidPdf);
+      return;
+    }
+    if (!Number.isFinite(copies) || copies < 1 || copies > 100) {
+      setError(COPY_VALIDATION.copies);
+      return;
+    }
+    setDirection(1);
+    setStep(2);
+  };
 
+  const goStep2To3 = () => {
+    setError('');
+    if (!proofFile) {
+      setError(COPY_VALIDATION.proofMissing);
+      proofInputRef.current?.focus();
+      return;
+    }
+    setDirection(1);
+    setStep(3);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    if (!agreed) {
+      setError(COPY_VALIDATION.agreement);
+      agreementRef.current?.focus();
+      return;
+    }
+    if (!pdfFile || !proofFile || pageCount === null) {
+      setError(COPY_VALIDATION.pdfMissing);
+      return;
+    }
+
+    setBusy(true);
     try {
-      if (!file || file.type !== 'application/pdf' || file.size === 0 || file.size > 10 * 1024 * 1024) {
-        throw new Error('Dokumen harus PDF, ukuran maksimum 10 MiB.');
-      }
-      if (!proof || !['image/png', 'image/jpeg'].includes(proof.type) || proof.size === 0 || proof.size > 5 * 1024 * 1024) {
-        throw new Error('Bukti pembayaran harus format PNG atau JPEG, maksimum 5 MiB.');
-      }
-
-      let order = draft;
-      if (!order) {
-        const response = await fetch('/api/orders', {
+      let currentDraft = draft;
+      if (!currentDraft) {
+        const res = await fetch('/api/orders', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Idempotency-Key': key
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            customer_name: form.get('customer_name'),
-            contact: form.get('contact'),
-            copies: Number(form.get('copies') || copies),
-            color_mode: form.get('color_mode') || colorMode,
-            paper_size: form.get('paper_size') || paperSize,
-            layout: form.get('layout') || '1-up',
-            scale_mode: 'fit',
-            orientation: form.get('orientation') || 'portrait',
-            user_note: form.get('user_note') || '',
-          })
+            customer_name: customerName.trim(),
+            contact: contact.trim(),
+            copies,
+            color_mode: colorMode,
+            paper_size: paperSize,
+            pages_per_sheet: pagesPerSheet,
+            orientation,
+            notes: notes.trim() || undefined,
+            idempotency_key: idempotencyKey,
+          }),
         });
-
-        const value = await response.json();
-        if (!response.ok || value.demoMode || typeof value.id !== 'string' || value.status !== 'pending_verification') {
-          throw new Error('Gagal membuat draft pesanan di backend lokal. Periksa status server.');
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data?.error?.message || 'Gagal menyiapkan pesanan.');
         }
-        order = { id: value.id, csrfToken: value.csrfToken };
-        setDraft(order);
+        currentDraft = { id: data.id, csrfToken: data.csrf_token };
+        setDraft(currentDraft);
       }
 
-      if (!order.csrfToken) {
-        throw new Error('Token otorisasi draft tidak valid. Harap muat ulang halaman.');
-      }
-
-      // Upload files sequentially
-      for (const [kind, selected] of [['document', file], ['proof', proof]] as const) {
-        const body = new FormData();
-        body.set('orderId', order.id);
-        body.set('kind', kind);
-        body.set('file', selected);
-
-        const response = await fetch('/api/upload', {
+      if (!docAcked) {
+        const docForm = new FormData();
+        docForm.append('order_id', currentDraft.id);
+        docForm.append('kind', 'document');
+        docForm.append('file', pdfFile);
+        const docRes = await fetch('/api/upload', {
           method: 'POST',
-          headers: { 'X-CSRF-Token': order.csrfToken },
-          body
+          headers: currentDraft.csrfToken ? { 'x-csrf-token': currentDraft.csrfToken } : undefined,
+          body: docForm,
         });
-
-        const result = await response.json();
-        if (!response.ok || result.demoMode) {
-          throw new Error(`Unggah berkas ${kind} gagal. Silakan coba kembali.`);
+        if (!docRes.ok) {
+          const d = await docRes.json().catch(() => null);
+          throw new Error(d?.error?.message || COPY_VALIDATION.invalidPdf);
         }
+        setDocAcked(true);
       }
 
-      router.push('/order-success?orderId=' + encodeURIComponent(order.id));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Terjadi kendala saat memproses pesanan.');
+      const proofForm = new FormData();
+      proofForm.append('order_id', currentDraft.id);
+      proofForm.append('kind', 'proof');
+      proofForm.append('file', proofFile);
+      const proofRes = await fetch('/api/upload', {
+        method: 'POST',
+        headers: currentDraft.csrfToken ? { 'x-csrf-token': currentDraft.csrfToken } : undefined,
+        body: proofForm,
+      });
+      if (!proofRes.ok) {
+        throw new Error('Bukti pembayaran belum terunggah. Coba kirim lagi.');
+      }
+
+      router.push(`/order-success?orderId=${encodeURIComponent(currentDraft.id)}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Gagal mengirim pesanan.');
     } finally {
       setBusy(false);
     }
-  }
+  };
+
+  const stepLabels = ['Berkas', 'Pembayaran', 'Kirim'] as const;
 
   return (
-    <div className="container mx-auto px-4 py-8 sm:py-12 max-w-4xl w-full min-w-0">
-      {/* Page Header */}
-      <div className="mb-8">
+    <div className="max-w-[960px] mx-auto px-4 md:px-0 pt-6 md:pt-10 pb-12">
+      <div className="mb-space6">
         <h1 className="text-headlineMedium-emphasized md:text-headlineLarge-emphasized font-display text-[var(--md-sys-color-on-surface)]">
           {COPY_PAGES.order.text001}
         </h1>
-        <p className="text-bodyLarge text-[var(--md-sys-color-on-surface-variant)] mt-space2 break-words">
+        <p className="text-bodyLarge text-[var(--md-sys-color-on-surface-variant)] mt-space2">
           {COPY_PAGES.order.text002}
         </p>
 
-        {/* §5 Stepper: Berkas, Pembayaran, Kirim */}
-        <ol className="grid grid-cols-3 gap-2 mt-6 p-2 bg-[var(--md-sys-color-surface-container-low)] rounded-l border border-[var(--md-sys-color-outline-variant)] text-labelLarge text-center">
-          <li aria-current="step" className="py-2 px-2 rounded-m bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] font-bold truncate">
-            1. Berkas
-          </li>
-          <li className="py-2 px-2 text-[var(--md-sys-color-on-surface-variant)] truncate">
-            2. Pembayaran
-          </li>
-          <li className="py-2 px-2 text-[var(--md-sys-color-on-surface-variant)] truncate">
-            3. Kirim
-          </li>
+        {/* §5 3-step Stepper */}
+        <ol className="mt-space6 grid grid-cols-3 gap-space2 min-h-[72px] items-center">
+          {stepLabels.map((label, idx) => {
+            const num = (idx + 1) as 1 | 2 | 3;
+            const done = step > num;
+            const current = step === num;
+            return (
+              <li
+                key={label}
+                aria-current={current ? 'step' : undefined}
+                className="flex flex-col items-center gap-1 text-center"
+              >
+                <span
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-labelMedium-emphasized ${
+                    done
+                      ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
+                      : current
+                        ? 'bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)]'
+                        : 'border border-[var(--md-sys-color-outline)] text-[var(--md-sys-color-outline)]'
+                  }`}
+                >
+                  {done ? <CheckCircleDuotone className="w-5 h-5" aria-hidden="true" /> : num}
+                </span>
+                <span className={current ? 'text-labelSmall-emphasized text-[var(--md-sys-color-primary)]' : 'text-labelSmall text-[var(--md-sys-color-on-surface-variant)]'}>
+                  {label}
+                </span>
+              </li>
+            );
+          })}
         </ol>
       </div>
 
-      <form onSubmit={submit} className="grid grid-cols-1 lg:grid-cols-12 gap-space6 items-start">
-        <div className="lg:col-span-7 space-y-space6 min-w-0">
-        {/* Section 1: Data Pemesan */}
-        <div className="rounded-lg border border-border bg-card p-5 sm:p-6 shadow-card space-y-4">
-          <h2 className="text-base sm:text-lg font-semibold text-foreground flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-secondary text-primary flex items-center justify-center text-xs font-bold">1</span>
-            Identitas Pemesan
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="customer_name" className="block text-xs font-medium text-foreground mb-1.5">
-                Nama Lengkap <span className="text-destructive">*</span>
-              </label>
-              <input
-                id="customer_name"
-                name="customer_name"
-                required
-                maxLength={100}
-                disabled={!!draft || busy}
-                placeholder="Contoh: Budi Santoso"
-                className="w-full h-11 px-3 text-sm rounded-md border border-input bg-background text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-60"
-              />
-            </div>
-            <div>
-              <label htmlFor="contact" className="block text-xs font-medium text-foreground mb-1.5">
-                Nomor WhatsApp / Telegram <span className="text-destructive">*</span>
-              </label>
-              <input
-                id="contact"
-                name="contact"
-                required
-                maxLength={100}
-                disabled={!!draft || busy}
-                placeholder="Contoh: 081234567890"
-                className="w-full h-11 px-3 text-sm rounded-md border border-input bg-background text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-60"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Section 2: Preferensi Cetak */}
-        <div className="rounded-lg border border-border bg-card p-5 sm:p-6 shadow-card space-y-4">
-          <h2 className="text-base sm:text-lg font-semibold text-foreground flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-secondary text-primary flex items-center justify-center text-xs font-bold">2</span>
-            Preferensi Cetak
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
-              <label htmlFor="copies" className="block text-xs font-medium text-foreground mb-1.5">
-                Jumlah Salinan
-              </label>
-              <input
-                id="copies"
-                name="copies"
-                type="number"
-                min={1}
-                max={100}
-                value={copies}
-                onChange={(e) => setCopies(Math.max(1, parseInt(e.target.value) || 1))}
-                disabled={!!draft || busy}
-                className="w-full h-11 px-3 text-sm rounded-md border border-input bg-background text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-60 font-mono"
-              />
-            </div>
-            <div>
-              <label htmlFor="color_mode" className="block text-xs font-medium text-foreground mb-1.5">
-                Mode Warna
-              </label>
-              <select
-                id="color_mode"
-                name="color_mode"
-                value={colorMode}
-                onChange={(e) => setColorMode(e.target.value as 'bw' | 'color')}
-                disabled={!!draft || busy}
-                className="w-full h-11 px-3 text-sm rounded-md border border-input bg-background text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-60"
-              >
-                <option value="bw">Hitam Putih (Rp500)</option>
-                <option value="color">Warna (Rp750)</option>
-              </select>
-            </div>
-            <div>
-              <label htmlFor="paper_size" className="block text-xs font-medium text-foreground mb-1.5">
-                Ukuran Kertas
-              </label>
-              <select
-                id="paper_size"
-                name="paper_size"
-                value={paperSize}
-                onChange={(e) => setPaperSize(e.target.value as 'A4' | 'F4')}
-                disabled={!!draft || busy}
-                className="w-full h-11 px-3 text-sm rounded-md border border-input bg-background text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-60"
-              >
-                <option value="A4">A4 (210 × 297 mm)</option>
-                <option value="F4">F4 / Folio (215 × 330 mm)</option>
-              </select>
-            </div>
-            <div>
-              <label htmlFor="layout" className="block text-xs font-medium text-foreground mb-1.5">
-                Tata Letak
-              </label>
-              <select
-                id="layout"
-                name="layout"
-                disabled={!!draft || busy}
-                className="w-full h-11 px-3 text-sm rounded-md border border-input bg-background text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-60"
-              >
-                <option value="1-up">1 Halaman per Lembar</option>
-                <option value="2-up">2 Halaman per Lembar</option>
-                <option value="4-up">4 Halaman per Lembar</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-            <div>
-              <label htmlFor="orientation" className="block text-xs font-medium text-foreground mb-1.5">
-                Orientasi Cetak
-              </label>
-              <select
-                id="orientation"
-                name="orientation"
-                disabled={!!draft || busy}
-                className="w-full h-11 px-3 text-sm rounded-md border border-input bg-background text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-60"
-              >
-                <option value="portrait">Potret (Tegak)</option>
-                <option value="landscape">Lansekap (Mendatar)</option>
-              </select>
-            </div>
-            <div>
-              <label htmlFor="user_note" className="block text-xs font-medium text-foreground mb-1.5">
-                Catatan Tambahan (Opsional)
-              </label>
-              <input
-                id="user_note"
-                name="user_note"
-                maxLength={500}
-                disabled={!!draft || busy}
-                placeholder="Contoh: Jilid staples sudut kiri atas"
-                className="w-full h-11 px-3 text-sm rounded-md border border-input bg-background text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-60"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Section 3: Berkas Dokumen PDF */}
-        <div className="rounded-lg border border-border bg-card p-5 sm:p-6 shadow-card space-y-4">
-          <h2 className="text-base sm:text-lg font-semibold text-foreground flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-secondary text-primary flex items-center justify-center text-xs font-bold">3</span>
-              Unggah Dokumen PDF
-            </span>
-            <span className="text-xs text-muted-foreground font-normal">Maks. 10 MiB</span>
-          </h2>
-
-          <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors bg-secondary/15">
-            <FileUp className="h-8 w-8 text-primary mx-auto mb-2" />
-            <p className="text-sm font-medium text-foreground">
-              {pdfFile ? pdfFile.name : 'Pilih berkas PDF dari perangkat Anda'}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1 mb-3">
-              Format didukung: PDF standar (dokumen teks/laporan/skripsi)
-            </p>
-            <label className="inline-block">
-              <span className="sr-only">Pilih berkas PDF</span>
-              <input
-                name="document"
-                type="file"
-                required
-                accept="application/pdf"
-                disabled={!!draft || busy}
-                onChange={async (e) => {
-                  const f = e.target.files?.[0] || null;
-                  setPdfFile(f);
-                  if (f) {
-                    const url = URL.createObjectURL(f);
-                    setPdfUrl(url);
-                    // Approximate page count from file size or pdf-lib in browser if needed, defaults to 1
-                    try {
-                      const buffer = await f.arrayBuffer();
-                      const bytes = new Uint8Array(buffer);
-                      // Simple /Type /Page scanner for fast client-side count
-                      const str = new TextDecoder('latin1').decode(bytes);
-                      const matches = str.match(/\/Type\s*\/Page\b/g);
-                      if (matches && matches.length > 0) {
-                        setPageCount(matches.length);
-                      }
-                    } catch {
-                      // Fallback to 1
-                    }
-                  } else {
-                    setPdfUrl(null);
-                  }
-                }}
-                className="block w-full max-w-full text-xs text-muted-foreground file:mr-3 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 cursor-pointer truncate"
-              />
-            </label>
-          </div>
-
-          {/* Interactive PDF Preview */}
-          {pdfUrl && (
-            <div className="mt-4 pt-4 border-t border-border">
-              <p className="text-xs font-medium text-foreground mb-2 flex items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                Pratinjau PDF Terdeteksi ({pageCount} Halaman)
-              </p>
-              <LivePDFPreview
-                fileUrl={pdfUrl}
-                colorMode={colorMode}
-                paperSize={paperSize}
-                layout="1-up"
-                scaleMode="fit"
-                orientation="portrait"
-                actualPages={pageCount}
-              />
+      <form
+        onSubmit={handleSubmit}
+        className="grid grid-cols-1 lg:grid-cols-[592px_344px] gap-space6 items-start"
+      >
+        {/* Active Step Elevated Card */}
+        <div className="p-space5 md:p-space6 rounded-lPlus bg-[var(--md-sys-color-surface-container-low)] shadow-elevation-1 min-w-0">
+          {error && (
+            <div
+              role="alert"
+              className="mb-space4 p-space3 rounded-m bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] flex items-start gap-space2 text-bodyMedium"
+            >
+              <WarningCircleDuotone className="w-5 h-5 shrink-0 mt-0.5" aria-hidden="true" />
+              <span>{error}</span>
             </div>
           )}
-        </div>
 
-        {/* Section 4: Estimasi Biaya & Pembayaran QRIS */}
-        <div className="rounded-lg border border-border bg-card p-5 sm:p-6 shadow-card space-y-4">
-          <h2 className="text-base sm:text-lg font-semibold text-foreground flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-secondary text-primary flex items-center justify-center text-xs font-bold">4</span>
-              Estimasi Biaya & Pembayaran QRIS
-            </span>
-            <span className="text-xs px-2 py-0.5 rounded bg-secondary text-primary font-medium">
-              Tarif Resmi
-            </span>
-          </h2>
-
-          {/* Price Breakdown Banner */}
-          <div className="rounded-md border border-emerald-200 bg-emerald-50/50 p-4 dark:border-emerald-900/50 dark:bg-emerald-950/20">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
-                <p className="text-xs text-emerald-900 dark:text-emerald-300 font-medium">
-                  Rincian Perhitungan Estimasi:
-                </p>
-                <p className="text-sm text-emerald-950 dark:text-emerald-100 font-mono mt-0.5">
-                  {pageCount} halaman × Rp {unitRate.toLocaleString('id-ID')} ({colorMode === 'color' ? 'Warna' : 'Hitam Putih'}) × {copies} salinan
-                </p>
-              </div>
-              <div className="text-right sm:border-l sm:border-emerald-200 sm:dark:border-emerald-800 sm:pl-4">
-                <span className="text-xs text-emerald-800 dark:text-emerald-400 font-medium block">Total Estimasi</span>
-                <span className="text-2xl font-bold font-mono text-emerald-900 dark:text-emerald-100">
-                  Rp {estimatedTotal.toLocaleString('id-ID')}
-                </span>
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2 border-t border-emerald-200/60 dark:border-emerald-900/60 pt-2 flex items-center gap-1">
-              <Info className="h-3.5 w-3.5 text-muted-foreground" />
-              Estimasi awal dihitung dari pratinjau halaman; tagihan final diverifikasi oleh server secara otomatis.
-            </p>
-          </div>
-
-          {/* Inline QRIS Display Card */}
-          <div className="border border-border rounded-lg p-4 bg-background space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <QrCode className="h-5 w-5 text-primary" />
-                <span className="text-sm font-semibold text-foreground">QRIS Layanan ARSC UB</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowQris(!showQris)}
-                className="text-xs text-primary hover:underline font-medium"
+          <AnimatePresence mode="wait" initial={false}>
+            {step === 1 && (
+              <motion.div
+                key="step-1"
+                initial={prefersReduced ? false : { x: direction * 24, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={prefersReduced ? undefined : { x: direction * -24, opacity: 0 }}
+                transition={m3Transitions(prefersReduced)}
+                className="space-y-space5"
               >
-                {showQris ? 'Sembunyikan QRIS' : 'Tampilkan QRIS'}
-              </button>
-            </div>
-
-            {showQris && (
-              <div className="flex flex-col sm:flex-row items-center gap-4 pt-2">
-                <div className="w-44 h-44 relative rounded-md border border-border p-1 bg-white shrink-0 shadow-xs">
-                  <Image
-                    src="/qris-arsc.jpeg"
-                    alt="Kode QRIS ARSC UB"
-                    fill
-                    className="object-contain p-1"
+                <div>
+                  <label htmlFor="customer_name" className="block text-labelLarge-emphasized mb-space2">
+                    {COPY_PAGES.order.text004}
+                  </label>
+                  <input
+                    ref={nameRef}
+                    id="customer_name"
+                    name="customer_name"
+                    autoComplete="name"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    disabled={!!draft || busy}
+                    className="w-full h-14 px-space4 rounded-t-xs bg-[var(--md-sys-color-surface-container-highest)] border-b border-[var(--md-sys-color-outline)] text-bodyLarge focus:border-b-2 focus:border-[var(--md-sys-color-primary)] focus:outline-none"
                   />
                 </div>
-                <div className="text-xs text-muted-foreground space-y-1.5 leading-relaxed">
-                  <p className="font-medium text-foreground">Instruksi Pembayaran Mandiri:</p>
-                  <ol className="list-decimal pl-4 space-y-1">
-                    <li>Buka aplikasi m-Banking (BCA, Mandiri, BRI, BNI) atau e-Wallet (Gopay, OVO, ShopeePay, Dana).</li>
-                    <li>Pindai kode QRIS di samping dan masukkan nominal transfer sesuai total estimasi: <strong className="text-foreground font-mono">Rp {estimatedTotal.toLocaleString('id-ID')}</strong>.</li>
-                    <li>Simpan tangkapan layar (screenshot) bukti transfer Anda.</li>
-                    <li>Unggah berkas bukti pembayaran di formulir bawah ini.</li>
-                  </ol>
+
+                <div>
+                  <label htmlFor="contact" className="block text-labelLarge-emphasized mb-space2">
+                    {COPY_PAGES.order.text005}
+                  </label>
+                  <input
+                    ref={contactRef}
+                    id="contact"
+                    name="contact"
+                    type="tel"
+                    autoComplete="tel"
+                    value={contact}
+                    onChange={(e) => setContact(e.target.value)}
+                    disabled={!!draft || busy}
+                    className="w-full h-14 px-space4 rounded-t-xs bg-[var(--md-sys-color-surface-container-highest)] border-b border-[var(--md-sys-color-outline)] text-bodyLarge focus:border-b-2 focus:border-[var(--md-sys-color-primary)] focus:outline-none"
+                  />
                 </div>
-              </div>
+
+                {/* PDF Dropzone */}
+                <div>
+                  <label className="block min-h-[144px] p-space4 rounded-lPlus border-2 border-dashed border-[var(--md-sys-color-outline)] bg-[var(--md-sys-color-surface-container-low)] flex flex-col items-center justify-center text-center cursor-pointer">
+                    <input
+                      ref={pdfInputRef}
+                      id="document_file"
+                      type="file"
+                      accept="application/pdf"
+                      disabled={!!draft || busy}
+                      onChange={(e) => void handlePdfChange(e.target.files?.[0] ?? null)}
+                      className="sr-only"
+                    />
+                    {parsingPdf ? (
+                      <ArrowClockwiseDuotone className="w-8 h-8 text-[var(--md-sys-color-primary)] animate-spin mb-space2" aria-hidden="true" />
+                    ) : pageCount !== null ? (
+                      <CheckCircleDuotone className="w-8 h-8 text-[var(--md-custom-color-success)] mb-space2" aria-hidden="true" />
+                    ) : (
+                      <UploadSimpleDuotone className="w-8 h-8 text-[var(--md-sys-color-primary)] mb-space2" aria-hidden="true" />
+                    )}
+                    <span className="text-titleMedium-emphasized">{COPY_UI.dropzonePdf}</span>
+                    <span className="text-bodySmall text-[var(--md-sys-color-on-surface-variant)] mt-1">
+                      {parsingPdf
+                        ? 'Jumlah halaman sedang diperiksa'
+                        : pdfFile && pageCount !== null
+                          ? `${pdfFile.name} (${pageCount} halaman)`
+                          : COPY_UI.dropzonePdfHelper}
+                    </span>
+                  </label>
+                </div>
+
+                {/* Copies */}
+                <div>
+                  <label htmlFor="copies" className="block text-labelLarge-emphasized mb-space2">
+                    Jumlah salinan
+                  </label>
+                  <input
+                    id="copies"
+                    type="number"
+                    min={1}
+                    max={100}
+                    value={copies}
+                    onChange={(e) => setCopies(Math.max(1, Math.min(100, Number(e.target.value) || 1)))}
+                    disabled={!!draft || busy}
+                    className="w-32 h-14 px-space4 rounded-t-xs bg-[var(--md-sys-color-surface-container-highest)] border-b border-[var(--md-sys-color-outline)] text-bodyLarge font-code"
+                  />
+                </div>
+
+                {/* Segmented: Warna cetak */}
+                <div>
+                  <span className="block text-labelLarge-emphasized mb-space2">Warna cetak</span>
+                  <div role="radiogroup" aria-label="Warna cetak" className="flex h-12 rounded-full border border-[var(--md-sys-color-outline)] overflow-hidden">
+                    {([
+                      { id: 'bw', label: 'Hitam putih' },
+                      { id: 'color', label: 'Warna' },
+                    ] as const).map((opt) => {
+                      const active = colorMode === opt.id;
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          role="radio"
+                          aria-checked={active}
+                          disabled={!!draft || busy}
+                          onClick={() => setColorMode(opt.id)}
+                          style={getM3LayerVars('secondaryContainer')}
+                          className={`m3-control flex-1 h-full flex items-center justify-center gap-space2 text-labelLarge ${
+                            active
+                              ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] font-bold'
+                              : 'text-[var(--md-sys-color-on-surface)]'
+                          }`}
+                        >
+                          <M3StateLayer />
+                          {active && <CheckCircleDuotone className="w-4 h-4" aria-hidden="true" />}
+                          <span>{opt.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Segmented: Ukuran kertas */}
+                <div>
+                  <span className="block text-labelLarge-emphasized mb-space2">Ukuran kertas</span>
+                  <div role="radiogroup" aria-label="Ukuran kertas" className="flex h-12 rounded-full border border-[var(--md-sys-color-outline)] overflow-hidden">
+                    {(['A4', 'F4'] as const).map((sz) => {
+                      const active = paperSize === sz;
+                      return (
+                        <button
+                          key={sz}
+                          type="button"
+                          role="radio"
+                          aria-checked={active}
+                          disabled={!!draft || busy}
+                          onClick={() => setPaperSize(sz)}
+                          style={getM3LayerVars('secondaryContainer')}
+                          className={`m3-control flex-1 h-full flex items-center justify-center gap-space2 text-labelLarge ${
+                            active
+                              ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] font-bold'
+                              : 'text-[var(--md-sys-color-on-surface)]'
+                          }`}
+                        >
+                          <M3StateLayer />
+                          {active && <CheckCircleDuotone className="w-4 h-4" aria-hidden="true" />}
+                          <span>{sz}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {paperSize === 'F4' && (
+                    <p className="text-bodySmall text-[var(--md-sys-color-on-surface-variant)] mt-1">
+                      Ketersediaan ukuran F4 diperiksa petugas.
+                    </p>
+                  )}
+                </div>
+
+                {/* Segmented: Halaman per lembar */}
+                <div>
+                  <span className="block text-labelLarge-emphasized mb-space2">Halaman per lembar</span>
+                  <div role="radiogroup" aria-label="Halaman per lembar" className="flex h-12 rounded-full border border-[var(--md-sys-color-outline)] overflow-hidden">
+                    {([1, 2, 4] as const).map((n) => {
+                      const active = pagesPerSheet === n;
+                      return (
+                        <button
+                          key={n}
+                          type="button"
+                          role="radio"
+                          aria-checked={active}
+                          disabled={!!draft || busy}
+                          onClick={() => setPagesPerSheet(n)}
+                          style={getM3LayerVars('secondaryContainer')}
+                          className={`m3-control flex-1 h-full flex items-center justify-center gap-space2 text-labelLarge ${
+                            active
+                              ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] font-bold'
+                              : 'text-[var(--md-sys-color-on-surface)]'
+                          }`}
+                        >
+                          <M3StateLayer />
+                          {active && <CheckCircleDuotone className="w-4 h-4" aria-hidden="true" />}
+                          <span>{n}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Segmented: Orientasi */}
+                <div>
+                  <span className="block text-labelLarge-emphasized mb-space2">Orientasi</span>
+                  <div role="radiogroup" aria-label="Orientasi" className="flex h-12 rounded-full border border-[var(--md-sys-color-outline)] overflow-hidden">
+                    {([
+                      { id: 'portrait', label: 'Tegak' },
+                      { id: 'landscape', label: 'Mendatar' },
+                    ] as const).map((o) => {
+                      const active = orientation === o.id;
+                      return (
+                        <button
+                          key={o.id}
+                          type="button"
+                          role="radio"
+                          aria-checked={active}
+                          disabled={!!draft || busy}
+                          onClick={() => setOrientation(o.id)}
+                          style={getM3LayerVars('secondaryContainer')}
+                          className={`m3-control flex-1 h-full flex items-center justify-center gap-space2 text-labelLarge ${
+                            active
+                              ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] font-bold'
+                              : 'text-[var(--md-sys-color-on-surface)]'
+                          }`}
+                        >
+                          <M3StateLayer />
+                          {active && <CheckCircleDuotone className="w-4 h-4" aria-hidden="true" />}
+                          <span>{o.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="notes" className="block text-labelLarge-emphasized mb-space2">
+                    Catatan untuk petugas (opsional)
+                  </label>
+                  <input
+                    id="notes"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    disabled={!!draft || busy}
+                    className="w-full h-14 px-space4 rounded-t-xs bg-[var(--md-sys-color-surface-container-highest)] border-b border-[var(--md-sys-color-outline)] text-bodyLarge"
+                  />
+                </div>
+
+                <div className="pt-space2 flex justify-end">
+                  <M3Pressable
+                    type="button"
+                    pair="primary"
+                    onClick={goStep1To2}
+                    className="h-12 px-6 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] text-labelLarge-emphasized w-full sm:w-auto"
+                  >
+                    {COPY_UI.step1Action}
+                  </M3Pressable>
+                </div>
+              </motion.div>
             )}
-          </div>
 
-          {/* Upload Proof Input */}
-          <div className="border-2 border-dashed border-border rounded-lg p-5 text-center bg-secondary/15">
-            <ImageIcon className="h-6 w-6 text-primary mx-auto mb-1.5" />
-            <p className="text-sm font-medium text-foreground">
-              {proofFile ? proofFile.name : 'Unggah Bukti Transfer QRIS (PNG/JPEG)'}
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5 mb-2">Maks. 5 MiB (verifikasi manual admin)</p>
-            <input
-              name="proof"
-              type="file"
-              required
-              accept="image/png,image/jpeg"
-              disabled={!!draft || busy}
-              onChange={(e) => {
-                const f = e.target.files?.[0] || null;
-                setProofFile(f);
-              }}
-              className="block w-full max-w-full text-xs text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 cursor-pointer truncate"
-            />
-          </div>
-        </div>
+            {step === 2 && (
+              <motion.div
+                key="step-2"
+                initial={prefersReduced ? false : { x: direction * 24, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={prefersReduced ? undefined : { x: direction * -24, opacity: 0 }}
+                transition={m3Transitions(prefersReduced)}
+                className="space-y-space5"
+              >
+                <div className="p-space4 rounded-m bg-[var(--md-sys-color-surface-container)] space-y-1">
+                  <p className="text-bodyMedium font-code">
+                    {pageCount} halaman × {copies} salinan × Rp {unitRate.toLocaleString('id-ID')}
+                  </p>
+                  <p className="text-titleMedium-emphasized">
+                    Estimasi biaya: <span className="font-code text-[var(--md-sys-color-primary)]">Rp {estimatedTotal?.toLocaleString('id-ID')}</span>
+                  </p>
+                  <p className="text-bodySmall text-[var(--md-sys-color-on-surface-variant)]">
+                    {COPY_UI.qrisEstimate}
+                  </p>
+                </div>
 
-        {/* Draft Notification if Present */}
-        {draft && (
-          <div className="p-3 bg-secondary border border-border rounded-md text-xs text-foreground">
-            Draft ID: <code className="font-mono font-semibold">{draft.id}</code>. Preferensi cetak terkunci selama proses unggah berkas.
-          </div>
-        )}
+                <div className="flex flex-col items-center gap-space3">
+                  <div className="p-4 bg-white rounded-m inline-block">
+                    <Image
+                      src="/qris-arsc.jpeg"
+                      alt={COPY_UI.qrisTitle}
+                      width={256}
+                      height={256}
+                      className="w-[min(256px,100%)] h-auto"
+                    />
+                  </div>
+                  <a
+                    href="/qris-arsc.jpeg"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-labelLarge text-[var(--md-sys-color-primary)] underline min-h-[48px] inline-flex items-center"
+                  >
+                    {COPY_UI.qrisOpen}
+                  </a>
+                </div>
 
-        {/* Action Error Message */}
-        {error && (
-          <div role="alert" className="p-3 bg-red-50 border border-red-200 text-red-900 rounded-md text-sm flex items-start gap-2">
-            <AlertCircle className="h-5 w-5 text-red-700 shrink-0 mt-0.5" />
-            <span>{error}</span>
-          </div>
-        )}
+                {/* Proof Dropzone */}
+                <div>
+                  <label className="block min-h-[144px] p-space4 rounded-lPlus border-2 border-dashed border-[var(--md-sys-color-outline)] bg-[var(--md-sys-color-surface-container-low)] flex flex-col items-center justify-center text-center cursor-pointer">
+                    <input
+                      ref={proofInputRef}
+                      id="proof_file"
+                      type="file"
+                      accept="image/png,image/jpeg"
+                      disabled={busy}
+                      onChange={(e) => handleProofChange(e.target.files?.[0] ?? null)}
+                      className="sr-only"
+                    />
+                    {proofFile ? (
+                      <CheckCircleDuotone className="w-8 h-8 text-[var(--md-custom-color-success)] mb-space2" aria-hidden="true" />
+                    ) : (
+                      <ImageDuotone className="w-8 h-8 text-[var(--md-sys-color-primary)] mb-space2" aria-hidden="true" />
+                    )}
+                    <span className="text-titleMedium-emphasized">{COPY_UI.dropzoneProof}</span>
+                    <span className="text-bodySmall text-[var(--md-sys-color-on-surface-variant)] mt-1">
+                      {proofFile ? proofFile.name : COPY_UI.dropzoneProofHelper}
+                    </span>
+                  </label>
+                </div>
 
-        {/* Submit Button */}
-        <div className="pt-2">
-          <M3Pressable
-            pair="primary"
-            disabled={busy || !pdfFile || !proofFile}
-            aria-busy={busy}
-            type="submit"
-            className="w-full sm:w-auto h-12 px-8 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] text-labelLarge-emphasized"
-          >
-            {busy ? COPY_LOADING.submit : COPY_PAGES.order.text034}
-          </M3Pressable>
-        </div>
+                <div className="pt-space2 flex flex-col-reverse sm:flex-row justify-between gap-space3">
+                  <M3Pressable
+                    type="button"
+                    pair="surface"
+                    onClick={() => {
+                      setDirection(-1);
+                      setStep(1);
+                    }}
+                    className="h-12 px-6 rounded-full border border-[var(--md-sys-color-outline)] text-labelLarge-emphasized"
+                  >
+                    {COPY_UI.stepBack}
+                  </M3Pressable>
+                  <M3Pressable
+                    type="button"
+                    pair="primary"
+                    onClick={goStep2To3}
+                    className="h-12 px-6 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] text-labelLarge-emphasized"
+                  >
+                    {COPY_UI.step2Action}
+                  </M3Pressable>
+                </div>
+              </motion.div>
+            )}
+
+            {step === 3 && (
+              <motion.div
+                key="step-3"
+                initial={prefersReduced ? false : { x: direction * 24, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={prefersReduced ? undefined : { x: direction * -24, opacity: 0 }}
+                transition={m3Transitions(prefersReduced)}
+                className="space-y-space5"
+              >
+                <div className="p-space4 rounded-m bg-[var(--md-sys-color-surface-container)] space-y-space2 text-bodyMedium">
+                  <div><strong>{COPY_PAGES.order.text004}:</strong> {customerName}</div>
+                  <div><strong>{COPY_PAGES.order.text005}:</strong> {contact}</div>
+                  <div><strong>{COPY_UI.dropzonePdf}:</strong> {pdfFile?.name} ({pageCount} hal)</div>
+                  <div><strong>Pengaturan:</strong> {copies}×, {colorMode === 'color' ? 'Warna' : 'Hitam putih'}, {paperSize}, {pagesPerSheet}-up, {orientation === 'portrait' ? 'Tegak' : 'Mendatar'}</div>
+                  <div><strong>Estimasi biaya:</strong> <span className="font-code">Rp {estimatedTotal?.toLocaleString('id-ID')}</span></div>
+                </div>
+
+                <label className="flex items-start gap-space3 cursor-pointer min-h-[48px]">
+                  <input
+                    ref={agreementRef}
+                    type="checkbox"
+                    checked={agreed}
+                    onChange={(e) => setAgreed(e.target.checked)}
+                    disabled={busy}
+                    className="w-6 h-6 mt-1 accent-[var(--md-sys-color-primary)]"
+                  />
+                  <span className="text-bodyMedium">{COPY_UI.orderAgreement}</span>
+                </label>
+
+                <p className="text-bodySmall text-[var(--md-sys-color-on-surface-variant)]">
+                  {COPY_UI.orderWarning}
+                </p>
+
+                <div className="pt-space2 flex flex-col-reverse sm:flex-row justify-between gap-space3">
+                  <M3Pressable
+                    type="button"
+                    pair="surface"
+                    disabled={busy || !!draft}
+                    onClick={() => {
+                      setDirection(-1);
+                      setStep(2);
+                    }}
+                    className="h-12 px-6 rounded-full border border-[var(--md-sys-color-outline)] text-labelLarge-emphasized"
+                  >
+                    {COPY_UI.stepBack}
+                  </M3Pressable>
+                  <M3Pressable
+                    type="submit"
+                    pair="primary"
+                    disabled={busy}
+                    aria-busy={busy}
+                    className="h-12 px-6 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] text-labelLarge-emphasized"
+                  >
+                    {busy ? COPY_LOADING.submit : COPY_UI.stepSubmit}
+                  </M3Pressable>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* §6.2 Sticky Summary Filled Card */}
-        <aside className="lg:col-span-5 lg:sticky lg:top-24 p-space5 md:p-space6 rounded-lPlus bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-on-surface)] space-y-space4">
+        <aside className="lg:sticky lg:top-24 p-space5 md:p-space6 rounded-lPlus bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-on-surface)] space-y-space4">
           <h2 className="text-titleMedium-emphasized">{COPY_PAGES.order.text003}</h2>
           <div className="space-y-space2 text-bodyMedium">
             <div className="flex justify-between">
               <span className="text-[var(--md-sys-color-on-surface-variant)]">Halaman PDF</span>
-              <span className="font-code">{pdfFile ? `${pageCount} hal` : '—'}</span>
+              <span className="font-code">{pageCount !== null ? `${pageCount} hal` : '—'}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[var(--md-sys-color-on-surface-variant)]">Salinan</span>
@@ -498,7 +717,7 @@ export default function OrderPage() {
             <div className="pt-space3 border-t border-[var(--md-sys-color-outline-variant)] flex justify-between items-baseline">
               <span className="text-titleSmall-emphasized">{COPY_PAGES.order.text024}</span>
               <span className="text-amount-emphasized font-code text-[var(--md-sys-color-primary)]">
-                Rp {estimatedTotal.toLocaleString('id-ID')}
+                {estimatedTotal !== null ? `Rp ${estimatedTotal.toLocaleString('id-ID')}` : '—'}
               </span>
             </div>
           </div>

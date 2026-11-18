@@ -11,38 +11,42 @@ async function run() {
   const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
   const page = await context.newPage();
 
-  // 1. /order
+  // 1. /order Step 1 empty
   await page.goto(`${baseUrl}/order`, { waitUntil: 'networkidle' });
+  await page.screenshot({ path: path.join(outDir, 'order-empty.png') });
+
+  // 2. Step 1 validation error
+  await page.click('button:has-text("Lanjut ke pembayaran")');
+  await page.waitForTimeout(200);
+  await page.screenshot({ path: path.join(outDir, 'order-validation-error.png') });
+
+  // 3. Step 1 filled + PDF parsed
   await page.fill('#customer_name', 'Budi Santoso');
   await page.fill('#contact', '081234567890');
+  await page.locator('input[type="file"][accept*="pdf"]').first().setInputFiles(path.resolve('tests/fixtures/minimal.pdf'));
+  await page.waitForSelector('text=minimal.pdf (1 halaman)', { timeout: 10000 });
+  await page.screenshot({ path: path.join(outDir, 'order-step1-filled.png') });
 
-  const pdfInput = page.locator('input[type="file"][accept*="pdf"]').first();
-  await pdfInput.setInputFiles(path.resolve('tests/fixtures/minimal.pdf'));
-  await page.waitForTimeout(400);
+  // 4. Advance to Step 2 Pembayaran
+  await page.click('button:has-text("Lanjut ke pembayaran")');
+  await page.waitForSelector('text=Estimasi biaya:', { timeout: 5000 });
+  await page.locator('input[type="file"][accept*="image"]').first().setInputFiles(path.resolve('tests/fixtures/proof.png'));
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: path.join(outDir, 'order-step2.png') });
 
-  const proofInput = page.locator('input[type="file"][accept*="image"]').first();
-  await proofInput.setInputFiles(path.resolve('tests/fixtures/proof.png'));
-  await page.waitForTimeout(400);
+  // 5. Advance to Step 3 Kirim
+  await page.click('button:has-text("Periksa pesanan")');
+  await page.waitForSelector('button[type="submit"]', { timeout: 5000 });
+  await page.screenshot({ path: path.join(outDir, 'order-step3.png') });
 
-  const agreement = page.locator('input[type="checkbox"]').first();
-  if ((await agreement.count()) > 0 && !(await agreement.isChecked())) {
-    await agreement.check();
-  }
-
-  const submitBtn = page.locator('button[type="submit"]').first();
-  await submitBtn.waitFor({ state: 'visible', timeout: 10000 });
-  await page.waitForFunction(
-    (btn) => btn && !btn.hasAttribute('disabled'),
-    await submitBtn.elementHandle(),
-    { timeout: 10000 },
-  );
-
-  await page.screenshot({ path: path.join(outDir, 'order-filled.png') });
-
+  // 6. Check agreement & submit
+  await page.locator('input[type="checkbox"]').first().check();
   const navPromise = page.waitForURL('**/order-success?orderId=*', { timeout: 25000 });
-  await submitBtn.click();
-  await navPromise;
+  await page.click('button[type="submit"]');
+  await page.waitForTimeout(100);
+  await page.screenshot({ path: path.join(outDir, 'order-submitting.png') });
 
+  await navPromise;
   await page.waitForLoadState('networkidle');
   await page.waitForTimeout(1000);
   const successUrl = page.url();
@@ -52,7 +56,7 @@ async function run() {
   console.log('E2E_SUCCESS_TEXT:', successMainText.replace(/\s+/g, ' ').trim());
   await page.screenshot({ path: path.join(outDir, 'success.png') });
 
-  // 2. /track
+  // 7. /track
   await page.goto(`${baseUrl}/track`, { waitUntil: 'networkidle' });
   await page.fill('#tracking-id', orderId);
   await page.click('button[type="submit"]');
