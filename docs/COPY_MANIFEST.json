@@ -357,5 +357,16 @@
       "text070": "Hasil sebelumnya mungkin sudah tercetak. Cetak ulang dapat menghasilkan dokumen ganda.",
       "text071": "Saya memahami risiko dokumen ganda."
     }
+  },
+  "COPY_HOME": {
+    "heroTitle": "Cetak tugas,\nlanjutkan harimu.",
+    "heroSubtitle": "Kirim PDF, bayar sesuai tagihan, lalu ambil pesanan di sekretariat ARSC.",
+    "tariffHeading": "Tarif yang jelas",
+    "tariffBwLabel": "Hitam putih",
+    "tariffBwValue": "Rp 500 per halaman",
+    "tariffColorLabel": "Warna",
+    "tariffColorValue": "Rp 750 per halaman",
+    "queueCountSuffix": "pesanan dalam antrean",
+    "queueLink": "Lihat antrean"
   }
 }

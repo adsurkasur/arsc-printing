@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { ClockDuotone } from '@/components/icons';
-import { COPY_PAGES } from '@/lib/copy';
+import { COPY_HOME } from '@/lib/copy';
 
 export function HomeQueueStrip() {
   const [count, setCount] = React.useState<number | null>(null);
@@ -25,8 +25,8 @@ export function HomeQueueStrip() {
 
   const label =
     count === null
-      ? COPY_PAGES.home.text009
-      : `${count} pesanan dalam antrean`;
+      ? `0 ${COPY_HOME.queueCountSuffix}`
+      : `${count} ${COPY_HOME.queueCountSuffix}`;
 
   return (
     <div className="mt-space6 lg:mt-space12 p-space4 rounded-l bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] flex flex-wrap items-center justify-between gap-space3">
@@ -38,7 +38,7 @@ export function HomeQueueStrip() {
         href="/queue"
         className="text-labelLarge-emphasized text-[var(--md-sys-color-on-secondary-container)] underline underline-offset-4 min-h-[48px] flex items-center"
       >
-        {COPY_PAGES.home.text010}
+        {COPY_HOME.queueLink}
       </Link>
     </div>
   );

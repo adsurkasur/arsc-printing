@@ -1,6 +1,6 @@
 ﻿import Link from 'next/link';
 import { FileTextDuotone } from '@/components/icons';
-import { COPY_PAGES, COPY_UI } from '@/lib/copy';
+import { COPY_HOME, COPY_PAGES, COPY_UI } from '@/lib/copy';
 import { getM3LayerVars, M3StateLayer } from '@/components/m3';
 import { HomeQueueStrip } from '@/components/HomeQueueStrip';
 
@@ -17,10 +17,10 @@ export default function HomePage() {
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
         <div className="lg:col-span-7 min-w-0">
           <h1 className="text-displaySmall-emphasized lg:text-displayLarge-emphasized font-display text-[var(--md-sys-color-on-surface)] whitespace-pre-line max-w-[620px]">
-            {COPY_PAGES.home.text001.replace('\\n', '\n')}
+            {COPY_HOME.heroTitle}
           </h1>
           <p className="text-bodyLarge text-[var(--md-sys-color-on-surface-variant)] mt-space4 max-w-[520px]">
-            {COPY_PAGES.home.text002}
+            {COPY_HOME.heroSubtitle}
           </p>
 
           <div className="mt-space6 flex flex-col sm:flex-row sm:items-center gap-space2 sm:gap-space4">
@@ -49,19 +49,19 @@ export default function HomePage() {
         <div className="lg:col-span-5 min-w-0">
           <div className="p-6 rounded-tl-[48px] rounded-tr-[16px] rounded-br-[48px] rounded-bl-[16px] bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-on-surface)] lg:min-h-[260px] flex flex-col justify-between">
             <h2 className="text-headlineSmall-emphasized font-display">
-              {COPY_PAGES.home.text005}
+              {COPY_HOME.tariffHeading}
             </h2>
             <div className="mt-space6 space-y-space4">
               <div className="flex items-baseline justify-between gap-space4 border-b border-[var(--md-sys-color-outline-variant)] pb-space3">
-                <span className="text-titleMedium text-[var(--md-sys-color-on-surface)]">{COPY_PAGES.home.text006}</span>
+                <span className="text-titleMedium text-[var(--md-sys-color-on-surface)]">{COPY_HOME.tariffBwLabel}</span>
                 <span className="text-amount-emphasized font-code text-[var(--md-sys-color-primary)]">
-                  {COPY_PAGES.home.text007}
+                  {COPY_HOME.tariffBwValue}
                 </span>
               </div>
               <div className="flex items-baseline justify-between gap-space4">
-                <span className="text-titleMedium text-[var(--md-sys-color-on-surface)]">{COPY_PAGES.home.text008}</span>
+                <span className="text-titleMedium text-[var(--md-sys-color-on-surface)]">{COPY_HOME.tariffColorLabel}</span>
                 <span className="text-amount-emphasized font-code text-[var(--md-sys-color-primary)]">
-                  {COPY_PAGES.home.text009}
+                  {COPY_HOME.tariffColorValue}
                 </span>
               </div>
             </div>

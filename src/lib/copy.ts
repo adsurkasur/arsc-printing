@@ -188,6 +188,18 @@ export const COPY_UI = {
   "cancelOrder": "Batalkan pesanan"
 } as const;
 
+export const COPY_HOME = {
+  heroTitle: "Cetak tugas,\nlanjutkan harimu.",
+  heroSubtitle: "Kirim PDF, bayar sesuai tagihan, lalu ambil pesanan di sekretariat ARSC.",
+  tariffHeading: "Tarif yang jelas",
+  tariffBwLabel: "Hitam putih",
+  tariffBwValue: "Rp 500 per halaman",
+  tariffColorLabel: "Warna",
+  tariffColorValue: "Rp 750 per halaman",
+  queueCountSuffix: "pesanan dalam antrean",
+  queueLink: "Lihat antrean",
+} as const;
+
 export const COPY_PAGES = {
   "home": {
     "text001": "Cetak tugas,\\nlanjutkan harimu.",
