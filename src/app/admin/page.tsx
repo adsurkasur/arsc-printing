@@ -177,7 +177,7 @@ export default function AdminDashboard() {
       const res = await fetch('/api/admin/workers', { headers });
       if (res.ok) {
         const data = await res.json();
-        const list: WorkerItem[] = data.workers || [];
+        const list: WorkerItem[] = data.items || data.workers || [];
         setWorkers(list);
         if (!selectedWorkerId && list.length > 0) {
           const active = list.find((w) => w.enabled);
@@ -233,8 +233,8 @@ export default function AdminDashboard() {
         throw new Error('Gagal memuat daftar pesanan.');
       }
       const data = await res.json();
-      setOrders(data.orders || []);
-      setTotalOrders(data.total || 0);
+      setOrders(data.items || data.orders || []);
+      setTotalOrders(data.total ?? (data.items?.length || 0));
     } catch (err: unknown) {
       if ((err as Error)?.name === 'AbortError') return;
       setError(err instanceof Error ? err.message : 'Terjadi kesalahan saat memuat pesanan.');
@@ -286,17 +286,21 @@ export default function AdminDashboard() {
   };
 
   const executeAdminAction = async (
-    orderId: string,
+    order: Order,
     action: AdminAction,
     extraBody?: Record<string, unknown>
   ) => {
     try {
-      setProcessingOrderId(orderId);
+      setProcessingOrderId(order.id);
       const headers = await getAuthHeaders();
-      const res = await fetch(`/api/admin/orders/${orderId}/action`, {
+      const res = await fetch(`/api/admin/orders/${order.id}/action`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ action, ...extraBody }),
+        body: JSON.stringify({
+          action,
+          expectedVersion: (order as Order & { version?: number }).version,
+          ...extraBody,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -620,7 +624,7 @@ export default function AdminDashboard() {
                         </span>
                       </div>
                       <p className="text-[14px] text-[var(--md-sys-color-on-surface-variant)]">
-                        {(order as Order & { customer_contact?: string }).customer_contact || '—'} · {formatWib(order.created_at)}
+                        {(order as Order & { contact?: string; customer_contact?: string }).contact || (order as Order & { customer_contact?: string }).customer_contact || '—'} · {formatWib(order.created_at)}
                       </p>
                     </div>
 
@@ -891,7 +895,7 @@ export default function AdminDashboard() {
               </Button>
               <Button
                 variant="default"
-                onClick={() => executeAdminAction(confirmModal.order.id, 'verify_payment')}
+                onClick={() => executeAdminAction(confirmModal.order, 'verify_payment')}
                 disabled={processingOrderId === confirmModal.order.id}
               >
                 {COPY_PAGES.admin.text038}
@@ -910,7 +914,7 @@ export default function AdminDashboard() {
               <Button
                 variant="default"
                 onClick={() =>
-                  executeAdminAction(confirmModal.order.id, 'reject_payment', {
+                  executeAdminAction(confirmModal.order, 'reject_payment', {
                     reason: rejectReason.trim(),
                   })
                 }
@@ -937,8 +941,9 @@ export default function AdminDashboard() {
               <Button
                 variant="default"
                 onClick={() =>
-                  executeAdminAction(confirmModal.order.id, 'approve', {
+                  executeAdminAction(confirmModal.order, 'approve', {
                     workerId: selectedWorkerId,
+                    printerKey: selectedWorker?.printerKey || 'fake',
                   })
                 }
                 disabled={processingOrderId === confirmModal.order.id}
@@ -975,7 +980,7 @@ export default function AdminDashboard() {
               </Button>
               <Button
                 variant="default"
-                onClick={() => executeAdminAction(confirmModal.order.id, 'deliver')}
+                onClick={() => executeAdminAction(confirmModal.order, 'deliver')}
                 disabled={!confirmChecked || processingOrderId === confirmModal.order.id}
               >
                 Sudah diserahkan
@@ -1006,8 +1011,9 @@ export default function AdminDashboard() {
               <Button
                 variant="default"
                 onClick={() =>
-                  executeAdminAction(confirmModal.order.id, 'reprint', {
+                  executeAdminAction(confirmModal.order, 'reprint', {
                     workerId: selectedWorkerId,
+                    printerKey: selectedWorker?.printerKey || 'fake',
                   })
                 }
                 disabled={!confirmChecked || processingOrderId === confirmModal.order.id}
@@ -1029,7 +1035,7 @@ export default function AdminDashboard() {
               </Button>
               <Button
                 variant="default"
-                onClick={() => executeAdminAction(confirmModal.order.id, 'cancel')}
+                onClick={() => executeAdminAction(confirmModal.order, 'cancel')}
                 disabled={processingOrderId === confirmModal.order.id}
               >
                 {COPY_PAGES.admin.text036}

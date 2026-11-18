@@ -66,6 +66,12 @@ async function run() {
   console.log('E2E_ADMIN_ORDER:', { orderId, pickupCode });
 
   // 2. Admin login
+  page.on('response', async (res) => {
+    if (res.url().includes('/api/admin/orders')) {
+      const body = await res.text().catch(() => '');
+      console.log('E2E_ADMIN_ORDERS_API:', res.request().method(), res.status(), body.slice(0, 300));
+    }
+  });
   await page.goto(`${baseUrl}/admin/login`, { waitUntil: 'networkidle' });
   await page.screenshot({ path: path.join(outDir, 'admin-login-1280.png') });
   await page.fill('input[type="email"]', email);
