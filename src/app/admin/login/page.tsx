@@ -79,7 +79,7 @@ export default function AdminLogin() {
             <Shield className="h-6 w-6" />
           </div>
           <h1 className="text-headlineSmall-emphasized font-display text-[var(--md-sys-color-on-surface)]">
-            {COPY_PAGES.adminLogin.text001}
+            {COPY_PAGES.login.text001}
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground">
             Akses khusus staf piket dan operator cetak ARSC FTAB UB.
