@@ -23,7 +23,7 @@ import {
   Info,
   Ban as Prohibit,
 } from 'lucide-react';
-import { COPY_PAGES } from '@/lib/copy';
+import { COPY_PAGES, formatReceiptEvent } from '@/lib/copy';
 import type { Order } from '@/types/order';
 import type { AdminAction } from '@/types/print-job';
 
@@ -816,7 +816,7 @@ export default function AdminDashboard() {
                 <ul className="space-y-1.5 text-bodySmall">
                   {activeReceipt.events.map((ev) => (
                     <li key={ev.eventId} className="flex justify-between gap-2">
-                      <span>{ev.type}</span>
+                      <span>{formatReceiptEvent(ev.type)}</span>
                       <span className="text-[var(--md-sys-color-on-surface-variant)]">
                         {formatWib(ev.createdAt)}
                       </span>

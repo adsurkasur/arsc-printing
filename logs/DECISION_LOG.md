@@ -126,3 +126,9 @@
 - **Decision**: Use MCU0.4.0 SchemeFidelity with seed #1E5AA8. Request2025 but record official actual2021 fallback; Content also falls back. Retain independent success/warning tokens and fixed contrast-safe state overrides.
 - **Rationale**: Fidelity preserves the seed exactly in primaryContainer, unlike TonalSpot's pastel container. Primary is deliberately darker for contrast, so its scalar CAM16 distance is not lower than TonalSpot; no false proximity claim. Content has identical primary/container but purple tertiary; Fidelity warm complementary tertiary selected.
 - **Evidence**: Three-scheme comparison and450 state/pair measurements; Fidelity text4.54:1/control3.54:1 minimum. No runtime dependency or protocol changes.
+
+## 2026-11-18 — M3 Expressive Redesign Decisions (Stages 0–5)
+- **Palette**: Blue seed `#1E5AA8`; green reserved strictly for success status.
+- **Honesty & Simulation**: Enabled workers are never labeled "Online"; `NEXT_PUBLIC_ARSC_SIMULATION=true` displays explicit simulation disclosure on admin actions, receipt, and customer status pages.
+- **Technical Terms**: Raw event keys (`approve`, `claim`, `submission_started`, `submitted`, `backend_completed`) are mapped to human Indonesian labels via `COPY_RECEIPT_EVENTS` with `Pembaruan status` fallback.
+- **E2E Execution**: Dev server + E2E scripts are executed in a single command to avoid background server termination on this host.

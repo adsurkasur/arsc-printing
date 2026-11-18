@@ -398,3 +398,22 @@ export function operatorStatus(order: { status: OrderStatus; payment_status: Pay
   if (order.payment_status === 'rejected') return COPY_PAYMENT_STATUS.rejected;
   return job ? COPY_JOB_STATUS[job.status] : COPY_ORDER_STATUS[order.status];
 }
+
+export const COPY_RECEIPT_EVENTS = {
+  approve: 'Disetujui petugas',
+  claim: 'Diambil perangkat cetak',
+  submission_started: 'Mulai dikirim ke printer',
+  submitted: 'Terkirim ke printer',
+  backend_completed: 'Selesai di printer (simulasi)',
+  deliver: 'Diserahkan',
+  failed: 'Gagal dicetak',
+  needs_reconciliation: 'Perlu diperiksa petugas',
+  unknown: 'Pembaruan status',
+} as const;
+
+export function formatReceiptEvent(type: string): string {
+  if (type in COPY_RECEIPT_EVENTS && type !== 'unknown') {
+    return COPY_RECEIPT_EVENTS[type as keyof typeof COPY_RECEIPT_EVENTS];
+  }
+  return COPY_RECEIPT_EVENTS.unknown;
+}

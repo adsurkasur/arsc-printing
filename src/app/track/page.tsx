@@ -41,7 +41,7 @@ export default function TrackPage() {
               placeholder={COPY_PAGES.track.text004}
               className="w-full h-14 pl-12 pr-4 rounded-t-xs bg-[var(--md-sys-color-surface-container-highest)] border-b border-[var(--md-sys-color-outline)] text-bodyLarge font-code focus:border-b-2 focus:border-[var(--md-sys-color-primary)] focus:outline-none"
             />
-            <MagnifyingGlassDuotone className="w-5 h-5 text-[var(--md-sys-color-on-surface-variant)] absolute left-4 top-4.5 pointer-events-none" aria-hidden="true" />
+            <MagnifyingGlassDuotone className="w-5 h-5 text-[var(--md-sys-color-on-surface-variant)] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
           </div>
         </div>
 

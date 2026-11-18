@@ -147,3 +147,10 @@
 - **Actions**: Created logs/ directory and established AGENTS.md.
 - **Files Modified**: AGENTS.md, logs/README.md, logs/ACTIVITY_LOG.md, logs/DECISION_LOG.md, logs/CHANGELOG.md.
 - **Verification**: Git status verified.
+
+## 2026-11-18 — M3 Expressive Redesign (Stages 0–5)
+- **Stage 0–1**: Defined `docs/M3_SPEC.md`, blue `#1E5AA8` palette, `copy.ts` + `COPY_MANIFEST.json`, and `check-copy` / `check-tokens` gates.
+- **Stage 2**: Implemented M3 shell (`AppShell`, rail/drawer, bottom nav, `CreateOrderFab` bottom-right).
+- **Stage 3**: Redesigned `/`, `/order` (3-step wizard), `/order-success`, `/track`, `/queue`; fixed order submit (`Idempotency-Key`, `csrfToken`, `orderId`), `pickupCode` mapping, and `Sudah diserahkan` / `Dibatalkan` status copy.
+- **Stage 4**: Redesigned `/admin/login` and `/admin` (`Meja layanan`, `Tanggal rekap`, `#worker-select`, `M3ResponsiveDialog` confirmation modals & `Rincian pesanan` with human Indonesian event labels, `NEXT_PUBLIC_ARSC_SIMULATION` disclosure).
+- **Stage 5**: Captured full-flow CDP screencast (`E:\OpenBot\recordings\arsc-redesign-full-flow.mp4`) and verified all 5 gates + `next build` + `e2e-admin` + `e2e-customer`.

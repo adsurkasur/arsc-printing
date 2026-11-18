@@ -368,5 +368,16 @@
     "tariffColorValue": "Rp 750 per halaman",
     "queueCountSuffix": "pesanan dalam antrean",
     "queueLink": "Lihat antrean"
+  },
+  "COPY_RECEIPT_EVENTS": {
+    "approve": "Disetujui petugas",
+    "claim": "Diambil perangkat cetak",
+    "submission_started": "Mulai dikirim ke printer",
+    "submitted": "Terkirim ke printer",
+    "backend_completed": "Selesai di printer (simulasi)",
+    "deliver": "Diserahkan",
+    "failed": "Gagal dicetak",
+    "needs_reconciliation": "Perlu diperiksa petugas",
+    "unknown": "Pembaruan status"
   }
 }

@@ -1,6 +1,6 @@
 // @ts-expect-error bun:test types are provided by bun runtime
 import { test, expect } from 'bun:test';
-import { COPY_ORDER_STATUS, COPY_PAGES, COPY_VALIDATION } from '../src/lib/copy';
+import { COPY_ORDER_STATUS, COPY_PAGES, COPY_VALIDATION, formatReceiptEvent } from '../src/lib/copy';
 
 test('OrderSuccess API response maps pickupCode and separates capability error from success', async () => {
   // 1. Success state contract
@@ -31,4 +31,16 @@ test('OrderSuccess/Track status copy maps delivered and cancelled from §7.1', (
   expect(COPY_ORDER_STATUS.cancelled.sentence).toBe(
     'Pesanan ini tidak akan dilanjutkan. Jika sudah membayar, hubungi petugas.'
   );
+});
+
+test('Receipt event labels map technical keys to human Indonesian and fallback safely', () => {
+  expect(formatReceiptEvent('approve')).toBe('Disetujui petugas');
+  expect(formatReceiptEvent('claim')).toBe('Diambil perangkat cetak');
+  expect(formatReceiptEvent('submission_started')).toBe('Mulai dikirim ke printer');
+  expect(formatReceiptEvent('submitted')).toBe('Terkirim ke printer');
+  expect(formatReceiptEvent('backend_completed')).toBe('Selesai di printer (simulasi)');
+  expect(formatReceiptEvent('deliver')).toBe('Diserahkan');
+  expect(formatReceiptEvent('failed')).toBe('Gagal dicetak');
+  expect(formatReceiptEvent('needs_reconciliation')).toBe('Perlu diperiksa petugas');
+  expect(formatReceiptEvent('some_unknown_event')).toBe('Pembaruan status');
 });
