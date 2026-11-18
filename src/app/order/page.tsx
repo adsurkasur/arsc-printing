@@ -202,18 +202,22 @@ export default function OrderPage() {
         if (!res.ok) {
           throw new Error(data?.error?.message || 'Gagal menyiapkan pesanan.');
         }
-        currentDraft = { id: data.id, csrfToken: data.csrf_token };
+        currentDraft = { id: data.id, csrfToken: data.csrfToken };
         setDraft(currentDraft);
       }
+      if (!currentDraft.csrfToken) {
+        throw new Error('Gagal menyiapkan pesanan.');
+      }
+      const uploadHeaders = { 'X-CSRF-Token': currentDraft.csrfToken };
 
       if (!docAcked) {
         const docForm = new FormData();
-        docForm.append('order_id', currentDraft.id);
+        docForm.append('orderId', currentDraft.id);
         docForm.append('kind', 'document');
         docForm.append('file', pdfFile);
         const docRes = await fetch('/api/upload', {
           method: 'POST',
-          headers: currentDraft.csrfToken ? { 'x-csrf-token': currentDraft.csrfToken } : undefined,
+          headers: uploadHeaders,
           body: docForm,
         });
         if (!docRes.ok) {
@@ -224,12 +228,12 @@ export default function OrderPage() {
       }
 
       const proofForm = new FormData();
-      proofForm.append('order_id', currentDraft.id);
+      proofForm.append('orderId', currentDraft.id);
       proofForm.append('kind', 'proof');
       proofForm.append('file', proofFile);
       const proofRes = await fetch('/api/upload', {
         method: 'POST',
-        headers: currentDraft.csrfToken ? { 'x-csrf-token': currentDraft.csrfToken } : undefined,
+        headers: uploadHeaders,
         body: proofForm,
       });
       if (!proofRes.ok) {
