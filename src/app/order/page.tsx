@@ -182,17 +182,20 @@ export default function OrderPage() {
       if (!currentDraft) {
         const res = await fetch('/api/orders', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Idempotency-Key': idempotencyKey,
+          },
           body: JSON.stringify({
             customer_name: customerName.trim(),
             contact: contact.trim(),
             copies,
             color_mode: colorMode,
             paper_size: paperSize,
-            pages_per_sheet: pagesPerSheet,
+            layout: `${pagesPerSheet}-up`,
+            scale_mode: 'fit',
             orientation,
-            notes: notes.trim() || undefined,
-            idempotency_key: idempotencyKey,
+            user_note: notes.trim() || '',
           }),
         });
         const data = await res.json();
