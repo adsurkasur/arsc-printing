@@ -1,8 +1,27 @@
 ﻿import type { Metadata } from 'next'
 import { Analytics } from '@vercel/analytics/next'
+import { Bricolage_Grotesque, Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google'
 import { Providers } from './providers'
 import { Navbar } from '@/components/Navbar'
 import './globals.css'
+
+const fontDisplay = Bricolage_Grotesque({
+  subsets: ['latin'],
+  variable: '--font-display',
+  display: 'swap',
+})
+
+const fontBody = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  variable: '--font-body',
+  display: 'swap',
+})
+
+const fontCode = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-code',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'ARSC Printing — Layanan Cetak Kampus FTP UB',
@@ -32,8 +51,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="id">
-      <body className="min-h-screen flex flex-col bg-background text-foreground antialiased selection:bg-primary/15 selection:text-primary">
+    <html lang="id" className={`${fontDisplay.variable} ${fontBody.variable} ${fontCode.variable}`}>
+      <body className="min-h-screen flex flex-col font-body bg-background text-foreground antialiased selection:bg-primary/15 selection:text-primary">
         <Providers>
           <Navbar />
           <main className="flex-1">

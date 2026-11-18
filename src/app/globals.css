@@ -3,96 +3,226 @@
 @tailwind utilities;
 
 /*
- * ARSC Printing - Editorial Campus Print Identity
- * Calm paper palette, rich academic emerald, deep ink text.
- * Strictly adheres to WCAG AA contrast (minimum 4.5:1 text, 3:1 components).
+ * ARSC Printing - M3 Redesign Tokens (M3_SPEC.md §2, §2.1, §3)
  */
 
 @layer base {
   :root {
-    /* Warm paper canvas */
-    --background: 45 10% 98%;
-    /* Deep forest ink */
-    --foreground: 156 21% 11%;
+    /* M3 Color Roles - Light (§2) */
+    --md-sys-color-primary: #246949;
+    --md-sys-color-on-primary: #ffffff;
+    --md-sys-color-primary-container: #aaefc3;
+    --md-sys-color-on-primary-container: #002110;
+    --md-sys-color-primary-fixed: #aaefc3;
+    --md-sys-color-primary-fixed-dim: #90d5a8;
+    --md-sys-color-on-primary-fixed: #002110;
+    --md-sys-color-on-primary-fixed-variant: #025232;
 
-    /* Crisp white cards with hairline border */
-    --card: 0 0% 100%;
-    --card-foreground: 156 21% 11%;
+    --md-sys-color-secondary: #4d6353;
+    --md-sys-color-on-secondary: #ffffff;
+    --md-sys-color-secondary-container: #d5e8d9;
+    --md-sys-color-on-secondary-container: #0e1f14;
+    --md-sys-color-secondary-fixed: #d5e8d9;
+    --md-sys-color-secondary-fixed-dim: #b4ccbe;
+    --md-sys-color-on-secondary-fixed: #0e1f14;
+    --md-sys-color-on-secondary-fixed-variant: #394f42;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 156 21% 11%;
+    --md-sys-color-tertiary: #386567;
+    --md-sys-color-on-tertiary: #ffffff;
+    --md-sys-color-tertiary-container: #bcebee;
+    --md-sys-color-on-tertiary-container: #002021;
+    --md-sys-color-tertiary-fixed: #bcebee;
+    --md-sys-color-tertiary-fixed-dim: #a0cfd0;
+    --md-sys-color-on-tertiary-fixed: #002021;
+    --md-sys-color-on-tertiary-fixed-variant: #1e4d4f;
 
-    /* Academic rich emerald */
-    --primary: 149 55% 24%;
-    --primary-foreground: 0 0% 100%;
+    --md-sys-color-error: #ba1a1a;
+    --md-sys-color-on-error: #ffffff;
+    --md-sys-color-error-container: #ffdad6;
+    --md-sys-color-on-error-container: #410002;
 
-    /* Warm stone secondary */
-    --secondary: 130 9% 93%;
-    --secondary-foreground: 156 21% 11%;
+    --md-sys-color-surface: #fdf9f4;
+    --md-sys-color-on-surface: #1a1c1a;
+    --md-sys-color-surface-dim: #ddd9d4;
+    --md-sys-color-surface-bright: #fdf9f4;
+    --md-sys-color-surface-container-lowest: #ffffff;
+    --md-sys-color-surface-container-low: #f7f3ee;
+    --md-sys-color-surface-container: #f2ede8;
+    --md-sys-color-surface-container-high: #ece8e3;
+    --md-sys-color-surface-container-highest: #e6e2dd;
+    --md-sys-color-on-surface-variant: #424842;
+    --md-sys-color-outline: #727972;
+    --md-sys-color-outline-variant: #c2c8c0;
 
-    /* Sage muted text */
-    --muted: 130 9% 93%;
-    --muted-foreground: 158 8% 38%;
+    --md-sys-color-inverse-surface: #2f312e;
+    --md-sys-color-inverse-on-surface: #f1f1ec;
+    --md-sys-color-inverse-primary: #90d5a8;
+    --md-sys-color-scrim: #000000;
+    --md-sys-color-shadow: #000000;
 
-    /* Accent leaf */
-    --accent: 149 45% 30%;
-    --accent-foreground: 0 0% 100%;
+    /* Semantic Status (Spec §2 & §7) */
+    --md-custom-color-warning: #944e00;
+    --md-custom-color-on-warning: #ffffff;
+    --md-custom-color-warning-container: #ffdcc3;
+    --md-custom-color-on-warning-container: #301400;
 
-    /* Destructive brick red */
-    --destructive: 0 72% 42%;
-    --destructive-foreground: 0 0% 100%;
+    --md-custom-color-info: #006399;
+    --md-custom-color-on-info: #ffffff;
+    --md-custom-color-info-container: #cde5ff;
+    --md-custom-color-on-info-container: #001d32;
 
-    /* Structural hairline border */
-    --border: 130 9% 88%;
-    --input: 130 9% 88%;
-    --ring: 149 55% 24%;
+    /* Shadcn/Tailwind HSL Compatibility Mapping (§2.1) */
+    --background: 33 69% 97%;          /* #fdf9f4 surface */
+    --foreground: 120 4% 11%;          /* #1a1c1a onSurface */
 
-    --radius: 0.5rem;
+    --card: 0 0% 100%;                 /* #ffffff surfaceContainerLowest */
+    --card-foreground: 120 4% 11%;     /* #1a1c1a onSurface */
 
-    /* Semantic badges */
-    --success: 149 55% 24%;
+    --popover: 0 0% 100%;              /* #ffffff surfaceContainerLowest */
+    --popover-foreground: 120 4% 11%;  /* #1a1c1a onSurface */
+
+    --primary: 152 49% 28%;            /* #246949 primary */
+    --primary-foreground: 0 0% 100%;   /* #ffffff onPrimary */
+
+    --secondary: 133 29% 87%;          /* #d5e8d9 secondaryContainer */
+    --secondary-foreground: 141 38% 9%;/* #0e1f14 onSecondaryContainer */
+
+    --muted: 30 28% 93%;               /* #f2ede8 surfaceContainer */
+    --muted-foreground: 120 4% 27%;    /* #424842 onSurfaceVariant */
+
+    --accent: 133 29% 87%;             /* #d5e8d9 secondaryContainer */
+    --accent-foreground: 141 38% 9%;   /* #0e1f14 onSecondaryContainer */
+
+    --destructive: 0 75% 42%;          /* #ba1a1a error */
+    --destructive-foreground: 0 0% 100%;/* #ffffff onError */
+
+    --border: 105 7% 77%;              /* #c2c8c0 outlineVariant */
+    --input: 105 7% 77%;               /* #c2c8c0 outlineVariant */
+    --ring: 152 49% 28%;               /* #246949 primary */
+
+    --radius: 0.75rem;
+
+    --success: 152 49% 28%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 28 88% 32%;
+    --warning: 32 100% 29%;
     --warning-foreground: 0 0% 100%;
 
-    --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+    /* Elevation Shadows (§3) */
+    --elevation-0: none;
+    --elevation-1: 0 1px 3px 1px rgba(0, 0, 0, 0.15), 0 1px 2px 0 rgba(0, 0, 0, 0.30);
+    --elevation-2: 0 2px 6px 2px rgba(0, 0, 0, 0.15), 0 1px 2px 0 rgba(0, 0, 0, 0.30);
+    --elevation-3: 0 4px 8px 3px rgba(0, 0, 0, 0.15), 0 1px 3px 0 rgba(0, 0, 0, 0.30);
+    --elevation-4: 0 6px 10px 4px rgba(0, 0, 0, 0.15), 0 2px 3px 0 rgba(0, 0, 0, 0.30);
+    --elevation-5: 0 8px 12px 6px rgba(0, 0, 0, 0.15), 0 4px 4px 0 rgba(0, 0, 0, 0.30);
   }
 
   .dark {
-    --background: 156 25% 8%;
-    --foreground: 45 10% 98%;
+    /* M3 Color Roles - Dark (§2) */
+    --md-sys-color-primary: #90d5a8;
+    --md-sys-color-on-primary: #00391f;
+    --md-sys-color-primary-container: #025232;
+    --md-sys-color-on-primary-container: #aaefc3;
+    --md-sys-color-primary-fixed: #aaefc3;
+    --md-sys-color-primary-fixed-dim: #90d5a8;
+    --md-sys-color-on-primary-fixed: #002110;
+    --md-sys-color-on-primary-fixed-variant: #025232;
 
-    --card: 156 20% 12%;
-    --card-foreground: 45 10% 98%;
+    --md-sys-color-secondary: #b4ccbe;
+    --md-sys-color-on-secondary: #203527;
+    --md-sys-color-secondary-container: #354b3c;
+    --md-sys-color-on-secondary-container: #d5e8d9;
+    --md-sys-color-secondary-fixed: #d5e8d9;
+    --md-sys-color-secondary-fixed-dim: #b4ccbe;
+    --md-sys-color-on-secondary-fixed: #0e1f14;
+    --md-sys-color-on-secondary-fixed-variant: #394f42;
 
-    --popover: 156 20% 12%;
-    --popover-foreground: 45 10% 98%;
+    --md-sys-color-tertiary: #a0cfd0;
+    --md-sys-color-on-tertiary: #003638;
+    --md-sys-color-tertiary-container: #1e4d4f;
+    --md-sys-color-on-tertiary-container: #bcebee;
+    --md-sys-color-tertiary-fixed: #bcebee;
+    --md-sys-color-tertiary-fixed-dim: #a0cfd0;
+    --md-sys-color-on-tertiary-fixed: #002021;
+    --md-sys-color-on-tertiary-fixed-variant: #1e4d4f;
 
-    --primary: 149 50% 45%;
-    --primary-foreground: 156 25% 8%;
+    --md-sys-color-error: #ffb4ab;
+    --md-sys-color-on-error: #690005;
+    --md-sys-color-error-container: #93000a;
+    --md-sys-color-on-error-container: #ffdad6;
 
-    --secondary: 156 20% 18%;
-    --secondary-foreground: 45 10% 98%;
+    --md-sys-color-surface: #121412;
+    --md-sys-color-on-surface: #e2e3de;
+    --md-sys-color-surface-dim: #121412;
+    --md-sys-color-surface-bright: #383a37;
+    --md-sys-color-surface-container-lowest: #0c0f0d;
+    --md-sys-color-surface-container-low: #1a1c1a;
+    --md-sys-color-surface-container: #1e201e;
+    --md-sys-color-surface-container-high: #282b28;
+    --md-sys-color-surface-container-highest: #333633;
+    --md-sys-color-on-surface-variant: #c2c8c0;
+    --md-sys-color-outline: #8c938b;
+    --md-sys-color-outline-variant: #424842;
 
-    --muted: 156 20% 18%;
-    --muted-foreground: 150 10% 65%;
+    --md-sys-color-inverse-surface: #e2e3de;
+    --md-sys-color-inverse-on-surface: #2f312e;
+    --md-sys-color-inverse-primary: #246949;
+    --md-sys-color-scrim: #000000;
+    --md-sys-color-shadow: #000000;
 
-    --accent: 149 50% 35%;
-    --accent-foreground: 45 10% 98%;
+    /* Semantic Status (Spec §2 & §7) */
+    --md-custom-color-warning: #ffb77c;
+    --md-custom-color-on-warning: #4e2600;
+    --md-custom-color-warning-container: #703900;
+    --md-custom-color-on-warning-container: #ffdcc3;
 
-    --destructive: 0 65% 55%;
-    --destructive-foreground: 0 0% 100%;
+    --md-custom-color-info: #94ccff;
+    --md-custom-color-on-info: #003353;
+    --md-custom-color-info-container: #004a75;
+    --md-custom-color-on-info-container: #cde5ff;
 
-    --border: 156 15% 22%;
-    --input: 156 15% 22%;
-    --ring: 149 50% 45%;
+    /* Shadcn/Tailwind HSL Compatibility Mapping (§2.1) */
+    --background: 120 5% 7%;           /* #121412 surface */
+    --foreground: 72 8% 88%;           /* #e2e3de onSurface */
 
-    --success: 149 50% 45%;
-    --success-foreground: 156 25% 8%;
+    --card: 120 4% 11%;                /* #1a1c1a surfaceContainerLow */
+    --card-foreground: 72 8% 88%;      /* #e2e3de onSurface */
 
-    --warning: 35 85% 50%;
-    --warning-foreground: 156 25% 8%;
+    --popover: 120 4% 11%;             /* #1a1c1a surfaceContainerLow */
+    --popover-foreground: 72 8% 88%;   /* #e2e3de onSurface */
+
+    --primary: 141 45% 70%;            /* #90d5a8 primary */
+    --primary-foreground: 153 100% 11%;/* #00391f onPrimary */
+
+    --secondary: 139 17% 25%;          /* #354b3c secondaryContainer */
+    --secondary-foreground: 133 29% 87%;/* #d5e8d9 onSecondaryContainer */
+
+    --muted: 120 3% 12%;               /* #1e201e surfaceContainer */
+    --muted-foreground: 105 7% 77%;    /* #c2c8c0 onSurfaceVariant */
+
+    --accent: 139 17% 25%;             /* #354b3c secondaryContainer */
+    --accent-foreground: 133 29% 87%;  /* #d5e8d9 onSecondaryContainer */
+
+    --destructive: 6 100% 84%;         /* #ffb4ab error */
+    --destructive-foreground: 357 100% 21%;/* #690005 onError */
+
+    --border: 120 4% 27%;              /* #424842 outlineVariant */
+    --input: 120 4% 27%;               /* #424842 outlineVariant */
+    --ring: 141 45% 70%;               /* #90d5a8 primary */
+
+    --success: 141 45% 70%;
+    --success-foreground: 153 100% 11%;
+
+    --warning: 27 100% 74%;
+    --warning-foreground: 29 100% 15%;
+
+    /* Elevation Shadows Dark (§3) */
+    --elevation-0: none;
+    --elevation-1: 0 1px 3px 1px rgba(0, 0, 0, 0.45), 0 1px 2px 0 rgba(0, 0, 0, 0.60);
+    --elevation-2: 0 2px 6px 2px rgba(0, 0, 0, 0.45), 0 1px 2px 0 rgba(0, 0, 0, 0.60);
+    --elevation-3: 0 4px 8px 3px rgba(0, 0, 0, 0.45), 0 1px 3px 0 rgba(0, 0, 0, 0.60);
+    --elevation-4: 0 6px 10px 4px rgba(0, 0, 0, 0.45), 0 2px 3px 0 rgba(0, 0, 0, 0.60);
+    --elevation-5: 0 8px 12px 6px rgba(0, 0, 0, 0.45), 0 4px 4px 0 rgba(0, 0, 0, 0.60);
   }
 }
 
