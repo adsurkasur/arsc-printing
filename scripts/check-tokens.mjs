@@ -1,9 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const projectRoot = path.resolve('E:/managed-projects-handoff/ARSC/arsc-printing');
+const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const specPath = path.join(projectRoot, 'docs/M3_SPEC.md');
-const cssPath = path.join(projectRoot, 'src/app/globals.css');
+const cssArg = process.argv.indexOf('--css');
+const cssPath = cssArg < 0 ? path.join(projectRoot, 'src/app/globals.css') : process.argv[cssArg + 1];
 const srcDir = path.join(projectRoot, 'src');
 
 console.log('--- Checking tokens and aliases against M3_SPEC.md ---');
@@ -169,26 +171,47 @@ for (const [role, hex] of Object.entries(expectedSemLight)) {
   }
 }
 
-// Check aliases mapping per §2.1:
-// popover=surfaceContainerHigh, muted=surfaceContainerHighest, input=outline
-// In :root:
-// --md-sys-color-surface-container-high is #e7e8ef -> HSL 230 19% 92%
-// --md-sys-color-surface-container-highest is #e1e2e9 -> HSL 231 16% 90%
-// --md-sys-color-outline is #737782 -> HSL 224 6% 48%
-const rootContent = rootMatch[1];
-const darkContent = darkMatch[1];
 
-if (!rootContent.includes('--popover: 230 19% 92.2%')) {
-  console.warn('Checking --popover light definition...');
+// Every HSL compatibility alias is compared in sRGB; <=1 channel rounding tolerance.
+const aliases = {
+  background:'surface', foreground:'onSurface', card:'surfaceContainerLow', 'card-foreground':'onSurface',
+  popover:'surfaceContainerHigh', 'popover-foreground':'onSurface', primary:'primary', 'primary-foreground':'onPrimary',
+  secondary:'secondaryContainer', 'secondary-foreground':'onSecondaryContainer', muted:'surfaceContainerHighest',
+  'muted-foreground':'onSurfaceVariant', accent:'secondaryContainer', 'accent-foreground':'onSecondaryContainer',
+  destructive:'error', 'destructive-foreground':'onError', border:'outlineVariant', input:'outline', ring:'primary',
+  success:'success', 'success-foreground':'onSuccess', warning:'warning', 'warning-foreground':'onWarning',
+};
+function hslRgb(value) {
+  const m = value?.match(/^\s*([\d.]+)\s+([\d.]+)%\s+([\d.]+)%\s*$/);
+  if (!m) return null;
+  const h=Number(m[1])/60, s=Number(m[2])/100, l=Number(m[3])/100;
+  const c=(1-Math.abs(2*l-1))*s, x=c*(1-Math.abs(h%2-1)), base=l-c/2;
+  const rgb=[[c,x,0],[x,c,0],[0,c,x],[0,x,c],[x,0,c],[c,0,x]][Math.floor(h)%6];
+  return rgb.map(v=>(v+base)*255);
 }
-if (!darkContent.includes('--popover: 220 8.2% 17.1%')) {
-  console.warn('Checking --popover dark definition...');
+for (const [theme, block, expected, semantic] of [
+  ['light',rootMatch[1],expectedLight,expectedSemLight], ['dark',darkMatch[1],expectedDark,expectedSemDark],
+]) {
+  for (const [alias, role] of Object.entries(aliases)) {
+    const value=block.match(new RegExp('--'+alias+':\\s*([^;]+);'))?.[1];
+    const rgb=hslRgb(value), hex=expected[role] ?? semantic[role];
+    const target=hex.slice(1).match(/../g).map(v=>parseInt(v,16));
+    if (!rgb || rgb.some((v,i)=>Math.abs(v-target[i])>1)) {
+      console.error(`FAIL: ${theme} alias ${alias} does not match ${role}`); mismatches++;
+    }
+  }
+  // Parse all 22 rows in the approved alpha table, not a second numeric allowlist.
+  const rows=[...spec.matchAll(/\| (light|dark) (\w+)\/(\w+) \|[^\n]+?\| (\d+)%\/(\d+)%\/(\d+)%\/(\d+)% \|/g)].filter(m=>m[1]===theme);
+  if (rows.length!==11) throw new Error('missing contrast alpha rows');
+  for (const row of rows) {
+    const pair=toKebab(row[3]);
+    for (const [i,state] of ['hover','focus','pressed','dragged'].entries()) {
+      const value=block.match(new RegExp('--m3-layer-'+pair+'-'+state+':\\s*([^;]+);'))?.[1];
+      if (value===undefined || Number(value)!==Number(row[4+i])/100) {
+        console.error(`FAIL: ${theme} alpha ${pair}/${state}`); mismatches++;
+      }
+    }
+  }
 }
-
-if (mismatches > 0) {
-  console.error(`FAIL: ${mismatches} mismatches found between M3_SPEC.md and globals.css.`);
-  process.exit(1);
-}
-
-console.log('PASS: All 49 M3 color roles + 8 semantic roles in light and dark match M3_SPEC.md exactly.');
-console.log('--- check-tokens.mjs passed with exit code 0 ---');
+if (mismatches) { console.error(`FAIL: ${mismatches} token/alias/alpha mismatches`); process.exit(1); }
+console.log('PASS: 49 roles + 8 semantic roles, 23 aliases/theme and 88 alpha overrides match spec.');

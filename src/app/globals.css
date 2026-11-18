@@ -9,6 +9,52 @@
 
 @layer base {
   :root {
+    /* §2.2 total foreground layer budgets; never stack ripple. */
+    --m3-layer-surface-hover: 0.08;
+    --m3-layer-surface-focus: 0.1;
+    --m3-layer-surface-pressed: 0.1;
+    --m3-layer-surface-dragged: 0.16;
+    --m3-layer-surface-container-highest-hover: 0.08;
+    --m3-layer-surface-container-highest-focus: 0.1;
+    --m3-layer-surface-container-highest-pressed: 0.1;
+    --m3-layer-surface-container-highest-dragged: 0.16;
+    --m3-layer-primary-hover: 0.08;
+    --m3-layer-primary-focus: 0.1;
+    --m3-layer-primary-pressed: 0.1;
+    --m3-layer-primary-dragged: 0.16;
+    --m3-layer-primary-container-hover: 0;
+    --m3-layer-primary-container-focus: 0;
+    --m3-layer-primary-container-pressed: 0;
+    --m3-layer-primary-container-dragged: 0;
+    --m3-layer-secondary-container-hover: 0;
+    --m3-layer-secondary-container-focus: 0;
+    --m3-layer-secondary-container-pressed: 0;
+    --m3-layer-secondary-container-dragged: 0;
+    --m3-layer-tertiary-container-hover: 0;
+    --m3-layer-tertiary-container-focus: 0;
+    --m3-layer-tertiary-container-pressed: 0;
+    --m3-layer-tertiary-container-dragged: 0;
+    --m3-layer-error-hover: 0.08;
+    --m3-layer-error-focus: 0.1;
+    --m3-layer-error-pressed: 0.1;
+    --m3-layer-error-dragged: 0.16;
+    --m3-layer-error-container-hover: 0.08;
+    --m3-layer-error-container-focus: 0.1;
+    --m3-layer-error-container-pressed: 0.1;
+    --m3-layer-error-container-dragged: 0.16;
+    --m3-layer-inverse-surface-hover: 0.08;
+    --m3-layer-inverse-surface-focus: 0.1;
+    --m3-layer-inverse-surface-pressed: 0.1;
+    --m3-layer-inverse-surface-dragged: 0.16;
+    --m3-layer-surface-hover: 0.08;
+    --m3-layer-surface-focus: 0.1;
+    --m3-layer-surface-pressed: 0.1;
+    --m3-layer-surface-dragged: 0.16;
+    --m3-layer-surface-hover: 0.08;
+    --m3-layer-surface-focus: 0.1;
+    --m3-layer-surface-pressed: 0.1;
+    --m3-layer-surface-dragged: 0.16;
+
     /* M3 Color Roles - Light (§2 Fidelity) */
     --md-sys-color-background: #f9f9ff;
     --md-sys-color-on-background: #191c21;
@@ -80,7 +126,7 @@
     --background: 240 100% 98.8%;        /* #f9f9ff surface */
     --foreground: 218 14% 11.4%;         /* #191c21 onSurface */
 
-    --card: 0 0% 100%;                   /* #ffffff surfaceContainerLowest */
+    --card: 240.000000 41.176471% 96.666667%;                   /* #ffffff surfaceContainerLowest */
     --card-foreground: 218 14% 11.4%;    /* #191c21 onSurface */
 
     --popover: 232.5 20% 92.2%;          /* #e7e8ef surfaceContainerHigh */
@@ -110,7 +156,7 @@
     --success: 142.9 64.1% 24.3%;        /* #166534 */
     --success-foreground: 0 0% 100%;
 
-    --warning: 32.1 80.9% 29.2%;         /* #854d0e */
+    --warning: 31.764706 80.952381% 28.823529%;         /* #854d0e */
     --warning-foreground: 0 0% 100%;
 
     /* Elevation Shadows (§3: shadow RGB 0 0 0, opacities 12%, 14%, 16%, 18%, 20%) */
@@ -123,6 +169,52 @@
   }
 
   .dark {
+    /* §2.2 total foreground layer budgets; never stack ripple. */
+    --m3-layer-surface-hover: 0.08;
+    --m3-layer-surface-focus: 0.1;
+    --m3-layer-surface-pressed: 0.1;
+    --m3-layer-surface-dragged: 0.16;
+    --m3-layer-surface-container-highest-hover: 0.08;
+    --m3-layer-surface-container-highest-focus: 0.1;
+    --m3-layer-surface-container-highest-pressed: 0.1;
+    --m3-layer-surface-container-highest-dragged: 0.16;
+    --m3-layer-primary-hover: 0.08;
+    --m3-layer-primary-focus: 0.1;
+    --m3-layer-primary-pressed: 0.1;
+    --m3-layer-primary-dragged: 0.16;
+    --m3-layer-primary-container-hover: 0;
+    --m3-layer-primary-container-focus: 0;
+    --m3-layer-primary-container-pressed: 0;
+    --m3-layer-primary-container-dragged: 0;
+    --m3-layer-secondary-container-hover: 0;
+    --m3-layer-secondary-container-focus: 0;
+    --m3-layer-secondary-container-pressed: 0;
+    --m3-layer-secondary-container-dragged: 0;
+    --m3-layer-tertiary-container-hover: 0;
+    --m3-layer-tertiary-container-focus: 0;
+    --m3-layer-tertiary-container-pressed: 0;
+    --m3-layer-tertiary-container-dragged: 0;
+    --m3-layer-error-hover: 0.08;
+    --m3-layer-error-focus: 0.1;
+    --m3-layer-error-pressed: 0.1;
+    --m3-layer-error-dragged: 0.16;
+    --m3-layer-error-container-hover: 0.08;
+    --m3-layer-error-container-focus: 0.1;
+    --m3-layer-error-container-pressed: 0.1;
+    --m3-layer-error-container-dragged: 0.16;
+    --m3-layer-inverse-surface-hover: 0.08;
+    --m3-layer-inverse-surface-focus: 0.1;
+    --m3-layer-inverse-surface-pressed: 0.1;
+    --m3-layer-inverse-surface-dragged: 0.16;
+    --m3-layer-surface-hover: 0.08;
+    --m3-layer-surface-focus: 0.1;
+    --m3-layer-surface-pressed: 0.1;
+    --m3-layer-surface-dragged: 0.16;
+    --m3-layer-surface-hover: 0.08;
+    --m3-layer-surface-focus: 0.1;
+    --m3-layer-surface-pressed: 0.1;
+    --m3-layer-surface-dragged: 0.16;
+
     /* M3 Color Roles - Dark (§2 Fidelity) */
     --md-sys-color-background: #111318;
     --md-sys-color-on-background: #e1e2e9;
@@ -191,7 +283,7 @@
     --md-custom-color-on-warning-container: #fef3c7;
 
     /* Shadcn/Tailwind HSL Compatibility Mapping (§2.1) */
-    --background: 222.9 17.2% 8.4%;       /* #111318 surface */
+    --background: 222.857143 17.073171% 8.039216%;       /* #111318 surface */
     --foreground: 232.5 15.4% 89.8%;      /* #e1e2e9 onSurface */
 
     --card: 218.2 14.1% 11.4%;            /* #191c21 surfaceContainerLow */
@@ -259,4 +351,32 @@
     outline: 3px solid var(--md-sys-color-primary) !important;
     outline-offset: 3px !important;
   }
+}
+
+/* Reusable interaction geometry. Foreground alpha is selected by M3StateLayer. */
+.m3-control { position: relative; isolation: isolate; }
+.m3-state-layer { position:absolute; inset:0; border-radius:inherit; pointer-events:none; background:var(--m3-layer-foreground); opacity:0; z-index:-1; }
+@media (hover:hover) and (pointer:fine) {
+  .m3-control:not(:disabled):not([aria-disabled="true"]):hover > .m3-state-layer { opacity:var(--m3-layer-hover); }
+}
+.m3-control:not(:disabled):focus-visible > .m3-state-layer,
+.m3-control[data-state="focus"] > .m3-state-layer { opacity:var(--m3-layer-focus); }
+.m3-control:not(:disabled):active > .m3-state-layer,
+.m3-control[data-state="pressed"] > .m3-state-layer { opacity:var(--m3-layer-pressed); }
+.m3-control[data-state="hover"] > .m3-state-layer { opacity:var(--m3-layer-hover); }
+.m3-control[data-state="dragged"] > .m3-state-layer { opacity:var(--m3-layer-dragged); }
+.m3-control:disabled, .m3-control[aria-disabled="true"] { color:color-mix(in srgb,var(--md-sys-color-on-surface) 38%,transparent); background:color-mix(in srgb,var(--md-sys-color-on-surface) 12%,transparent); }
+.m3-control:disabled > .m3-state-layer, .m3-control[aria-disabled="true"] > .m3-state-layer { opacity:0; }
+.m3-control:focus-visible, .m3-focus-ring { box-shadow:0 0 0 3px var(--md-sys-color-surface); }
+.m3-scrim { position:fixed; inset:0; z-index:60; background:color-mix(in srgb,var(--md-sys-color-scrim) 32%,transparent); }
+.m3-overlay-panel { position:fixed; z-index:70; background:var(--md-sys-color-surface-container-high); color:var(--md-sys-color-on-surface); border-radius:28px; padding:24px; box-shadow:var(--elevation-3); width:min(560px,calc(100vw - 32px)); max-height:calc(100dvh - 48px); overflow-y:auto; top:50%; left:50%; transform:translate(-50%,-50%); }
+.m3-sheet-handle { display:none; }
+@media (max-width:599px) {
+ .m3-overlay-panel[data-sheet="true"] { top:auto; bottom:0; left:0; transform:none; width:100%; max-height:85dvh; border-radius:28px 28px 0 0; padding:20px; }
+ .m3-overlay-panel[data-sheet="true"] .m3-sheet-handle { display:block; width:32px; height:4px; border-radius:9999px; background:var(--md-sys-color-outline-variant); margin:0 auto 20px; }
+}
+@media (prefers-reduced-motion:reduce) {
+ .animate-spin, .animate-pulse, .m3-spinner, .m3-pulse, .m3-ripple { animation:none !important; }
+ .m3-control, .m3-overlay-panel, .m3-ripple { transition:none !important; }
+ .m3-control { transform:none !important; }
 }

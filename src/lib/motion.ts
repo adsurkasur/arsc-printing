@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Motion Tokens Module (M3_SPEC.md §4)
  * Locked Material 3 Expressive spring and tween configurations.
@@ -77,13 +79,27 @@ export const motionTokens = {
 
 export type MotionTokenName = keyof typeof motionTokens;
 
-/**
- * Hook to retrieve an M3 transition respecting prefers-reduced-motion.
- */
+/** Pure selector also used by DOM fixtures and regression tests. */
+export function m3Transition(token: MotionTokenName, reduced: boolean): Transition {
+  if (!reduced) return motionTokens[token];
+  return token.startsWith('effects') || token === 'reduced'
+    ? { type: 'tween', duration: 0.10, ease: 'linear' }
+    : { type: 'tween', duration: 0 };
+}
 export function useM3Transition(token: MotionTokenName): Transition {
-  const shouldReduce = useReducedMotion();
-  if (shouldReduce) {
-    return motionTokens.reduced;
-  }
-  return motionTokens[token];
+  return m3Transition(token, useReducedMotion() !== false);
+}
+/** Per-property transition: spatial transforms snap, opacity alone may fade. */
+export function m3Transitions(reduced: boolean, spatial: MotionTokenName = 'spatialDefault'): Transition {
+  return {
+    default: m3Transition(spatial, reduced),
+    layout: m3Transition(spatial, reduced),
+    opacity: m3Transition('effectsFast', reduced),
+    backgroundColor: m3Transition('effectsFast', reduced),
+    color: m3Transition('effectsFast', reduced),
+    borderRadius: m3Transition(spatial, reduced),
+  };
+}
+export function useM3Transitions(spatial: MotionTokenName = 'spatialDefault'): Transition {
+  return m3Transitions(useReducedMotion() !== false, spatial);
 }
