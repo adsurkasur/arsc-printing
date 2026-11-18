@@ -98,14 +98,18 @@ async function run() {
   // 5. Run fake worker once
   const stateDir = fs.mkdtempSync('E:/OpenBot/tmp/e2e-worker-');
   const worker = new PrintWorker({
-    apiUrl: baseUrl,
+    apiBaseUrl: baseUrl,
     workerId,
     workerSecret,
     printerKey: 'fake',
     stateDir,
     adapter: new FakePrinterAdapter({ latencyMs: 50 }),
   });
-  await worker.pollOnce();
+  const job = await worker.claimJob();
+  if (job) {
+    await worker.processJob(job);
+  }
+  console.log('E2E_ADMIN_WORKER_JOB:', job ? job.id : 'none');
   await page.waitForTimeout(1000);
   await page.reload({ waitUntil: 'networkidle' });
   await page.screenshot({ path: path.join(outDir, 'admin-completed-1280.png') });

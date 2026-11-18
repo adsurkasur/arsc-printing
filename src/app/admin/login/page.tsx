@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import { useState, useEffect } from 'react'
+import { COPY_PAGES } from '@/lib/copy'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -72,13 +73,13 @@ export default function AdminLogin() {
 
   return (
     <div className="container mx-auto px-4 py-12 sm:py-20 max-w-md">
-      <div className="rounded-lg border border-border bg-card p-6 sm:p-8 shadow-card space-y-6">
+      <div className="rounded-lPlus bg-[var(--md-sys-color-surface-container-low)] p-space6 sm:p-space8 shadow-elevation-1 space-y-6">
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-lg bg-primary text-primary-foreground flex items-center justify-center mx-auto shadow-xs">
+          <div className="w-12 h-12 rounded-m bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center mx-auto">
             <Shield className="h-6 w-6" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Portal Masuk Admin
+          <h1 className="text-headlineSmall-emphasized font-display text-[var(--md-sys-color-on-surface)]">
+            {COPY_PAGES.adminLogin.text001}
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground">
             Akses khusus staf piket dan operator cetak ARSC FTAB UB.
