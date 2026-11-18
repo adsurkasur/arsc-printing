@@ -251,7 +251,7 @@ export default function OrderPage() {
   const stepLabels = ['Berkas', 'Pembayaran', 'Kirim'] as const;
 
   return (
-    <div className="max-w-[960px] mx-auto px-4 md:px-0 pt-6 md:pt-10 pb-12">
+    <div className="max-w-[960px] mx-auto page-padding pt-6 md:pt-10 page-bottom">
       <div className="mb-space6">
         <h1 className="text-headlineMedium-emphasized md:text-headlineLarge-emphasized font-display text-[var(--md-sys-color-on-surface)]">
           {COPY_PAGES.order.text001}

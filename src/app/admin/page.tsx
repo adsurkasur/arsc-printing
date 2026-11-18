@@ -334,7 +334,7 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="max-w-[1200px] mx-auto page-padding pt-6 md:pt-8 page-bottom">
       {/* Header */}
       <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
@@ -380,17 +380,17 @@ export default function AdminDashboard() {
       {IS_SIMULATION && (
         <div
           role="status"
-          className="flex items-start gap-2.5 p-3.5 rounded-xl bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)] text-bodySmall"
+          className="mt-6 md:mt-8 flex items-start gap-2.5 p-4 rounded-xl bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)] text-bodySmall max-w-[70ch]"
         >
           <Info className="w-4 h-4 shrink-0 mt-0.5" />
           <span>{COPY_SIMULATION_DISCLOSURE}</span>
         </div>
       )}
 
-      {/* Summary Section */}
-      <section id="summary" aria-label={COPY_PAGES.admin.text003}>
+      {/* Summary Section: ONE card with 3 metric columns separated by 24px */}
+      <section id="summary" aria-label={COPY_PAGES.admin.text003} className="mt-6">
         {summaryError ? (
-          <div className="p-4 flex items-center justify-between gap-4">
+          <div className="rounded-2xl border border-[var(--md-sys-color-outline-variant)] p-4 sm:p-6 flex items-center justify-between gap-4">
             <span className="text-bodyMedium text-[var(--md-sys-color-error)]">
               {COPY_PAGES.admin.text021}
             </span>
@@ -399,8 +399,8 @@ export default function AdminDashboard() {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 space-y-1">
+          <div className="rounded-2xl bg-[var(--md-sys-color-surface-container-low)] border border-[var(--md-sys-color-outline-variant)] p-4 sm:p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="space-y-2">
               <p className="text-labelMedium text-[var(--md-sys-color-on-surface-variant)]">
                 {COPY_PAGES.admin.text005}
               </p>
@@ -409,26 +409,26 @@ export default function AdminDashboard() {
               </p>
             </div>
 
-            <div className="p-4 space-y-1">
+            <div className="space-y-2">
               <p className="text-labelMedium text-[var(--md-sys-color-on-surface-variant)]">
                 {COPY_PAGES.admin.text006}
               </p>
               <p className="text-headlineSmall font-display tabular-nums text-[var(--md-sys-color-on-surface)]">
                 {summary ? summary.pages : '—'}
               </p>
-              <p className="text-bodySmall text-[var(--md-sys-color-on-surface-variant)]">
+              <p className="text-bodySmall text-[var(--md-sys-color-on-surface-variant)] max-w-[40ch]">
                 {COPY_PAGES.admin.text024}
               </p>
             </div>
 
-            <div className="p-4 space-y-1">
+            <div className="space-y-2">
               <p className="text-labelMedium text-[var(--md-sys-color-on-surface-variant)]">
                 {COPY_PAGES.admin.text007}
               </p>
               <p className="text-headlineSmall font-display tabular-nums text-[var(--md-sys-color-on-surface)]">
                 {summary ? `Rp ${summary.revenueVerified.toLocaleString('id-ID')}` : '—'}
               </p>
-              <p className="text-bodySmall text-[var(--md-sys-color-on-surface-variant)]">
+              <p className="text-bodySmall text-[var(--md-sys-color-on-surface-variant)] max-w-[40ch]">
                 {summaryDate === todayJakarta ? COPY_PAGES.admin.text022 : COPY_PAGES.admin.text023}
               </p>
             </div>
@@ -436,8 +436,8 @@ export default function AdminDashboard() {
         )}
       </section>
 
-      {/* Filters & Worker Selector */}
-      <section id="workers" className="space-y-4">
+      {/* Filter Card: 2-row grid with 16px gaps */}
+      <section id="workers" className="mt-8 rounded-2xl bg-[var(--md-sys-color-surface-container-low)] border border-[var(--md-sys-color-outline-variant)] p-4 sm:p-6 space-y-4">
         <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-end">
           <div className="flex-1">
             <input
@@ -574,7 +574,7 @@ export default function AdminDashboard() {
       </section>
 
       {/* Orders List */}
-      <section id="orders" className="space-y-4">
+      <section id="orders" className="mt-6 space-y-4">
         <div className="flex items-center justify-between">
           <p className="text-labelLarge text-[var(--md-sys-color-on-surface-variant)]">
             {formatCopy(COPY_PAGES.admin.text017, { total: totalOrders })}

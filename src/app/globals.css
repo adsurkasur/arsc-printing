@@ -380,3 +380,41 @@
  .m3-control, .m3-overlay-panel, .m3-ripple { transition:none !important; }
  .m3-control { transform:none !important; }
 }
+
+/* M3 4dp Grid Page Frame & Vertical Rhythm Utilities */
+.page-padding {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+@media (min-width: 600px) {
+  .page-padding {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+@media (min-width: 840px) {
+  .page-padding {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+}
+
+.section-gap {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+@media (min-width: 840px) {
+  .section-gap {
+    gap: 48px;
+  }
+}
+
+.page-bottom {
+  padding-bottom: 128px;
+}
+@media (min-width: 840px) {
+  .page-bottom {
+    padding-bottom: 64px;
+  }
+}
