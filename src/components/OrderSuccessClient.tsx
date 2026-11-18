@@ -52,7 +52,8 @@ export default function OrderSuccessClient({ initialOrderId }: { initialOrderId:
       })
       .then((data) => {
         setStatus(typeof data?.status === 'string' ? data.status : null);
-        setPickupCode(typeof data?.pickup_code === 'string' ? data.pickup_code : null);
+        const code = typeof data?.pickupCode === 'string' ? data.pickupCode : typeof data?.pickup_code === 'string' ? data.pickup_code : null;
+        setPickupCode(code);
         setAmountDue(typeof data?.amount_due === 'number' ? data.amount_due : null);
       })
       .catch((err) => {
@@ -167,7 +168,6 @@ export default function OrderSuccessClient({ initialOrderId }: { initialOrderId:
               {copiedCode ? <CheckCircleDuotone className="w-6 h-6" /> : <CopyDuotone className="w-6 h-6" />}
             </M3Pressable>
           </div>
-          <p className="text-bodySmall">{COPY_PAGES.success.text010}</p>
         </div>
 
         <div className="p-space5 rounded-lPlus bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-on-surface)] flex flex-col justify-between">
