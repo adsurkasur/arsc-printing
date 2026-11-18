@@ -10,6 +10,7 @@ export type M3SurfacePair =
   | 'surface'
   | 'surfaceVariant'
   | 'error'
+  | 'success'
   | 'inverseSurface';
 
 const LAYER_STYLES: Record<
@@ -59,6 +60,13 @@ const LAYER_STYLES: Record<
   },
   error: {
     foreground: 'var(--md-sys-color-on-error)',
+    hover: '0.08',
+    focus: '0.10',
+    pressed: '0.10',
+    dragged: '0.16',
+  },
+  success: {
+    foreground: 'var(--md-custom-color-on-success)',
     hover: '0.08',
     focus: '0.10',
     pressed: '0.10',

@@ -41,6 +41,7 @@ export const M3Pressable = React.forwardRef<HTMLButtonElement, M3PressableProps>
     const prefersReduced = useReducedMotion() !== false;
     const transition = m3Transition('press', prefersReduced);
     const layerVars = getM3LayerVars(pair, disabledLayer);
+    const fgColor = disabled ? undefined : (layerVars as Record<string, string>)['--m3-layer-foreground'];
 
     return (
       <motion.button
@@ -55,7 +56,7 @@ export const M3Pressable = React.forwardRef<HTMLButtonElement, M3PressableProps>
               ? { scale: 0.98, borderRadius: '16px' }
               : { scale: 0.98 }
         }
-        style={{ ...layerVars, ...style }}
+        style={{ ...(fgColor ? { color: fgColor } : {}), ...layerVars, ...style }}
         className={cn(
           'm3-control',
           simulatedState === 'focus' && 'm3-focus-ring',

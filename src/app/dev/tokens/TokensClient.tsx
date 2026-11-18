@@ -123,11 +123,11 @@ export function TokensClient() {
             <M3Pressable
               key={t}
               type="button"
-              pair={theme === t ? 'primary' : 'surface'}
+              pair={mounted && theme === t ? 'primary' : 'surface'}
               data-testid={`theme-toggle-${t}`}
               onClick={() => setTheme(t)}
               className={`min-h-[48px] px-space4 rounded-full text-labelMedium border ${
-                theme === t
+                mounted && theme === t
                   ? 'bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] border-transparent'
                   : 'border-[var(--md-sys-color-outline)] text-[var(--md-sys-color-on-surface)]'
               }`}
@@ -405,7 +405,7 @@ export function TokensClient() {
             <div className="flex flex-col items-center gap-space1">
               <M3Pressable
                 type="button"
-                pair="secondaryContainer"
+                pair="success"
                 className="h-12 px-6 rounded-full bg-[var(--md-custom-color-success)] text-[var(--md-custom-color-on-success)] text-labelLarge-emphasized flex items-center gap-space2"
               >
                 <CheckCircleDuotone className="w-4 h-4" />
@@ -686,7 +686,7 @@ export function TokensClient() {
             <div className="mt-space2 flex flex-wrap gap-space3 items-center">
               <M3Pressable
                 type="button"
-                pair="secondaryContainer"
+                pair="success"
                 data-testid="toast-trigger-success"
                 onClick={() => m3Toast.success(COPY_TOASTS.cancelSuccess)}
                 className="min-h-[48px] px-4 rounded-full bg-[var(--md-custom-color-success)] text-[var(--md-custom-color-on-success)] text-labelMedium"
