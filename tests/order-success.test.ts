@@ -1,6 +1,6 @@
 // @ts-expect-error bun:test types are provided by bun runtime
 import { test, expect } from 'bun:test';
-import { COPY_PAGES, COPY_VALIDATION } from '../src/lib/copy';
+import { COPY_ORDER_STATUS, COPY_PAGES, COPY_VALIDATION } from '../src/lib/copy';
 
 test('OrderSuccess API response maps pickupCode and separates capability error from success', async () => {
   // 1. Success state contract
@@ -22,4 +22,13 @@ test('OrderSuccess API response maps pickupCode and separates capability error f
   expect(res.ok).toBe(false);
   expect(res.status).toBe(403);
   expect(COPY_VALIDATION.forbidden).toBe('Pesanan ini tidak dapat dibuka dari browser ini.');
+});
+
+test('OrderSuccess/Track status copy maps delivered and cancelled from §7.1', () => {
+  expect(COPY_ORDER_STATUS.delivered.label).toBe('Sudah diserahkan');
+  expect(COPY_ORDER_STATUS.delivered.sentence).toBe('Penyerahan pesanan sudah dicatat oleh petugas.');
+  expect(COPY_ORDER_STATUS.cancelled.label).toBe('Dibatalkan');
+  expect(COPY_ORDER_STATUS.cancelled.sentence).toBe(
+    'Pesanan ini tidak akan dilanjutkan. Jika sudah membayar, hubungi petugas.'
+  );
 });

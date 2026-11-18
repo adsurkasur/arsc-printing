@@ -172,8 +172,8 @@ async function run() {
   await page.waitForTimeout(1500);
   const trackText = await page.locator('main').innerText();
   console.log('E2E_ADMIN_FINAL_TRACK:', trackText.replace(/\s+/g, ' ').trim().slice(0, 300));
-  if (!/selesai|diserahkan|delivered/i.test(trackText)) {
-    throw new Error(`Expected delivered status on /track, got: ${trackText.slice(0, 200)}`);
+  if (!/Sudah diserahkan/i.test(trackText)) {
+    throw new Error(`Expected "Sudah diserahkan" on /track, got: ${trackText.slice(0, 200)}`);
   }
 
   await browser.close();

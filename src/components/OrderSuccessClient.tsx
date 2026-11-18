@@ -136,10 +136,10 @@ export default function OrderSuccessClient({ initialOrderId }: { initialOrderId:
         <CheckCircleDuotone className="w-8 h-8 text-[var(--md-custom-color-success)] shrink-0 mt-1" aria-hidden="true" />
         <div>
           <h1 className="text-headlineSmall-emphasized md:text-headlineMedium-emphasized font-display text-[var(--md-sys-color-on-surface)]">
-            {COPY_PAGES.success.text001}
+            {status && status !== 'pending_verification' ? statusInfo.label : COPY_PAGES.success.text001}
           </h1>
           <p className="text-bodyLarge text-[var(--md-sys-color-on-surface-variant)] mt-space1">
-            {COPY_PAGES.success.text002}
+            {status && status !== 'pending_verification' ? statusInfo.sentence : COPY_PAGES.success.text002}
           </p>
         </div>
       </div>
