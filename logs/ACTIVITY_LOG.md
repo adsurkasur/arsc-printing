@@ -1,5 +1,14 @@
 # Activity Log
 
+### [2026-11-18 17:55] [Atlas / Redesign Stage 0 — specification]
+- **Goal**: Freeze a fully specified Material 3 Expressive UI before implementation.
+- **Actions**: Read impeccable, hallmark, taste-skill and better-icons; inspect incumbent UI and frozen API contracts; read rendered official M3 color, shape, typography and motion guidance. Created feat/redesign-v2 from feat/print-pipeline. Generated light/dark tokens once with official Material Color Utilities 0.4.0 outside the app on E:.
+- **Files**: docs/M3_SPEC.md and mandatory activity/decision/changelog documentation only. No API, DB, worker or UI implementation edits.
+- **Decisions**: Green TonalSpot 2025 palette; full Expressive shape/type/state/motion language; Framer Motion only; Phosphor duotone; three requested next/font families; human copy and sonner notifications; preserve actual status/data limitations.
+- **Verification**: Specification checker exit0: 49 roles per theme, 22 contrast pairs, 18 component rows, 7 page plans, balanced fences, whitespace and desktop grid sums. Token generation exit0. App test/build and rendered UI acceptance are not claimed for this documentation-only stage.
+- **Handoff**: Soren review required before Kiro implements Stage1. Temporary generator/package/output/checker are under E:/OpenBot/tmp/arsc-m3-tokens. No production/remote DB interaction, no dependencies added.
+
+
 ### [2026-11-18 15:10] [Kiro / Phase 5c Final Quality & Hygiene]
 - **Goal**: Finalize repository hygiene, clean up temporary artifacts, update comprehensive modular logs, and ensure all build/lint/whitespace gates pass cleanly.
 - **Actions**:

@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Added
+- Stage0 redesign specification in docs/M3_SPEC.md: generated M3 light/dark tokens, complete component state contracts, responsive page wireframes, motion and final Indonesian copy. This is a review document; the redesign is not implemented yet.
 - Phase 4b & 5 Features: Human-friendly 4-character pickup codes (`ARSC-XXXX`), customer self-cancellation with concurrency version locking, administrative search (`q`), status filtering, Asia/Jakarta daily summary metrics, worker management list, and print receipt viewer dialog.
 - Phase 4a Visual Redesign: Authentic campus print-service aesthetic adhering to `docs/DESIGN_DIRECTION.md`, WCAG AA contrast compliance, live pricing estimator, and mobile-first responsive 1-column layouts at 375px.
 - Local Supabase test stack support on dedicated loopback ports (18480/18432) enforcing 8 relational database invariants.

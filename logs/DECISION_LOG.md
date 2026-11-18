@@ -104,3 +104,11 @@
 - **Context**: Audit demonstrated horizontal layout overflow and badge clipping on narrow mobile viewports (375px).
 - **Decision**: Enforce 1-column layout at 375px mobile viewport, transitioning to multi-column grids only at `sm` (640px) and `lg` (1024px) breakpoints. Shorten progress indicators to concise labels.
 - **Consequences**: Zero horizontal scroll overflow across all public mobile and desktop screens.
+
+### [DEC-016] Full Material 3 Expressive UI contract before implementation
+- **Date**: 2026-11-18
+- **Status**: User direction accepted; detailed specification pending Soren review.
+- **Context**: The prototype needs a coherent design language and a precise handoff, without changing print protocol truth.
+- **Decision**: docs/M3_SPEC.md freezes generated light/dark role colors, typography, shape/elevation, web-tuned springs, complete states, responsive page layouts and Indonesian copy. Use TonalSpot spec2025 to retain the ARSC green seed, independently of Expressive component/motion language. No runtime color utility. Framer Motion only, Phosphor duotone, sonner, existing Tailwind3/Radix.
+- **Rationale**: Explicit values prevent creative drift. Operational UI prioritizes tasks; expressive moments are scoped. Customer progress never invents job data absent from the API, and fake-printer simulation must be labeled.
+- **Affected**: Future UI/components/layout/copy registry only; API/database/worker contracts remain unchanged. Alternative generic theme rotation and a full framework migration were rejected.
