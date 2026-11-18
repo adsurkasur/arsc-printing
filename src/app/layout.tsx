@@ -51,7 +51,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="id" className={`${fontDisplay.variable} ${fontBody.variable} ${fontCode.variable}`}>
+    <html lang="id" suppressHydrationWarning className={`${fontDisplay.variable} ${fontBody.variable} ${fontCode.variable}`}>
       <body className="min-h-screen flex flex-col font-body bg-background text-foreground antialiased selection:bg-primary/15 selection:text-primary">
         <Providers>
           <Navbar />
