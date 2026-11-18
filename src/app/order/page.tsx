@@ -6,7 +6,8 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { FileUp, Image as ImageIcon, CheckCircle2, AlertCircle, QrCode, ArrowRight, ShieldCheck, Info } from 'lucide-react';
 import LivePDFPreview from '@/components/LivePDFPreview';
-import { COPY_PAGES } from '@/lib/copy';
+import { COPY_PAGES, COPY_LOADING } from '@/lib/copy';
+import { M3Pressable } from '@/components/m3';
 
 export default function OrderPage() {
   const router = useRouter();
@@ -135,7 +136,8 @@ export default function OrderPage() {
         </ol>
       </div>
 
-      <form onSubmit={submit} className="space-y-8">
+      <form onSubmit={submit} className="grid grid-cols-1 lg:grid-cols-12 gap-space6 items-start">
+        <div className="lg:col-span-7 space-y-space6 min-w-0">
         {/* Section 1: Data Pemesan */}
         <div className="rounded-lg border border-border bg-card p-5 sm:p-6 shadow-card space-y-4">
           <h2 className="text-base sm:text-lg font-semibold text-foreground flex items-center gap-2">
@@ -465,14 +467,45 @@ export default function OrderPage() {
 
         {/* Submit Button */}
         <div className="pt-2">
-          <Button
+          <M3Pressable
+            pair="primary"
             disabled={busy || !pdfFile || !proofFile}
+            aria-busy={busy}
             type="submit"
-            className="w-full sm:w-auto h-12 px-8 text-base bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-xs"
+            className="w-full sm:w-auto h-12 px-8 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] text-labelLarge-emphasized"
           >
-            {busy ? 'Mengunggah & Menyimpan…' : 'Kirim Pesanan & Unggah Berkas'}
-          </Button>
+            {busy ? COPY_LOADING.submit : COPY_PAGES.order.text034}
+          </M3Pressable>
         </div>
+        </div>
+
+        {/* §6.2 Sticky Summary Filled Card */}
+        <aside className="lg:col-span-5 lg:sticky lg:top-24 p-space5 md:p-space6 rounded-lPlus bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-on-surface)] space-y-space4">
+          <h2 className="text-titleMedium-emphasized">{COPY_PAGES.order.text003}</h2>
+          <div className="space-y-space2 text-bodyMedium">
+            <div className="flex justify-between">
+              <span className="text-[var(--md-sys-color-on-surface-variant)]">Halaman PDF</span>
+              <span className="font-code">{pdfFile ? `${pageCount} hal` : '—'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-[var(--md-sys-color-on-surface-variant)]">Salinan</span>
+              <span className="font-code">{copies}×</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-[var(--md-sys-color-on-surface-variant)]">Tarif</span>
+              <span className="font-code">Rp {unitRate.toLocaleString('id-ID')}</span>
+            </div>
+            <div className="pt-space3 border-t border-[var(--md-sys-color-outline-variant)] flex justify-between items-baseline">
+              <span className="text-titleSmall-emphasized">{COPY_PAGES.order.text024}</span>
+              <span className="text-amount-emphasized font-code text-[var(--md-sys-color-primary)]">
+                Rp {estimatedTotal.toLocaleString('id-ID')}
+              </span>
+            </div>
+          </div>
+          <p className="text-bodySmall text-[var(--md-sys-color-on-surface-variant)]">
+            {COPY_PAGES.order.text025}
+          </p>
+        </aside>
       </form>
     </div>
   );
