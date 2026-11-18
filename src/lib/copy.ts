@@ -1,74 +1,179 @@
 /**
- * Copy Registry (M3_SPEC.md §7)
+ * Copy Registry (M3_SPEC.md §5, §6, §7)
  * Strictly Indonesian language, polite, concise, informative.
- * Verbatim text dictionary for customer-facing ARSC flows.
+ * VERBATIM text dictionary for customer and operator ARSC flows.
  */
 
-export const COPY_STATUS_MAP: Record<string, string> = {
-  SUBMITTED: 'Pesanan Diterima',
-  CONFIRMED: 'Pembayaran Terverifikasi',
-  PRINTING: 'Sedang Dicetak',
-  COMPLETED: 'Selesai — Siap Diambil',
-  CANCELLED: 'Pesanan Dibatalkan',
-  REFUNDED: 'Dana Dikembalikan',
+export const COPY_STATUS_MAP: Record<
+  | 'pending_verification'
+  | 'payment_pending'
+  | 'payment_rejected'
+  | 'approved'
+  | 'ready'
+  | 'claimed'
+  | 'submitted'
+  | 'backend_completed'
+  | 'needs_reconciliation'
+  | 'failed'
+  | 'delivered'
+  | 'cancelled',
+  { label: string; sentence: string }
+> = {
+  pending_verification: {
+    label: 'Menunggu pemeriksaan',
+    sentence: 'Petugas akan memeriksa pembayaran dan berkasmu.',
+  },
+  payment_pending: {
+    label: 'Menunggu pemeriksaan',
+    sentence: 'Petugas akan memeriksa pembayaran dan berkasmu.',
+  },
+  payment_rejected: {
+    label: 'Pembayaran perlu diperiksa',
+    sentence: 'Bukti pembayaran belum dapat diverifikasi. Hubungi petugas ARSC untuk melanjutkan.',
+  },
+  approved: {
+    label: 'Masuk antrean cetak',
+    sentence: 'Pesanan sudah disetujui dan menunggu diproses.',
+  },
+  ready: {
+    label: 'Masuk antrean cetak',
+    sentence: 'Pesanan sudah disetujui dan menunggu diproses.',
+  },
+  claimed: {
+    label: 'Sedang disiapkan',
+    sentence: 'Perangkat sedang menyiapkan pesanan.',
+  },
+  submitted: {
+    label: 'Sedang diproses',
+    sentence: 'Proses cetak sedang berjalan. Tunggu pemeriksaan petugas.',
+  },
+  backend_completed: {
+    label: 'Menunggu pemeriksaan hasil',
+    sentence: 'Proses pada perangkat selesai. Petugas masih perlu memeriksa hasil cetak.',
+  },
+  needs_reconciliation: {
+    label: 'Perlu pemeriksaan petugas',
+    sentence: 'Ada proses yang perlu diperiksa. Jangan mengirim ulang pesanan yang sama.',
+  },
+  failed: {
+    label: 'Proses terhenti',
+    sentence: 'Petugas perlu memeriksa pesanan sebelum melanjutkan.',
+  },
+  delivered: {
+    label: 'Sudah diserahkan',
+    sentence: 'Penyerahan pesanan sudah dicatat oleh petugas.',
+  },
+  cancelled: {
+    label: 'Dibatalkan',
+    sentence: 'Pesanan ini tidak akan dilanjutkan. Jika sudah membayar, hubungi petugas.',
+  },
+} as const;
+
+export const COPY_TIMELINE_STEPS = [
+  'Terkirim',
+  'Pembayaran diperiksa',
+  'Diproses',
+  'Hasil diperiksa',
+  'Diserahkan',
+] as const;
+
+export const COPY_SIMULATION = {
+  disclosure: 'Mode simulasi: alur ini memakai printer uji. Tidak ada dokumen fisik yang dicetak.',
 } as const;
 
 export const COPY_TOASTS = {
-  // Order submission
-  orderCreated: 'Pesanan berhasil dibuat. Simpan ID pesanan untuk memantau status.',
-  orderSubmitFailed: 'Gagal membuat pesanan. Silakan periksa kembali formulir atau coba beberapa saat lagi.',
-
-  // Payment upload
-  proofUploaded: 'Bukti pembayaran terkirim. Menunggu verifikasi admin (maksimal 15 menit saat jam operasional).',
-  proofUploadFailed: 'Unggah bukti pembayaran gagal. Pastikan format file PNG atau JPG dan ukuran maksimal 5 MB.',
-
-  // Verification & Copy
-  idCopied: 'ID pesanan disalin ke papan klip.',
-  linkCopied: 'Tautan disalin ke papan klip.',
-
-  // Network / Error states
-  networkError: 'Koneksi terputus. Memeriksa kembali...',
-  serverError: 'Terjadi kendala pada server. Tim kami sedang menanganinya.',
+  orderSent: 'Pesanan terkirim. Simpan kode ambilmu.',
+  copyPickup: 'Kode ambil disalin.',
+  copyId: 'ID pesanan disalin.',
+  clipboardFailed: 'Belum bisa menyalin. Pilih teks lalu salin secara manual.',
+  cancelSuccess: 'Pesanan dibatalkan.',
+  verifyPayment: 'Pembayaran sudah diverifikasi.',
+  rejectPayment: 'Pembayaran ditandai perlu diperiksa.',
+  approve: 'Pesanan disetujui dan masuk antrean cetak.',
+  adminCancel: 'Pesanan dibatalkan.',
+  deliver: 'Penyerahan pesanan sudah dicatat.',
+  simulatedDeliver: 'Penyerahan simulasi sudah dicatat.',
+  reconcileSuccess: 'Hasil pemeriksaan sudah dicatat.',
+  reprint: 'Pesanan cetak ulang masuk antrean.',
+  explicitRefresh: 'Data pesanan sudah diperbarui.',
+  signedDocumentFailed: 'Berkas belum bisa dibuka. Coba lagi.',
+  workerListFailed: 'Daftar perangkat belum bisa dimuat.',
+  staleVersion: 'Pesanan sudah berubah. Muat ulang data sebelum melanjutkan.',
+  notAllowed: 'Tindakan ini tidak tersedia untuk status pesanan saat ini.',
+  capabilityCsrfForbidden: 'Akses pesanan berakhir. Buka dari browser yang dipakai saat memesan, lalu muat ulang.',
+  sessionExpired: 'Sesi masuk berakhir. Silakan masuk kembali.',
+  backendUnavailable: 'Layanan belum bisa dihubungi. Coba lagi sebentar.',
+  genericActionFailed: 'Perubahan belum tersimpan. Periksa koneksi lalu coba lagi.',
+  logoutSuccess: 'Kamu sudah keluar.',
 } as const;
 
-export const COPY_UI = {
-  // Brand
-  brandName: 'ARSC Printing',
-  brandSubtitle: 'Layanan Cetak Mandiri Mahasiswa',
-  operationalHours: 'Senin – Jumat, 08.00 – 16.00 WIB',
-  location: 'Gedung F FTP Universitas Brawijaya, Lantai 1',
+export const COPY_LOADING = {
+  create: 'Menyiapkan pesanan…',
+  documentUpload: 'Mengunggah PDF…',
+  proofUpload: 'Mengunggah bukti…',
+  parse: 'Memeriksa PDF…',
+  submit: 'Mengirim pesanan…',
+  verify: 'Memverifikasi…',
+  approve: 'Memasukkan ke antrean…',
+  cancel: 'Membatalkan…',
+  deliver: 'Mencatat penyerahan…',
+  receipt: 'Memuat rincian…',
+  list: 'Memuat pesanan…',
+  genericRefresh: 'Memperbarui…',
+  screenReaderCompletion: 'Pembaruan selesai.',
+} as const;
 
-  // Order Flow
-  fileUploadDropzone: 'Tarik file PDF ke sini, atau klik untuk memilih',
-  fileUploadHint: 'Hanya file PDF, maksimal 50 MB, maksimal 500 halaman.',
-  pagesCount: (pages: number) => `${pages} halaman`,
-  copiesCount: (copies: number) => `${copies} eksemplar`,
-  totalPrice: (formattedPrice: string) => `Total: ${formattedPrice}`,
-
-  // Simulation Mode Disclosure (Mandatory if mock backend active)
-  simulationDisclosure: 'Layanan ini berjalan dalam mode simulasi antrean. Berkas tidak benar-benar dicetak ke mesin fisik.',
+export const COPY_VALIDATION = {
+  name: 'Isi nama lengkapmu.',
+  contact: 'Isi nomor atau akun yang dapat dihubungi.',
+  pdfMissing: 'Pilih dokumen PDF terlebih dahulu.',
+  invalidPdf: 'Berkas belum bisa dibaca sebagai PDF. Simpan ulang sebagai PDF lalu coba lagi.',
+  pdfSize: 'Ukuran PDF melebihi 10 MiB. Perkecil berkas lalu unggah kembali.',
+  proofMissing: 'Unggah bukti pembayaran sebelum mengirim pesanan.',
+  proofType: 'Bukti pembayaran harus PNG atau JPEG.',
+  proofSize: 'Ukuran bukti melebihi 5 MiB. Perkecil gambar lalu coba lagi.',
+  copies: 'Jumlah salinan harus antara 1 dan 100.',
+  limits: 'Jumlah halaman atau salinan melebihi batas layanan. Kurangi jumlahnya lalu coba lagi.',
+  agreement: 'Periksa ringkasan dan centang konfirmasi sebelum mengirim.',
+  workerRequired: 'Pilih perangkat cetak terlebih dahulu.',
+  reasonRequired: 'Tuliskan alasan pemeriksaan.',
+  dateInvalid: 'Periksa rentang tanggal. Tanggal awal tidak boleh setelah tanggal akhir.',
+  forbidden: 'Pesanan ini tidak dapat dibuka dari browser ini.',
+  notFound: 'Pesanan tidak ditemukan. Periksa ID pesananmu.',
+  errorSummaryHeading: 'Periksa bagian berikut',
 } as const;
 
 export const COPY_EMPTY = {
   noOrders: 'Belum ada pesanan.',
-  noOrdersSub: 'Unggah dokumen PDF untuk membuat pesanan cetak baru.',
-  orderNotFound: 'Pesanan tidak ditemukan.',
-  orderNotFoundSub: 'Periksa kembali ID pesanan yang Anda masukkan atau hubungi narahubung jika ada kendala.',
+  noOrdersSub: 'Pesanan baru akan muncul di sini setelah dikirim pelanggan.',
 } as const;
 
-export const COPY_VALIDATION = {
-  requiredField: 'Bidang ini wajib diisi.',
-  invalidEmail: 'Masukkan alamat email yang valid.',
-  invalidPhone: 'Masukkan nomor WhatsApp yang valid (contoh: 08123456789).',
-  invalidPdf: 'File harus berformat PDF.',
-  fileTooLarge: 'Ukuran file melebihi batas maksimal 50 MB.',
-  pagesExceeded: 'Jumlah halaman melebihi batas maksimal 500 halaman.',
-  invalidProofImage: 'Bukti pembayaran harus berupa gambar PNG atau JPG maksimal 5 MB.',
-} as const;
-
-export const COPY_LOADING = {
-  analyzingPdf: 'Menganalisis dokumen PDF...',
-  uploadingFile: 'Mengunggah dokumen...',
-  creatingOrder: 'Membuat pesanan...',
-  verifyingPayment: 'Memverifikasi pembayaran...',
+export const COPY_UI = {
+  brandName: 'ARSC Printing',
+  appMarkTitle: 'ARSC Printing',
+  orderCta: 'Buat pesanan',
+  orderNow: 'Kirim pesanan sekarang',
+  navHome: 'Beranda',
+  navOrder: 'Pesan',
+  navTrack: 'Lacak',
+  navQueue: 'Antrean',
+  dropzonePdf: 'Dokumen PDF',
+  dropzonePdfHelper: 'PDF saja, maksimal 10 MiB.',
+  dropzonePdfDrag: 'Lepaskan berkas di sini',
+  dropzoneProof: 'Bukti pembayaran',
+  dropzoneProofHelper: 'PNG atau JPEG, maksimal 5 MiB.',
+  dropzoneProofDrag: 'Lepaskan berkas di sini',
+  dropzoneChangeFile: 'Ganti berkas',
+  step1Action: 'Lanjut ke pembayaran',
+  step2Action: 'Periksa pesanan',
+  stepBack: 'Kembali',
+  stepSubmit: 'Kirim pesanan',
+  qrisTitle: 'Kode QRIS pembayaran ARSC',
+  qrisOpen: 'Buka QRIS',
+  qrisEstimate: 'Estimasi; tagihan akhir dihitung dari berkas oleh server.',
+  orderAgreement: 'Saya sudah memeriksa berkas, pengaturan cetak, dan bukti pembayaran.',
+  orderWarning: 'Berkas dan pengaturan tidak dapat diubah setelah pesanan dikirim.',
+  close: 'Tutup',
+  cancel: 'Batal',
+  searchOrders: 'Cari pesanan...',
 } as const;

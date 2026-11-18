@@ -9,6 +9,10 @@ type ToasterProps = React.ComponentProps<typeof Sonner>;
  * Body: inverseOnSurface, font 14 regular
  * Icon: 20x20
  * Action: inversePrimary font 14 medium
+ * Hit target: close 48px
+ * Stacking: visibleToasts 3
+ * Duration: success 4s / info 6s / error persistent (Infinity)
+ * Position: desktop top-right 24px below appbar; mobile top 80px + safe area
  */
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = "system" } = useTheme();
@@ -17,15 +21,21 @@ const Toaster = ({ ...props }: ToasterProps) => {
     <Sonner
       theme={theme as ToasterProps["theme"]}
       className="toaster group"
+      position="top-right"
+      visibleToasts={3}
+      closeButton={true}
+      pauseWhenPageIsHidden={true}
       toastOptions={{
         classNames: {
           toast:
-            "group toast group-[.toaster]:bg-[var(--md-sys-color-inverse-surface)] group-[.toaster]:text-[var(--md-sys-color-inverse-on-surface)] group-[.toaster]:border-transparent group-[.toaster]:rounded-m group-[.toaster]:min-h-[56px] group-[.toaster]:p-space4 group-[.toaster]:shadow-elevation-3 group-[.toaster]:text-sm group-[.toaster]:font-body",
+            "group toast group-[.toaster]:bg-[var(--md-sys-color-inverse-surface)] group-[.toaster]:text-[var(--md-sys-color-inverse-on-surface)] group-[.toaster]:border-transparent group-[.toaster]:rounded-m group-[.toaster]:min-h-[56px] group-[.toaster]:p-space4 group-[.toaster]:shadow-elevation-3 group-[.toaster]:text-sm group-[.toaster]:font-body group-[.toaster]:max-w-[400px]",
           description: "group-[.toast]:text-[var(--md-sys-color-inverse-on-surface)]/80 text-xs",
           actionButton:
             "group-[.toast]:bg-transparent group-[.toast]:text-[var(--md-sys-color-inverse-primary)] group-[.toast]:font-medium group-[.toast]:hover:underline",
           cancelButton:
             "group-[.toast]:bg-transparent group-[.toast]:text-[var(--md-sys-color-inverse-on-surface)]/70",
+          closeButton:
+            "group-[.toast]:!w-12 group-[.toast]:!h-12 group-[.toast]:!p-3 group-[.toast]:!bg-transparent group-[.toast]:!text-[var(--md-sys-color-inverse-on-surface)]",
           icon: "group-[.toast]:w-5 group-[.toast]:h-5 group-[.toast]:text-[var(--md-sys-color-inverse-primary)]",
         },
       }}

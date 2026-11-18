@@ -77,40 +77,40 @@
     --md-custom-color-on-warning-container: #713f12;
 
     /* Shadcn/Tailwind HSL Compatibility Mapping (§2.1) */
-    --background: 240 100% 99%;        /* #f9f9ff surface */
-    --foreground: 218 14% 11%;         /* #191c21 onSurface */
+    --background: 240 100% 98.8%;        /* #f9f9ff surface */
+    --foreground: 218 14% 11.4%;         /* #191c21 onSurface */
 
-    --card: 0 0% 100%;                 /* #ffffff surfaceContainerLowest */
-    --card-foreground: 218 14% 11%;    /* #191c21 onSurface */
+    --card: 0 0% 100%;                   /* #ffffff surfaceContainerLowest */
+    --card-foreground: 218 14% 11.4%;    /* #191c21 onSurface */
 
-    --popover: 0 0% 100%;              /* #ffffff surfaceContainerLowest */
-    --popover-foreground: 218 14% 11%; /* #191c21 onSurface */
+    --popover: 232.5 20% 92.2%;          /* #e7e8ef surfaceContainerHigh */
+    --popover-foreground: 218 14% 11.4%; /* #191c21 onSurface */
 
-    --primary: 211 100% 26%;           /* #004287 primary */
-    --primary-foreground: 0 0% 100%;   /* #ffffff onPrimary */
+    --primary: 210.6 100% 26.5%;         /* #004287 primary */
+    --primary-foreground: 0 0% 100%;     /* #ffffff onPrimary */
 
-    --secondary: 221 100% 89%;         /* #c9daff secondaryContainer */
-    --secondary-foreground: 219 24% 40%;/* #4e5f7f onSecondaryContainer */
+    --secondary: 221 100% 89.4%;         /* #c9daff secondaryContainer */
+    --secondary-foreground: 219 24% 40.2%;/* #4e5f7f onSecondaryContainer */
 
-    --muted: 240 29% 95%;              /* #ededf5 surfaceContainer */
-    --muted-foreground: 220 10% 29%;   /* #424751 onSurfaceVariant */
+    --muted: 232.5 15.4% 89.8%;          /* #e1e2e9 surfaceContainerHighest */
+    --muted-foreground: 220 10.1% 29%;   /* #424751 onSurfaceVariant */
 
-    --accent: 221 100% 89%;            /* #c9daff secondaryContainer */
-    --accent-foreground: 219 24% 40%;  /* #4e5f7f onSecondaryContainer */
+    --accent: 221 100% 89.4%;            /* #c9daff secondaryContainer */
+    --accent-foreground: 219 24% 40.2%;  /* #4e5f7f onSecondaryContainer */
 
-    --destructive: 0 75% 42%;          /* #ba1a1a error */
-    --destructive-foreground: 0 0% 100%;/* #ffffff onError */
+    --destructive: 0 75.4% 41.6%;        /* #ba1a1a error */
+    --destructive-foreground: 0 0% 100%; /* #ffffff onError */
 
-    --border: 226 16% 79%;             /* #c2c6d3 outlineVariant */
-    --input: 226 16% 79%;              /* #c2c6d3 outlineVariant */
-    --ring: 211 100% 26%;              /* #004287 primary */
+    --border: 225.8 16.3% 79.4%;         /* #c2c6d3 outlineVariant */
+    --input: 224 6.1% 48%;               /* #737782 outline */
+    --ring: 210.6 100% 26.5%;            /* #004287 primary */
 
     --radius: 0.75rem;
 
-    --success: 143 64% 24%;            /* #166534 */
+    --success: 142.9 64.1% 24.3%;        /* #166534 */
     --success-foreground: 0 0% 100%;
 
-    --warning: 32 81% 29%;             /* #854d0e */
+    --warning: 32.1 80.9% 29.2%;         /* #854d0e */
     --warning-foreground: 0 0% 100%;
 
     /* Elevation Shadows (§3: shadow RGB 0 0 0, opacities 12%, 14%, 16%, 18%, 20%) */
@@ -191,39 +191,39 @@
     --md-custom-color-on-warning-container: #fef3c7;
 
     /* Shadcn/Tailwind HSL Compatibility Mapping (§2.1) */
-    --background: 223 17% 8%;          /* #111318 surface */
-    --foreground: 233 15% 90%;         /* #e1e2e9 onSurface */
+    --background: 222.9 17.2% 8.4%;       /* #111318 surface */
+    --foreground: 232.5 15.4% 89.8%;      /* #e1e2e9 onSurface */
 
-    --card: 218 14% 11%;               /* #191c21 surfaceContainerLow */
-    --card-foreground: 233 15% 90%;    /* #e1e2e9 onSurface */
+    --card: 218.2 14.1% 11.4%;            /* #191c21 surfaceContainerLow */
+    --card-foreground: 232.5 15.4% 89.8%; /* #e1e2e9 onSurface */
 
-    --popover: 218 14% 11%;            /* #191c21 surfaceContainerLow */
-    --popover-foreground: 233 15% 90%; /* #e1e2e9 onSurface */
+    --popover: 222.9 8.2% 17.1%;          /* #282a2f surfaceContainerHigh */
+    --popover-foreground: 232.5 15.4% 89.8%;/* #e1e2e9 onSurface */
 
-    --primary: 220 100% 83%;           /* #aac7ff primary */
-    --primary-foreground: 212 100% 20%;/* #002f64 onPrimary */
+    --primary: 219.8 100% 83.3%;          /* #aac7ff primary */
+    --primary-foreground: 211.9 100% 19.6%;/* #002f64 onPrimary */
 
-    --secondary: 219 31% 31%;          /* #364766 secondaryContainer */
-    --secondary-foreground: 220 41% 75%;/* #a4b6d9 onSecondaryContainer */
+    --secondary: 218.8 30.6% 30.8%;       /* #364766 secondaryContainer */
+    --secondary-foreground: 219.6 40.7% 74.9%;/* #a4b6d9 onSecondaryContainer */
 
-    --muted: 218 12% 13%;              /* #1d2025 surfaceContainer */
-    --muted-foreground: 226 16% 79%;   /* #c2c6d3 onSurfaceVariant */
+    --muted: 222.9 6.4% 21.4%;            /* #33353a surfaceContainerHighest */
+    --muted-foreground: 225.8 16.3% 79.4%;/* #c2c6d3 onSurfaceVariant */
 
-    --accent: 219 31% 31%;             /* #364766 secondaryContainer */
-    --accent-foreground: 220 41% 75%;  /* #a4b6d9 onSecondaryContainer */
+    --accent: 218.8 30.6% 30.8%;          /* #364766 secondaryContainer */
+    --accent-foreground: 219.6 40.7% 74.9%;/* #a4b6d9 onSecondaryContainer */
 
-    --destructive: 6 100% 84%;         /* #ffb4ab error */
-    --destructive-foreground: 357 100% 21%;/* #690005 onError */
+    --destructive: 6.2 100% 83.7%;        /* #ffb4ab error */
+    --destructive-foreground: 356.9 100% 20.6%;/* #690005 onError */
 
-    --border: 220 10% 29%;             /* #424751 outlineVariant */
-    --input: 220 10% 29%;              /* #424751 outlineVariant */
-    --ring: 220 100% 83%;              /* #aac7ff primary */
+    --border: 220 10.1% 29%;              /* #424751 outlineVariant */
+    --input: 221.3 7.5% 58%;              /* #8c919c outline */
+    --ring: 219.8 100% 83.3%;             /* #aac7ff primary */
 
-    --success: 142 77% 73%;            /* #86efac */
-    --success-foreground: 144 82% 10%; /* #052e16 */
+    --success: 142.1 76.6% 73.1%;         /* #86efac */
+    --success-foreground: 144 82% 10%;    /* #052e16 */
 
-    --warning: 50 98% 64%;             /* #fde047 */
-    --warning-foreground: 26 83% 14%;  /* #422006 */
+    --warning: 50.3 97.8% 63.7%;          /* #fde047 */
+    --warning-foreground: 26.3 83.3% 14.1%;/* #422006 */
 
     /* Elevation Shadows Dark (§3: shadow RGB 0 0 0, same opacities) */
     --elevation-0: none;
@@ -246,5 +246,17 @@
   }
   html {
     overflow-x: clip;
+  }
+
+  /* M3 Focus Rings Contract (§2.1 / §5) */
+  :focus-visible {
+    outline: 3px solid var(--md-sys-color-primary) !important;
+    outline-offset: 3px !important;
+  }
+
+  /* Forced focus class for test fixtures */
+  .m3-focus-ring {
+    outline: 3px solid var(--md-sys-color-primary) !important;
+    outline-offset: 3px !important;
   }
 }
