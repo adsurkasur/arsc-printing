@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import OrderSuccessClient from '@/components/OrderSuccessClient';
 import { MagnifyingGlassDuotone, WarningCircleDuotone } from '@/components/icons';
-import { COPY_PAGES } from '@/lib/copy';
+import { COPY_PAGES, COPY_UI } from '@/lib/copy';
 import { M3Pressable } from '@/components/m3';
 
 export default function TrackPage() {
@@ -58,6 +58,25 @@ export default function TrackPage() {
         <WarningCircleDuotone className="w-5 h-5 shrink-0 mt-0.5" aria-hidden="true" />
         <p>{COPY_PAGES.success.text010}</p>
       </div>
+
+      {!id && (
+        <div className="p-space4 rounded-lPlus bg-[var(--md-sys-color-surface-container-low)] flex flex-wrap items-center gap-x-4 gap-y-2 text-bodySmall">
+          <a
+            href={COPY_UI.contactTel}
+            className="text-[var(--md-sys-color-primary)] font-medium hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--md-sys-color-primary)]"
+          >
+            {COPY_UI.contactLabel}
+          </a>
+          <a
+            href={COPY_UI.contactWhatsapp}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[var(--md-sys-color-primary)] font-medium hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--md-sys-color-primary)]"
+          >
+            {COPY_UI.contactWhatsappLabel}
+          </a>
+        </div>
+      )}
 
       {id && (
         <div className="pt-space2">

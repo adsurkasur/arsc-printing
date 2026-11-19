@@ -150,6 +150,12 @@ export const COPY_UI = {
   "brandName": "ARSC Printing",
   "appMarkTitle": "ARSC Printing",
   "faculty": "Fakultas Teknologi Agroindustri dan Biosistem (FTAB)",
+  "locationLabel": "Sekretariat ARSC Gedung A FTAB UB",
+  "serviceHours": "Jam layanan fleksibel. Pesanan akan diperiksa pada sesi berikutnya.",
+  "contactLabel": "Hubungi Arina: +62 878-8283-2706",
+  "contactTel": "tel:+6287882832706",
+  "contactWhatsapp": "https://wa.me/6287882832706",
+  "contactWhatsappLabel": "WhatsApp Arina",
   "orderCta": "Buat pesanan",
   "navHome": "Beranda",
   "navOrder": "Pesan",
@@ -219,7 +225,7 @@ export const COPY_PAGES = {
     "text015": "Periksa tagihan, lalu unggah bukti pembayaran.",
     "text016": "Tunggu pemeriksaan",
     "text017": "Petugas memeriksa pembayaran dan menyiapkan pesanan untuk diambil.",
-    "text018": "Layanan mengikuti jadwal piket sekretariat. Pesanan di luar jadwal akan diperiksa pada sesi berikutnya."
+    "text018": "Jam layanan fleksibel. Pesanan akan diperiksa pada sesi berikutnya."
   },
   "order": {
     "text001": "Buat pesanan",

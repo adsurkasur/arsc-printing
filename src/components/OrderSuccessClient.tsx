@@ -205,6 +205,24 @@ export default function OrderSuccessClient({ initialOrderId }: { initialOrderId:
         })}
       </ol>
 
+      {/* Contact */}
+      <div className="p-space4 rounded-lPlus bg-[var(--md-sys-color-surface-container-low)] flex flex-wrap items-center gap-x-4 gap-y-2 text-bodySmall">
+        <a
+          href={COPY_UI.contactTel}
+          className="text-[var(--md-sys-color-primary)] font-medium hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--md-sys-color-primary)]"
+        >
+          {COPY_UI.contactLabel}
+        </a>
+        <a
+          href={COPY_UI.contactWhatsapp}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[var(--md-sys-color-primary)] font-medium hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--md-sys-color-primary)]"
+        >
+          {COPY_UI.contactWhatsappLabel}
+        </a>
+      </div>
+
       {/* Actions */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-space3">
         <Link

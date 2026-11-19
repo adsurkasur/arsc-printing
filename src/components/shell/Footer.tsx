@@ -14,13 +14,30 @@ export function Footer() {
         </div>
 
         <div>
-          <p className="text-labelLarge-emphasized text-[var(--md-sys-color-on-surface)]">Lokasi</p>
-          <p className="text-bodySmall mt-space1">Sekretariat ARSC Gedung F FTAB UB</p>
+          <p className="text-labelLarge-emphasized text-[var(--md-sys-color-on-surface)]">Lokasi &amp; Layanan</p>
+          <p className="text-bodySmall mt-space1">{COPY_UI.locationLabel}</p>
+          <p className="text-bodySmall mt-space1">{COPY_UI.serviceHours}</p>
         </div>
 
         <div>
-          <p className="text-labelLarge-emphasized text-[var(--md-sys-color-on-surface)]">Tarif cetak</p>
+          <p className="text-labelLarge-emphasized text-[var(--md-sys-color-on-surface)]">Tarif &amp; Kontak</p>
           <p className="text-bodySmall font-code mt-space1">Hitam putih Rp 500/hal · Warna Rp 750/hal</p>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-space1 text-bodySmall">
+            <a
+              href={COPY_UI.contactTel}
+              className="text-[var(--md-sys-color-primary)] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--md-sys-color-primary)]"
+            >
+              {COPY_UI.contactLabel}
+            </a>
+            <a
+              href={COPY_UI.contactWhatsapp}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[var(--md-sys-color-primary)] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--md-sys-color-primary)]"
+            >
+              {COPY_UI.contactWhatsappLabel}
+            </a>
+          </div>
         </div>
       </div>
     </footer>
