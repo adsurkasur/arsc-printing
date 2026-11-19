@@ -3,6 +3,7 @@ import { FileTextDuotone } from '@/components/icons';
 import { COPY_HOME, COPY_PAGES, COPY_UI } from '@/lib/copy';
 import { getM3LayerVars, M3StateLayer } from '@/components/m3';
 import { HomeQueueStrip } from '@/components/HomeQueueStrip';
+import { HeroLineReveal, TariffCardReveal, ProcessRowReveal } from '@/components/HomeMotion';
 
 export default function HomePage() {
   const processSteps = [
@@ -16,8 +17,12 @@ export default function HomePage() {
       {/* §6.1 Two-column hero at >=840 (7/5, gap 48px), stacked at 375 */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
         <div className="lg:col-span-7 min-w-0">
-          <h1 className="text-displaySmall-emphasized lg:text-displayLarge-emphasized font-display text-[var(--md-sys-color-on-surface)] whitespace-pre-line max-w-[620px]">
-            {COPY_HOME.heroTitle}
+          <h1 className="text-displaySmall-emphasized lg:text-displayLarge-emphasized font-display text-[var(--md-sys-color-on-surface)] max-w-[620px]">
+            {COPY_HOME.heroTitle.split('\n').map((line, i) => (
+              <HeroLineReveal key={line} index={i} className="block">
+                {line}
+              </HeroLineReveal>
+            ))}
           </h1>
           <p className="text-bodyLarge text-[var(--md-sys-color-on-surface-variant)] mt-space4 max-w-[520px]">
             {COPY_HOME.heroSubtitle}
@@ -46,7 +51,7 @@ export default function HomePage() {
         </div>
 
         {/* Asymmetric tariff panel: 48/16/48/16 clockwise */}
-        <div className="lg:col-span-5 min-w-0">
+        <TariffCardReveal className="lg:col-span-5 min-w-0">
           <div className="p-6 rounded-tl-[48px] rounded-tr-[16px] rounded-br-[48px] rounded-bl-[16px] bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-on-surface)] lg:min-h-[260px] flex flex-col justify-between">
             <h2 className="text-headlineSmall-emphasized font-display">
               {COPY_HOME.tariffHeading}
@@ -66,7 +71,7 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-        </div>
+        </TariffCardReveal>
       </section>
 
       {/* Queue strip */}
@@ -85,7 +90,7 @@ export default function HomePage() {
 
         <ol className="lg:col-span-8 min-w-0 divide-y divide-[var(--md-sys-color-outline-variant)] border-y border-[var(--md-sys-color-outline-variant)]">
           {processSteps.map((step, idx) => (
-            <li key={step.title} className="py-space4 flex items-start gap-space4">
+            <ProcessRowReveal key={step.title} index={idx} className="py-space4 flex items-start gap-space4">
               <span className="w-8 h-8 rounded-full bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] text-labelLarge-emphasized flex items-center justify-center shrink-0">
                 {idx + 1}
               </span>
@@ -97,7 +102,7 @@ export default function HomePage() {
                   {step.desc}
                 </p>
               </div>
-            </li>
+            </ProcessRowReveal>
           ))}
         </ol>
       </section>

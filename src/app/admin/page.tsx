@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { m3Transition } from '@/lib/motion';
 import { createClient } from '@/lib/supabase/client';
 import StatusBadge from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
-import { M3ResponsiveDialog, m3Toast } from '@/components/m3';
+import { M3ResponsiveDialog, m3Toast, CountUp } from '@/components/m3';
 import {
   RefreshCw as ArrowsClockwise,
   FileText,
@@ -405,7 +407,7 @@ export default function AdminDashboard() {
                 {COPY_PAGES.admin.text005}
               </p>
               <p className="text-headlineSmall font-display tabular-nums text-[var(--md-sys-color-on-surface)]">
-                {summary ? summary.orderCount : '—'}
+                {summary ? <CountUp value={summary.orderCount} duration={0.6} /> : '—'}
               </p>
             </div>
 
@@ -414,7 +416,7 @@ export default function AdminDashboard() {
                 {COPY_PAGES.admin.text006}
               </p>
               <p className="text-headlineSmall font-display tabular-nums text-[var(--md-sys-color-on-surface)]">
-                {summary ? summary.pages : '—'}
+                {summary ? <CountUp value={summary.pages} duration={0.6} /> : '—'}
               </p>
               <p className="text-bodySmall text-[var(--md-sys-color-on-surface-variant)] max-w-[40ch]">
                 {COPY_PAGES.admin.text024}
@@ -426,7 +428,15 @@ export default function AdminDashboard() {
                 {COPY_PAGES.admin.text007}
               </p>
               <p className="text-headlineSmall font-display tabular-nums text-[var(--md-sys-color-on-surface)]">
-                {summary ? `Rp ${summary.revenueVerified.toLocaleString('id-ID')}` : '—'}
+                {summary ? (
+                  <CountUp
+                    value={summary.revenueVerified}
+                    duration={0.6}
+                    formatter={(n) => `Rp ${Math.round(n).toLocaleString('id-ID')}`}
+                  />
+                ) : (
+                  '—'
+                )}
               </p>
               <p className="text-bodySmall text-[var(--md-sys-color-on-surface-variant)] max-w-[40ch]">
                 {summaryDate === todayJakarta ? COPY_PAGES.admin.text022 : COPY_PAGES.admin.text023}
@@ -636,7 +646,17 @@ export default function AdminDashboard() {
                     </div>
 
                     <div className="flex flex-col sm:items-end gap-1">
-                      <StatusBadge status={order.status} />
+                      <AnimatePresence mode="wait">
+                        <motion.span
+                          key={order.status}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={m3Transition('effectsFast', false)}
+                        >
+                          <StatusBadge status={order.status} />
+                        </motion.span>
+                      </AnimatePresence>
                       <span className="text-[24px] leading-8 font-bold tabular-nums text-[var(--md-sys-color-on-surface)]">
                         Rp {order.amount_due.toLocaleString('id-ID')}
                       </span>

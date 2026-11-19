@@ -2,6 +2,8 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { motion, useReducedMotion } from 'framer-motion';
+import { m3Transition } from '@/lib/motion';
 import {
   CheckCircleDuotone,
   CopyDuotone,
@@ -24,6 +26,7 @@ function getTimelineIndex(status: string | null): number {
 }
 
 export default function OrderSuccessClient({ initialOrderId }: { initialOrderId: string | null }) {
+  const reduced = useReducedMotion() !== false;
   const [loading, setLoading] = React.useState(Boolean(initialOrderId));
   const [status, setStatus] = React.useState<string | null>(null);
   const [pickupCode, setPickupCode] = React.useState<string | null>(null);
@@ -133,7 +136,22 @@ export default function OrderSuccessClient({ initialOrderId }: { initialOrderId:
     <div className="max-w-[720px] mx-auto px-4 md:px-0 pt-6 md:pt-12 pb-12 space-y-space6">
       {/* Check32 + H1 + Body */}
       <div className="flex items-start gap-space3">
-        <CheckCircleDuotone className="w-8 h-8 text-[var(--md-custom-color-success)] shrink-0 mt-1" aria-hidden="true" />
+        <svg className="w-8 h-8 text-[var(--md-custom-color-success)] shrink-0 mt-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <motion.circle
+            cx="12"
+            cy="12"
+            r="10"
+            initial={reduced ? { pathLength: 1 } : { pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={m3Transition('effectsDefault', reduced)}
+          />
+          <motion.path
+            d="m9 12 2 2 4-4"
+            initial={reduced ? { pathLength: 1 } : { pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={m3Transition('effectsSlow', reduced)}
+          />
+        </svg>
         <div>
           <h1 className="text-headlineSmall-emphasized md:text-headlineMedium-emphasized font-display text-[var(--md-sys-color-on-surface)]">
             {status && status !== 'pending_verification' ? statusInfo.label : COPY_PAGES.success.text001}
@@ -146,7 +164,10 @@ export default function OrderSuccessClient({ initialOrderId }: { initialOrderId:
 
       {/* Pickup Panel (440px) + Final Amount (256px) at 1280 */}
       <div className="grid grid-cols-1 md:grid-cols-[440px_256px] gap-space6 items-stretch">
-        <div
+        <motion.div
+          initial={reduced ? { opacity: 1 } : { opacity: 0, scale: 0.94 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={m3Transition('spatialDefault', reduced)}
           style={getM3LayerVars('primaryContainer', true)}
           className="p-space5 rounded-lPlus bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex flex-col justify-between gap-space3"
         >
@@ -168,7 +189,7 @@ export default function OrderSuccessClient({ initialOrderId }: { initialOrderId:
               {copiedCode ? <CheckCircleDuotone className="w-6 h-6" /> : <CopyDuotone className="w-6 h-6" />}
             </M3Pressable>
           </div>
-        </div>
+        </motion.div>
 
         <div className="p-space5 rounded-lPlus bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-on-surface)] flex flex-col justify-between">
           <span className="text-labelLarge text-[var(--md-sys-color-on-surface-variant)]">Tagihan akhir</span>
@@ -187,7 +208,14 @@ export default function OrderSuccessClient({ initialOrderId }: { initialOrderId:
           const done = i < activeIdx;
           const current = i === activeIdx;
           return (
-            <li key={label} aria-current={current ? 'step' : undefined} className="flex items-center gap-space3">
+            <motion.li
+              key={label}
+              aria-current={current ? 'step' : undefined}
+              initial={reduced ? { opacity: 1 } : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={reduced ? m3Transition('reduced', true) : { ...m3Transition('spatialDefault', false), delay: i * 0.06 }}
+              className="flex items-center gap-space3"
+            >
               {done ? (
                 <CheckCircleDuotone className="w-5 h-5 text-[var(--md-custom-color-success)] shrink-0" aria-hidden="true" />
               ) : current ? (
@@ -200,7 +228,7 @@ export default function OrderSuccessClient({ initialOrderId }: { initialOrderId:
               <span className={current ? 'text-titleSmall-emphasized text-[var(--md-sys-color-primary)]' : 'text-titleSmall'}>
                 {label}
               </span>
-            </li>
+            </motion.li>
           );
         })}
       </ol>

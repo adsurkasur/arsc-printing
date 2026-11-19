@@ -4,6 +4,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import { ClockDuotone } from '@/components/icons';
 import { COPY_HOME, COPY_LOADING, COPY_TOASTS } from '@/lib/copy';
+import { CountUp } from '@/components/m3';
 
 export type QueueStripState =
   | { status: 'loading' }
@@ -49,7 +50,17 @@ export function HomeQueueStrip() {
     <div className="mt-space6 lg:mt-space12 p-space4 rounded-l bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] flex flex-wrap items-center justify-between gap-space3">
       <div className="flex items-center gap-space3">
         <ClockDuotone className="w-5 h-5 shrink-0" aria-hidden="true" />
-        <span className="text-bodyMedium-emphasized">{formatQueueStripText(state)}</span>
+        <span className="text-bodyMedium-emphasized">
+          {state.status === 'ready' ? (
+            <CountUp
+              value={state.count}
+              duration={0.6}
+              formatter={(n) => formatQueueStripText({ status: 'ready', count: Math.round(n) })}
+            />
+          ) : (
+            formatQueueStripText(state)
+          )}
+        </span>
       </div>
       <Link
         href="/queue"

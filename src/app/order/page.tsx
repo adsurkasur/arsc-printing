@@ -13,8 +13,8 @@ import {
   ArrowClockwiseDuotone,
 } from '@/components/icons';
 import { COPY_PAGES, COPY_UI, COPY_LOADING, COPY_VALIDATION } from '@/lib/copy';
-import { m3Transitions } from '@/lib/motion';
-import { M3Pressable, getM3LayerVars, M3StateLayer } from '@/components/m3';
+import { m3Transition, m3Transitions } from '@/lib/motion';
+import { M3Pressable, getM3LayerVars, M3StateLayer, CountUp } from '@/components/m3';
 
 async function countPdfPagesSafe(file: File): Promise<number> {
   if (file.size > 10 * 1024 * 1024) {
@@ -37,6 +37,7 @@ async function countPdfPagesSafe(file: File): Promise<number> {
 
 export default function OrderPage() {
   const router = useRouter();
+  const reduced = useReducedMotion() !== false;
   const prefersReduced = useReducedMotion() === true;
 
   const [step, setStep] = React.useState<1 | 2 | 3>(1);
@@ -273,14 +274,21 @@ export default function OrderPage() {
                 className="flex flex-col items-center gap-1 text-center"
               >
                 <span
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-labelMedium-emphasized ${
+                  className={`relative w-8 h-8 rounded-full flex items-center justify-center text-labelMedium-emphasized ${
                     done
                       ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
                       : current
-                        ? 'bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)]'
+                        ? 'text-[var(--md-sys-color-on-primary)]'
                         : 'border border-[var(--md-sys-color-outline)] text-[var(--md-sys-color-outline)]'
                   }`}
                 >
+                  {current && (
+                    <motion.span
+                      layoutId="order-stepper-indicator"
+                      transition={m3Transition('spatialDefault', reduced)}
+                      className="absolute inset-0 rounded-full bg-[var(--md-sys-color-primary)] -z-10"
+                    />
+                  )}
                   {done ? <CheckCircleDuotone className="w-5 h-5" aria-hidden="true" /> : num}
                 </span>
                 <span className={current ? 'text-labelSmall-emphasized text-[var(--md-sys-color-primary)]' : 'text-labelSmall text-[var(--md-sys-color-on-surface-variant)]'}>
@@ -353,7 +361,13 @@ export default function OrderPage() {
 
                 {/* PDF Dropzone */}
                 <div>
-                  <label className="block min-h-[144px] p-space4 rounded-lPlus border-2 border-dashed border-[var(--md-sys-color-outline)] bg-[var(--md-sys-color-surface-container-low)] flex flex-col items-center justify-center text-center cursor-pointer">
+                  <motion.label
+                    whileHover={reduced ? undefined : { scale: 1.01 }}
+                    transition={m3Transition('spatialFast', reduced)}
+                    style={getM3LayerVars('surface')}
+                    className="m3-control relative block min-h-[144px] p-space4 rounded-lPlus border-2 border-dashed border-[var(--md-sys-color-outline)] bg-[var(--md-sys-color-surface-container-low)] flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden"
+                  >
+                    <M3StateLayer />
                     <input
                       ref={pdfInputRef}
                       id="document_file"
@@ -366,7 +380,22 @@ export default function OrderPage() {
                     {parsingPdf ? (
                       <ArrowClockwiseDuotone className="w-8 h-8 text-[var(--md-sys-color-primary)] animate-spin mb-space2" aria-hidden="true" />
                     ) : pageCount !== null ? (
-                      <CheckCircleDuotone className="w-8 h-8 text-[var(--md-custom-color-success)] mb-space2" aria-hidden="true" />
+                      <svg className="w-8 h-8 text-[var(--md-custom-color-success)] mb-space2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <motion.circle
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          initial={reduced ? { pathLength: 1 } : { pathLength: 0 }}
+                          animate={{ pathLength: 1 }}
+                          transition={m3Transition('effectsDefault', reduced)}
+                        />
+                        <motion.path
+                          d="m9 12 2 2 4-4"
+                          initial={reduced ? { pathLength: 1 } : { pathLength: 0 }}
+                          animate={{ pathLength: 1 }}
+                          transition={m3Transition('effectsSlow', reduced)}
+                        />
+                      </svg>
                     ) : (
                       <UploadSimpleDuotone className="w-8 h-8 text-[var(--md-sys-color-primary)] mb-space2" aria-hidden="true" />
                     )}
@@ -378,7 +407,7 @@ export default function OrderPage() {
                           ? `${pdfFile.name} (${pageCount} halaman)`
                           : COPY_UI.dropzonePdfHelper}
                     </span>
-                  </label>
+                  </motion.label>
                 </div>
 
                 {/* Copies */}
@@ -724,7 +753,15 @@ export default function OrderPage() {
             <div className="pt-space3 border-t border-[var(--md-sys-color-outline-variant)] flex justify-between items-baseline">
               <span className="text-titleSmall-emphasized">{COPY_PAGES.order.text024}</span>
               <span className="text-amount-emphasized font-code text-[var(--md-sys-color-primary)]">
-                {estimatedTotal !== null ? `Rp ${estimatedTotal.toLocaleString('id-ID')}` : '—'}
+                {estimatedTotal !== null ? (
+                  <CountUp
+                    value={estimatedTotal}
+                    duration={0.4}
+                    formatter={(n) => `Rp ${Math.round(n).toLocaleString('id-ID')}`}
+                  />
+                ) : (
+                  '—'
+                )}
               </span>
             </div>
           </div>
