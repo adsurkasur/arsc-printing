@@ -16,7 +16,7 @@ export function CountUp({
   formatter?: (n: number) => string;
   className?: string;
 }) {
-  const reduced = useReducedMotion() !== false;
+  const reduced = useReducedMotion() === true;
   const [display, setDisplay] = React.useState(() => formatter(reduced ? value : from));
   const prevRef = React.useRef(from);
 

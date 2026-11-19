@@ -13,7 +13,7 @@ export function HeroLineReveal({
   index?: number;
   className?: string;
 }) {
-  const reduced = useReducedMotion() !== false;
+  const reduced = useReducedMotion() === true;
   const transition = m3Transition('spatialDefault', reduced);
 
   return (
@@ -35,7 +35,7 @@ export function TariffCardReveal({
   children: React.ReactNode;
   className?: string;
 }) {
-  const reduced = useReducedMotion() !== false;
+  const reduced = useReducedMotion() === true;
   const transition = m3Transition('spatialDefault', reduced);
 
   return (
@@ -59,7 +59,7 @@ export function ProcessRowReveal({
   index?: number;
   className?: string;
 }) {
-  const reduced = useReducedMotion() !== false;
+  const reduced = useReducedMotion() === true;
   const transition = m3Transition('spatialDefault', reduced);
 
   return (

@@ -5,7 +5,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { m3Transition } from '@/lib/motion';
 
 export default function Template({ children }: { children: React.ReactNode }) {
-  const reduced = useReducedMotion() !== false;
+  const reduced = useReducedMotion() === true;
   const transition = m3Transition('effectsDefault', reduced);
 
   return (

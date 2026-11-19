@@ -37,7 +37,7 @@ async function countPdfPagesSafe(file: File): Promise<number> {
 
 export default function OrderPage() {
   const router = useRouter();
-  const reduced = useReducedMotion() !== false;
+  const reduced = useReducedMotion() === true;
   const prefersReduced = useReducedMotion() === true;
 
   const [step, setStep] = React.useState<1 | 2 | 3>(1);

@@ -89,3 +89,14 @@ Audit of every visible UI element across all pages, plus explicit YAGNI decision
 | Filter card (Search, status chips, dates, device select) | Order filtering | Find specific orders or filter by status/device | Keep |
 | Order cards (with single `StatusBadge` + action buttons) | Order management | Verify payment, approve, print, view receipt, or mark delivered | Keep |
 | Receipt modal (`Rincian pesanan`) | Detailed audit | Inspect `Riwayat proses` and `Nomor proses` | Keep |
+
+---
+
+## Layout, Edge-Check & Keyboard Accessibility Audit
+
+- **Edge-Check (`scripts/edge-check.mjs`)**: **0 offenders** (`EDGE_OK`) across `/`, `/order`, `/order-success`, `/track`, `/queue`, `/admin/login`, and `/admin` at `375`, `768`, `1280`, and `1440`.
+- **Keyboard Tab / Focus Order**:
+  - `/order`: `Tab` moves cleanly through header links, theme toggle, admin icon, and into `#customer_name` (`544×56`) with visible focus ring.
+  - `/admin`: `Tab` moves cleanly through header links, theme toggle, admin icon, and into the admin navigation rail (`64×64`) with visible focus ring.
+- **Browser Console Audit**: **0 console errors** across `/`, `/order`, `/order-success`, `/track`, `/queue`, `/admin/login`, and `/admin`.
+

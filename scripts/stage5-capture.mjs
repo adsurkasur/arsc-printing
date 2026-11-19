@@ -9,10 +9,10 @@ import { FakePrinterAdapter } from '../worker/fake-printer.mjs';
 
 const baseUrl = process.env.E2E_BASE_URL || 'http://localhost:3019';
 const stage4Dir = 'E:/OpenBot/recordings/redesign/stage4';
-const framesDir = 'E:/OpenBot/recordings/redesign/final-frames';
+const framesDir = 'E:/OpenBot/recordings/redesign/final-run-frames';
 const castDir = 'E:/OpenBot/tmp/stage5-cast';
-const videoPath = 'E:/OpenBot/recordings/arsc-redesign-full-flow.mp4';
-const logPath = 'E:/OpenBot/recordings/arsc-redesign-full-flow-steps.txt';
+const videoPath = 'E:/OpenBot/recordings/arsc-final-run.mp4';
+const logPath = 'E:/OpenBot/recordings/arsc-final-run-steps.txt';
 
 for (const d of [stage4Dir, framesDir, castDir]) {
   fs.mkdirSync(d, { recursive: true });

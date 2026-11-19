@@ -25,6 +25,8 @@ export interface AdminShellProps {
 
 export function AdminShell({ children, onLogout }: AdminShellProps) {
   const [drawerOpen, setDrawerOpen] = React.useState(false);
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
 
   return (
     <div className="min-h-[calc(100vh-80px)] flex flex-col xl:flex-row">
@@ -68,7 +70,8 @@ export function AdminShell({ children, onLogout }: AdminShellProps) {
 
       {/* Mobile / Tablet < 1200px Drawer Trigger */}
       <div className="xl:hidden flex items-center justify-between page-padding py-space2 bg-[var(--md-sys-color-surface-container-low)] border-b border-[var(--md-sys-color-outline-variant)]/40">
-        <DialogPrimitive.Root open={drawerOpen} onOpenChange={setDrawerOpen}>
+        {mounted ? (
+          <DialogPrimitive.Root open={drawerOpen} onOpenChange={setDrawerOpen}>
           <DialogPrimitive.Trigger asChild>
             <M3Pressable
               type="button"
@@ -140,6 +143,18 @@ export function AdminShell({ children, onLogout }: AdminShellProps) {
             </DialogPrimitive.Content>
           </DialogPrimitive.Portal>
         </DialogPrimitive.Root>
+        ) : (
+          <M3Pressable
+            type="button"
+            pair="surface"
+            data-testid="admin-drawer-trigger"
+            aria-label="Buka menu petugas"
+            className="min-h-[48px] px-space3 rounded-full flex items-center gap-space2 text-labelLarge"
+          >
+            <ListDuotone className="w-6 h-6" aria-hidden="true" />
+            <span>Menu petugas</span>
+          </M3Pressable>
+        )}
       </div>
 
       <div className="flex-1 min-w-0">{children}</div>

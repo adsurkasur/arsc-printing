@@ -26,7 +26,7 @@ function getTimelineIndex(status: string | null): number {
 }
 
 export default function OrderSuccessClient({ initialOrderId }: { initialOrderId: string | null }) {
-  const reduced = useReducedMotion() !== false;
+  const reduced = useReducedMotion() === true;
   const [loading, setLoading] = React.useState(Boolean(initialOrderId));
   const [status, setStatus] = React.useState<string | null>(null);
   const [pickupCode, setPickupCode] = React.useState<string | null>(null);
