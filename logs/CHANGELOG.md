@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - M3 specification v1.1 switches the brand to academic blue #1E5AA8, preserves distinct semantic status colors and freezes measured interaction-state contrast overrides. UI implementation remains pending.
 
 ### Added
+- Canonical repository handoff in `docs/AI_HANDOFF_COMPLETE_CONTEXT.md` on `feat/redesign-v2` and entry-point pointer in `AGENTS.md §0` (recording `[DEC-019]` shared Supabase Cloud audit & manual QRIS scope).
 - Stage0 redesign specification in docs/M3_SPEC.md: generated M3 light/dark tokens, complete component state contracts, responsive page wireframes, motion and final Indonesian copy. This is a review document; the redesign is not implemented yet.
 - Phase 4b & 5 Features: Human-friendly 4-character pickup codes (`ARSC-XXXX`), customer self-cancellation with concurrency version locking, administrative search (`q`), status filtering, Asia/Jakarta daily summary metrics, worker management list, and print receipt viewer dialog.
 - Phase 4a Visual Redesign: Authentic campus print-service aesthetic adhering to `docs/DESIGN_DIRECTION.md`, WCAG AA contrast compliance, live pricing estimator, and mobile-first responsive 1-column layouts at 375px.

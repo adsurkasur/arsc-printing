@@ -132,3 +132,15 @@
 - **Honesty & Simulation**: Enabled workers are never labeled "Online"; `NEXT_PUBLIC_ARSC_SIMULATION=true` displays explicit simulation disclosure on admin actions, receipt, and customer status pages.
 - **Technical Terms**: Raw event keys (`approve`, `claim`, `submission_started`, `submitted`, `backend_completed`) are mapped to human Indonesian labels via `COPY_RECEIPT_EVENTS` with `Pembaruan status` fallback.
 - **E2E Execution**: Dev server + E2E scripts are executed in a single command to avoid background server termination on this host.
+
+### [DEC-019] Production Deployment Architecture & Canonical Handoff Authority
+- **Date**: 2026-11-25
+- **Status**: Accepted
+- **Context**: Active development on `feat/redesign-v2` spans print pipeline security, SQL migrations, a local worker, and M3 Expressive UI, while `main` still holds the legacy MVP. Maintainers and AI agents need one authoritative project handoff and explicit production deployment guardrails.
+- **Decision**:
+  1. Establish `docs/AI_HANDOFF_COMPLETE_CONTEXT.md` on `feat/redesign-v2` (linked from `AGENTS.md §0`) as the canonical entry point for ARSC Printing, aligned with sibling ARSC repositories.
+  2. Document confirmed production decisions: production targets Vercel + **Supabase Cloud** (Option A, not the t530 stack); payments remain manual QRIS + proof verification with Midtrans deferred to a later phase.
+  3. Mandate a read-only collision audit across all apps sharing the Supabase Cloud project (`halo-psdm`, `Rapor-ARSC-2025-2026`, `arsc-leaderboard`, `arsc-supabase-audit`) covering `orders`, `user_roles`, `is_admin()`, `documents`, and `storage.objects` policies before applying any migration, sequenced after initial Vercel deployment setup.
+  4. Keep `main` (`28845fc`) untouched until explicit merge approval.
+- **Rationale**: Prevents accidental cloud schema/RLS collisions across shared ARSC apps, keeps local loopback simulation safe, and eliminates context fragmentation for future sessions.
+- **Affected**: `docs/AI_HANDOFF_COMPLETE_CONTEXT.md`, `AGENTS.md`, `logs/*`; no runtime application, API, or database code modified.

@@ -1,5 +1,16 @@
 # Activity Log
 
+### [2026-11-25 10:28] [Kiro / Canonical Project Handoff & OpenBot Channel Setup]
+- **Goal**: Author a complete, canonical project handoff inside `arsc-printing` on `feat/redesign-v2`, update modular logs and `AGENTS.md`, run deterministic verification gates, commit/push cleanly, and prepare a dedicated OpenBot channel.
+- **Actions**:
+  - Switched local working tree from legacy `main` (`28845fc`) to active `feat/redesign-v2` (`8cca678`, synced with `origin/feat/redesign-v2`).
+  - Verified all static, unit, copy, token, and build gates directly against `feat/redesign-v2`.
+  - Authored `docs/AI_HANDOFF_COMPLETE_CONTEXT.md` consolidating product truth, branch/PR topology, evidence boundaries (`[U]` production gates), API/worker/SQL inventory, shared Supabase Cloud collision audit guardrails, M3 Expressive layout/copy/honesty rules, env variable names, runbook commands, and prioritized production blockers.
+  - Added `## 0. Project Handoff Entry Point` to `AGENTS.md` and recorded `[DEC-019]` in `logs/DECISION_LOG.md` plus release note in `logs/CHANGELOG.md`.
+- **Files Created / Modified**: `docs/AI_HANDOFF_COMPLETE_CONTEXT.md` (created), `AGENTS.md`, `logs/ACTIVITY_LOG.md`, `logs/DECISION_LOG.md`, `logs/CHANGELOG.md`.
+- **Verification**: `bun run typecheck` (exit 0), `bun run lint` (exit 0), `bun run test` (exit 0: 34 pass, 3 skipped Supabase DB/E2E integration tests; 9/9 `worker/worker.test.mjs` pass), `node scripts/check-copy.mjs` (exit 0), `node scripts/check-tokens.mjs` (exit 0), `bun run build` (exit 0, 21/21 static pages). Local loopback E2E/edge/DB suites were not re-run in this documentation-only session.
+- **Git / Scope**: Committed and pushed to `origin/feat/redesign-v2`; legacy `main` and portfolio superproject `E:\managed-projects-handoff` intentionally left unchanged.
+
 ### [2026-11-18 18:04] [Atlas / Fidelity palette selection]
 - **Goal**: Compare TonalSpot, Fidelity and Content once and freeze a more faithful blue brand.
 - **Actions**: One MCU0.4.0 comparison run with seed #1E5AA8, requested spec2025, contrast0, phone. Fidelity/Content actually fall back to2021 in the official package; documented rather than claiming2025 output. Chose Fidelity: primaryContainer matches seed in both themes; primary retains saturated blue with accessible tone.

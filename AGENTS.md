@@ -5,6 +5,15 @@ All AI agents (Antigravity, Gemini, Claude, etc.) and automated tools working on
 
 ---
 
+## 0. Project Handoff Entry Point
+
+Before starting work on this repository, **read [`docs/AI_HANDOFF_COMPLETE_CONTEXT.md`](docs/AI_HANDOFF_COMPLETE_CONTEXT.md) first**.
+- **Active development branch**: `feat/redesign-v2` (contains the hardened print pipeline, SQL migrations, local worker, and Material 3 Expressive UI).
+- **Legacy `main` branch**: Still holds the 2026-09-16 MVP (`28845fc`). Do **not** merge into `main` or modify superproject pointers without explicit owner approval.
+- Update `docs/AI_HANDOFF_COMPLETE_CONTEXT.md` whenever major milestones, production blockers, or architectural boundaries change.
+
+---
+
 ## 1. Mandatory Logging Rules
 
 Any task that modifies code, configuration, database schemas, documentation, or assets **MUST** record its actions in the logs/ directory:
@@ -27,4 +36,4 @@ Any task that modifies code, configuration, database schemas, documentation, or 
 - **Understand Before Touching**: Trace real call paths and read relevant docs before proposing edits.
 - **Root Cause over Symptom**: Fix shared utilities and underlying root causes rather than patching one-off symptoms.
 - **Verify Every Change**: Every non-trivial change must leave behind a runnable verification check (test suite, verification script, or assertion check).
-- **Preserve Documentation Integrity**: Do not delete unrelated comments, docstrings, or architectural notes without explicit instructions.\n
+- **Preserve Documentation Integrity**: Do not delete unrelated comments, docstrings, or architectural notes without explicit instructions.
